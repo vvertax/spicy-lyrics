@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.2
+
+- Fix quick controls collapsing into a narrow strip above the menu button.
+- Keep pinned controls in one scrollable row and remaining actions inside the menu.
+
 ## 1.6.1
 
 - Use this fork's changelog for update notes and show notes for its own version series.

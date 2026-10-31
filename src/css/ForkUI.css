@@ -99,10 +99,12 @@
 .vv-quote-footer { flex-wrap:wrap; }
 .vv-quote-footer .vv-quote-copy { background:transparent; color:#e0ceef; border-color:#ffffff30; }
 
-#SpicyLyricsPage#SpicyLyricsPage .ViewControls.sl-fork-controls { max-width:calc(100% - 24px); gap:8px; align-items:center; }
-#SpicyLyricsPage .sl-quick-controls { display:flex; gap:6px; max-width:min(70vw,700px); overflow-x:auto; padding:4px; border-radius:999px; background:rgba(24,24,26,.35); backdrop-filter:blur(24px); }
+/* The inherited size container collapses fit-content/auto dimensions and wraps
+   pinned actions above the menu toggle. Use a normal, single-row flex layout. */
+#SpicyLyricsPage#SpicyLyricsPage .ViewControls.sl-fork-controls { max-width:calc(100% - 24px); gap:8px; align-items:center; container-type:normal; flex-wrap:nowrap; --ViewControlSize:clamp(32px, 5.5vh, 64px); }
+#SpicyLyricsPage .sl-quick-controls { display:flex; flex:0 1 auto; min-width:0; gap:6px; max-width:min(70vw,700px); overflow-x:auto; padding:4px; border-radius:999px; background:rgba(24,24,26,.35); backdrop-filter:blur(24px); }
 #SpicyLyricsPage .sl-quick-controls:empty { display:none; }
-#SpicyLyricsPage .sl-quick-controls .sl-quick-control { flex:0 0 38px; display:flex; justify-content:center; align-items:center; width:38px; min-height:38px; padding:8px; border:1px solid #ffffff22; border-radius:50%; background:transparent; color:#eee; }
+#SpicyLyricsPage .sl-quick-controls .sl-quick-control { flex:0 0 38px; display:flex; justify-content:center; align-items:center; width:38px; height:38px; min-height:38px; box-sizing:border-box; padding:8px; border:1px solid #ffffff22; border-radius:50%; background:transparent; color:#eee; }
 #SpicyLyricsPage .sl-quick-controls .sl-quick-control > span { display:none; }
 #SpicyLyricsPage .sl-quick-controls .sl-quick-control svg { width:20px; height:20px; }
 #SpicyLyricsPage .sl-quick-controls .sl-quick-control[aria-pressed="true"] { color:#c9def5; background:#ffffff20; }
@@ -112,6 +114,7 @@
 .vv-quick-settings > p { color:var(--ry-muted); font-size:12px; line-height:1.5; }
 .vv-quick-settings > button { margin:12px 0; }
 
+#SpicyLyricsPage .sl-fork-menu-toggle { flex-shrink:0; }
 #SpicyLyricsPage .sl-fork-menu-toggle[hidden] { display:none!important; }
 
 /* Independent A/B timelines; the normal lyrics renderer is left untouched. */
