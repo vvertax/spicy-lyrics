@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.3
+
+- Use the original Pixel ViewControl appearance for pinned actions: matching sizes, glass surfaces and icon styles.
+- Remove the shared capsule background and keep menu-only styling off quick buttons.
+
 ## 1.6.2
 
 - Fix quick controls collapsing into a narrow strip above the menu button.

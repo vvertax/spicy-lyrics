@@ -1,5 +1,5 @@
 export const ProjectName = "spicy-lyrics";
-export const ProjectVersion = "1.6.2";
+export const ProjectVersion = "1.6.3";
 
 export const ProjectDisplayName = "Spicy Lyrics";
 

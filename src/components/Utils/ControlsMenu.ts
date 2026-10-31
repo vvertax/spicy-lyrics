@@ -128,6 +128,8 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
     for(const row of allRows){
       const quick=pinned.has(row.dataset.controlId!);
       row.classList.toggle('sl-quick-control',quick);
+      row.classList.toggle('ViewControl',quick);
+      row.classList.toggle('sl-fork-menu-item',!quick);
       if(quick){row.role='button';row.setAttribute('aria-label',row.dataset.controlLabel!);row.title=row.dataset.controlLabel!;quickbar.append(row);}
       else {row.role=row.dataset.menuRole!;row.removeAttribute('aria-pressed');row.removeAttribute('aria-label');row.removeAttribute('title');menu.append(row);}
     }

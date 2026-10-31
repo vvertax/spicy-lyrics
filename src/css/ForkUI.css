@@ -102,14 +102,11 @@
 /* The inherited size container collapses fit-content/auto dimensions and wraps
    pinned actions above the menu toggle. Use a normal, single-row flex layout. */
 #SpicyLyricsPage#SpicyLyricsPage .ViewControls.sl-fork-controls { max-width:calc(100% - 24px); gap:8px; align-items:center; container-type:normal; flex-wrap:nowrap; --ViewControlSize:clamp(32px, 5.5vh, 64px); }
-#SpicyLyricsPage .sl-quick-controls { display:flex; flex:0 1 auto; min-width:0; gap:6px; max-width:min(70vw,700px); overflow-x:auto; padding:4px; border-radius:999px; background:rgba(24,24,26,.35); backdrop-filter:blur(24px); }
+/* Quick actions use the upstream ViewControl button rules from default.css. */
+#SpicyLyricsPage .sl-quick-controls { display:flex; flex:0 1 auto; min-width:0; gap:6px; max-width:min(70vw,700px); overflow-x:auto; padding:0; background:none; }
 #SpicyLyricsPage .sl-quick-controls:empty { display:none; }
-#SpicyLyricsPage .sl-quick-controls .sl-quick-control { flex:0 0 38px; display:flex; justify-content:center; align-items:center; width:38px; height:38px; min-height:38px; box-sizing:border-box; padding:8px; border:1px solid #ffffff22; border-radius:50%; background:transparent; color:#eee; }
 #SpicyLyricsPage .sl-quick-controls .sl-quick-control > span { display:none; }
-#SpicyLyricsPage .sl-quick-controls .sl-quick-control svg { width:20px; height:20px; }
-#SpicyLyricsPage .sl-quick-controls .sl-quick-control[aria-pressed="true"] { color:#c9def5; background:#ffffff20; }
-#SpicyLyricsPage .sl-quick-controls .sl-quick-control::after { display:none; }
-#SpicyLyricsPage .sl-quick-control:focus-visible { outline:2px solid #c9def5; outline-offset:-2px; }
+#SpicyLyricsPage .sl-quick-controls .sl-quick-control[aria-pressed="true"] { color:var(--ry-accent-3, #c9def5); }
 .vv-quick-settings h3 { margin:16px 0 8px; font-size:14px; }
 .vv-quick-settings > p { color:var(--ry-muted); font-size:12px; line-height:1.5; }
 .vv-quick-settings > button { margin:12px 0; }
