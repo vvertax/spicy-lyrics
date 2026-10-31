@@ -1220,7 +1220,7 @@ function reconcileLineAnimation(line: LyricsSyllable | LyricsLine, position: num
 
 let lastAnimateFrameTime = 0;
 
-export function Animate(position: number): void {
+export function Animate(position: number, target?: { type: "Syllable" | "Line"; lines: LyricsSyllable[] }): void {
   const ProcessedPosition = position + timeOffset - ($simpleLyricsMode.get() ? 33.5 : 0);
   const refreshedSimple =
     !$spaceGravityMode.get() && $simpleLyricsMode.get() && isExperimentEnabled("refreshedSimpleLyrics");
@@ -1237,8 +1237,8 @@ export function Animate(position: number): void {
   lastFrameTime = now;
   lastAnimateFrameTime = now;
 
-  const CurrentLyricsType = $currentLyricsType.get();
-  resetLineSweeps(LyricsObject.Types.Syllable.Lines);
+  const CurrentLyricsType = target?.type ?? $currentLyricsType.get();
+  resetLineSweeps((target ? (target.type === "Syllable" ? target.lines : []) : LyricsObject.Types.Syllable.Lines));
 
   if (!CurrentLyricsType || CurrentLyricsType === "None") return;
 
@@ -1345,7 +1345,7 @@ export function Animate(position: number): void {
   let firstActive = -1;
 
   if (CurrentLyricsType === "Syllable") {
-    const arr = LyricsObject.Types.Syllable.Lines;
+    const arr = (target ? (target.type === "Syllable" ? target.lines : []) : LyricsObject.Types.Syllable.Lines);
     // The pop-out belongs to the refreshed layout; anywhere else every background line stays open.
     markBackgroundGroups(arr, ProcessedPosition, isBgPopActive());
 
@@ -2455,7 +2455,7 @@ export function Animate(position: number): void {
       }
     }
   } else if (CurrentLyricsType === "Line") {
-    const arr = LyricsObject.Types.Line.Lines;
+    const arr = (target ? (target.type === "Line" ? target.lines : []) : LyricsObject.Types.Line.Lines);
 
     for (let index = 0; index < arr.length; index++) {
       const line = arr[index];
@@ -2662,7 +2662,7 @@ export function Animate(position: number): void {
   }
   if (CurrentLyricsType === "Syllable" || CurrentLyricsType === "Line") {
     markSungAfterActive(
-      LyricsObject.Types[CurrentLyricsType].Lines,
+      (target?.lines ?? LyricsObject.Types[CurrentLyricsType].Lines),
       ProcessedPosition,
       !$spaceGravityMode.get() && isExperimentEnabled("keepOverlappingLines") ? firstActive : -1
     );
@@ -2696,5 +2696,53 @@ export function createWordAnimationPreview(element: HTMLElement, startMs: number
     element.style.setProperty('--text-shadow-blur-radius', `${4 + 2 * currentGlow}px`);
     element.style.setProperty('--text-shadow-opacity', `${Math.min(currentGlow * 35, 100)}%`);
     element.style.setProperty('--gradient-position', `${positionMs >= endMs ? 100 : active ? -20 + 120 * progress : -20}%`);
+  };
+}
+
+/** Separate timeline, springs and sweep measurements; executes the production animator. */
+export function createLyricsAnimationSession(type: "Syllable" | "Line", lines: LyricsSyllable[]) {
+  const capture = () => ({ Blurring_LastLine, lastFrameTime, lastPlaybackPosition, lastAnimateFrameTime,
+    sungAfterMarked, sungAfterSpare, bgGroupsMarked, _sweptLines, _sweepResize });
+  const restore = (state: ReturnType<typeof capture>) => {
+    ({ Blurring_LastLine, lastFrameTime, lastPlaybackPosition, lastAnimateFrameTime,
+      sungAfterMarked, sungAfterSpare, bgGroupsMarked, _sweptLines, _sweepResize } = state);
+  };
+  let state: ReturnType<typeof capture> = { Blurring_LastLine: null, lastFrameTime: performance.now(),
+    lastPlaybackPosition: null, lastAnimateFrameTime: 0, sungAfterMarked: [], sungAfterSpare: [],
+    bgGroupsMarked: false, _sweptLines: null, _sweepResize: null };
+  let destroyed = false;
+  const invalidate = () => {
+    state.Blurring_LastLine = null;
+    for (const line of lines) {
+      line.AnimatorStore = undefined;
+      for (const word of line.Syllables?.Lead ?? []) {
+        word.AnimatorStore = undefined;
+        for (const letter of word.Letters ?? []) letter.AnimatorStore = undefined;
+      }
+    }
+  };
+  const unsubscribe = $animatorValues.listen(invalidate);
+  const unsubscribePreset = $animatorPreset.listen(invalidate);
+  return {
+    animate(position: number) {
+      if (destroyed) return;
+      const main = capture();restore(state);
+      try {
+        for (const line of lines) line.Status = position + timeOffset < line.StartTime ? "NotSung" : position + timeOffset >= line.EndTime ? "Sung" : "Active";
+        Animate(position, { type, lines });
+      }
+      finally { state = capture();restore(main); }
+    },
+    destroy() {
+      if (destroyed) return;destroyed = true;unsubscribe();unsubscribePreset();state._sweepResize?.disconnect();
+      for (const line of lines) {
+        _lineSweeps.delete(line.HTMLElement);_styleCache.delete(line.HTMLElement);_styleQueue.delete(line.HTMLElement);
+        for (const word of line.Syllables?.Lead ?? []) {
+          _styleCache.delete(word.HTMLElement);_styleQueue.delete(word.HTMLElement);
+          for (const letter of word.Letters ?? []) {_styleCache.delete(letter.HTMLElement);_styleQueue.delete(letter.HTMLElement);}
+        }
+      }
+      state.sungAfterMarked.length = 0;state.sungAfterSpare.length = 0;
+    },
   };
 }

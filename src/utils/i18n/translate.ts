@@ -6,6 +6,9 @@ export function translateUi(text: string, language: Language): string {
   if(dictionary[text])return dictionary[text];
   const core=text.trim();
   if(dictionary[core])return text.replace(core,dictionary[core]);
+  if(core.startsWith("Code: "))return `Код: ${core.slice(6)}`;
+  const differences=core.match(/^(\d+) differing lines · text \/ timing$/);
+  if(differences)return `${differences[1]} строк с различиями · текст / тайминг`;
   const shortcut=core.split(" · ");
   if(shortcut.length>1&&dictionary[shortcut[0]])return text.replace(shortcut[0],dictionary[shortcut[0]]);
   const lines=core.match(/^(\d+) \/ 12 lines$/);if(lines)return `${lines[1]} / 12 строк`;

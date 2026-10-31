@@ -54,9 +54,8 @@ export default function AppearanceSection({ query, sectionFilter, showHidden = f
   const r8 = visible("appearance-sliderbar-styling") && matches(query, "New SliderBar Styling", "New glass-like style for the SliderBar. Disable to revert back to the original one.");
   const r9 = visible("appearance-fps-limit") && matches(query, "Limit Animation Frame Rate", FPS_CAP_DESCRIPTION);
   const r10 = visible("appearance-fps-cap") && fpsCapEnabled && matches(query, "Animation Frame Rate", FPS_SLIDER_DESCRIPTION);
-  const newDesign = visible("appearance-settings-design") && matches(query, "New Settings and Update Design", "Use the lavender design for settings, update dialogs, and notifications. Disable for classic neutral styling.");
 
-  if (!r1 && !r2 && !r3 && !r4 && !r6 && !r7 && !r8 && !r9 && !r10 && !newDesign) return null;
+  if (!r1 && !r2 && !r3 && !r4 && !r6 && !r7 && !r8 && !r9 && !r10) return null;
 
   return (
     <>
@@ -101,7 +100,6 @@ export default function AppearanceSection({ query, sectionFilter, showHidden = f
         </Row>
       )}
       {r8 && <ExperimentSettings experimentIds={["newProgressBarStyling"]} showBuiltIn={false} />}
-      {newDesign && <ExperimentSettings experimentIds={["newSettingsDesign"]} showBuiltIn={false} />}
 
       {r9 && (
         <Row settingId="appearance-fps-limit" label="Limit Animation Frame Rate" description={FPS_CAP_DESCRIPTION}>

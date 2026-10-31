@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.0
+
+- Move TTML A/B comparison onto the lyrics page with a shared track background, Spicy Lyrics controls, and the production lyric animator running independently for A and B.
+- Restore the normal page when leaving comparison or changing tracks.
+- Remove excessive hover bloom from active lyrics and style the quick-controls scrollbar.
+- Remove the settings/update design toggle and translate the frame-rate description.
+- Make quote-card watermarks lighter on near-black cover-derived backgrounds.
+- Use a lavender Copy details button and localize lyrics notices, errors and copy feedback for Russian.
+
 ## 1.6.4
 
 - Give karaoke, recording, quote cards, author search, lyrics review and TTML comparison distinct icons.

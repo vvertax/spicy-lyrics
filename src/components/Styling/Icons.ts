@@ -24,6 +24,8 @@ const TrackSkip = `
 `;
 
 export const Icons = {
+  SeekBackward: Line(`<path d="M3 10a9 9 0 1 1 1 7M3 4v6h6"/><text x="12" y="16" text-anchor="middle" fill="currentColor" stroke="none" font-size="10" font-family="sans-serif" font-weight="700">5</text>`),
+  SeekForward: Line(`<path d="M21 10a9 9 0 1 0-1 7M21 4v6h-6"/><text x="12" y="16" text-anchor="middle" fill="currentColor" stroke="none" font-size="10" font-family="sans-serif" font-weight="700">5</text>`),
   Karaoke: Line(`<rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 10v2a6 6 0 0 0 12 0v-2M12 18v3M9 21h6"/>`),
   RecordingMode: Line(`<rect x="3" y="5" width="12" height="14" rx="3"/><path d="m15 10 6-4v12l-6-4"/>`),
   QuoteCard: Line(`<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9h3v4H7v-2M14 9h3v4h-3v-2M8 16h8"/>`),

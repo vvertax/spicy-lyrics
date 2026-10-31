@@ -115,25 +115,26 @@
 #SpicyLyricsPage .sl-fork-menu-toggle[hidden] { display:none!important; }
 
 /* Independent A/B timelines; the normal lyrics renderer is left untouched. */
-.vv-review-dialog.vv-split-dialog { width:min(1500px,97vw); height:92vh; max-height:92vh; padding:20px; overflow:hidden; }
-.vv-split-dialog[open] { display:flex; flex-direction:column; gap:10px; }
-.vv-split-dialog > header { margin:0; flex:none; }
+#SpicyLyricsPage.VV_ComparingTTML .ContentBox { position:relative; }
+#SpicyLyricsPage.VV_ComparingTTML .ContentBox > :is(.LyricsContainer,.NowBar) { visibility:hidden!important; pointer-events:none!important; }
+#SpicyLyricsPage .vv-page-comparison { position:absolute; inset:0; z-index:10; display:flex; flex-direction:column; gap:10px; padding:14px 20px; box-sizing:border-box; color:var(--color-text-primary,#fff); font-family:var(--comparison-font,SpicyLyrics,sans-serif); }
+#SpicyLyricsPage.VV_ComparingTTML .ViewControls { visibility:hidden!important; pointer-events:none!important; }
+.vv-comparison-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; flex:none; }
+.vv-comparison-heading h2 { font-size:18px; margin:0; }
+.vv-page-comparison button:not(.vv-split-line), .vv-page-comparison input[type="file"] { border:1px solid #ffffff30; border-radius:10px; background:#ffffff0c; color:inherit; padding:7px 10px; font:inherit; font-size:12px; }
+.vv-page-comparison button:focus-visible, .vv-page-comparison input:focus-visible { outline:2px solid var(--ry-accent,#c9def5); outline-offset:2px; }
+.vv-page-comparison button:not(.vv-split-line):hover { background:#ffffff20; }
 .vv-split-track { margin:0; color:#b8aec8; font-size:12px; }
-.vv-split-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:0; flex:1; min-height:0; border:1px solid #ffffff20; border-radius:14px; overflow:hidden; }
-.vv-split-side { display:flex; flex-direction:column; min-width:0; min-height:0; background:#ffffff03; }
+.vv-split-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:0; flex:1; min-height:0; overflow:hidden; }
+.vv-split-side { display:flex; flex-direction:column; min-width:0; min-height:0; background:transparent; }
 .vv-split-side + .vv-split-side { border-left:1px solid #ffffff25; }
 .vv-split-side-header { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:12px; border-bottom:1px solid #ffffff15; }
 .vv-split-side-header > strong { display:grid; place-items:center; width:28px; height:28px; background:#b99be42b; border-radius:7px; }
 .vv-split-filename { flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:#cbb9e3; font-size:12px; }
-.vv-split-side-header input { flex:1 1 100%; font-size:12px; }
+.vv-split-side-header input { flex:0 1 230px; min-width:0; max-width:100%; font-size:12px; }
 .vv-split-side-header button { font-size:11px; padding:5px 8px; }
-.vv-split-lyrics { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:24px 20px 35vh; scroll-padding-block:80px; }
-.vv-split-lyrics .vv-split-line { display:block; width:100%; padding:14px 12px; margin:0 0 8px; text-align:left; border:1px solid transparent; background:transparent; color:#958b9f; border-radius:12px; font:700 clamp(19px,2vw,30px)/1.4 SpicyLyrics,sans-serif; transition:background .18s,color .18s; overflow-wrap:anywhere; }
-.vv-split-lyrics .vv-split-line:hover { background:#ffffff08; }
-.vv-split-lyrics .vv-split-line.is-active { color:#f3eaff; background:#c4a2f210; }
-.vv-split-lyrics .vv-split-line.is-sung { color:#c6bdce; }
+.vv-split-lyrics { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:12vh 4% 40vh; scroll-padding-block:80px; mask-image:linear-gradient(transparent,#000 32px,#000 calc(100% - 40px),transparent); scrollbar-width:thin; }
 .vv-split-line small { display:block; font:10px/1.5 monospace; color:#9b8fa8; margin-top:6px; }
-.vv-split-line .vv-split-word { --word-fill:0%; color:transparent; background:linear-gradient(90deg,#f4eaff var(--word-fill),#918598 var(--word-fill)); background-clip:text; -webkit-background-clip:text; }
 .vv-split-backing { display:block; font-size:.7em; opacity:.7; margin-top:6px; }
 .vv-split-lyrics .vv-split-duet { text-align:right; }
 .vv-split-lyrics .vv-split-line[data-diff="text"] { border-left:3px solid #dfae6c; }
@@ -145,5 +146,75 @@
 .vv-split-clock { font:11px monospace; color:#c4b6d2; }
 .vv-split-summary { font-size:11px; color:#a89ab7; }
 .vv-split-toolbar label { font-size:11px; }
-.vv-split-dialog > p[role="status"] { margin:0; color:#b8aec8; font-size:11px; flex:none; }
-@media(max-width:650px) { .vv-review-dialog.vv-split-dialog { padding:10px; } .vv-split-lyrics { padding:14px 6px 30vh; } .vv-split-lyrics .vv-split-line { font-size:18px; padding:10px 6px; } }
+.vv-page-comparison > p[role="status"] { margin:0; color:#b8aec8; font-size:11px; flex:none; }
+@media(max-width:650px) { #SpicyLyricsPage .vv-page-comparison { padding:10px; } .vv-split-lyrics { padding:14px 6px 30vh; } .vv-split-lyrics .vv-split-line { font-size:18px; padding:10px 6px; } }
+
+/* Comparison controls follow Spicy's translucent, circular ViewControl treatment. */
+#SpicyLyricsPage .vv-page-comparison { padding:24px clamp(16px,3vw,48px); gap:16px; --comparison-ink:rgba(255,255,255,.92); color:var(--comparison-ink); }
+.vv-comparison-heading { min-height:48px; }
+.vv-comparison-heading h2 { font-size:16px; font-weight:600; letter-spacing:-.02em; color:#ffffffb3; }
+.vv-comparison-heading .vv-split-track { display:block; font-size:12px; font-weight:500; color:#ffffff70; margin-top:5px; }
+#SpicyLyricsPage .vv-page-comparison .vv-comparison-control { display:flex; align-items:center; justify-content:center; flex:0 0 44px; width:44px; height:44px; padding:0; border:1px solid #ffffff30; border-radius:50%; color:var(--comparison-ink); background:color-mix(in srgb,var(--material-regular-bg, #ffffff20) 30%,transparent); backdrop-filter:blur(4px) saturate(1.12); box-shadow:0 10px 24px -8px #080a126b; cursor:pointer; transition:background .2s,scale .2s,opacity .2s; }
+#SpicyLyricsPage .vv-page-comparison .vv-comparison-control:hover { background:#ffffff12; scale:1.05; }
+#SpicyLyricsPage .vv-page-comparison .vv-comparison-control:active { scale:.94; }
+#SpicyLyricsPage .vv-page-comparison .vv-comparison-control:disabled { opacity:.3; cursor:default; scale:1; }
+.vv-comparison-control svg { width:20px; height:20px; display:block; fill:currentColor; }
+.vv-comparison-control svg.NoFill { fill:none; }
+.vv-comparison-control .PlaybackControl { display:flex; align-items:center; justify-content:center; }
+.vv-split-side-header { flex-wrap:nowrap; padding:8px 24px 16px; border:0; gap:12px; }
+.vv-split-side-header > strong { background:transparent; width:auto; height:auto; font-size:22px; font-weight:700; color:#ffffff9c; }
+.vv-split-filename { color:#ffffff80; font-weight:500; }
+.vv-split-side + .vv-split-side { border-left:1px solid #ffffff14; }
+.vv-comparison-empty { min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; text-align:center; }
+.vv-comparison-empty-icon { color:#ffffff38; }
+.vv-comparison-empty-icon svg { width:56px; height:56px; }
+#SpicyLyricsPage .vv-page-comparison .vv-comparison-load { padding:14px 26px; border-radius:999px; border:1px solid #ffffff30; color:#ffffffe6; background:#ffffff0c; backdrop-filter:blur(12px); font-size:16px; font-weight:600; cursor:pointer; }
+.vv-comparison-empty p { max-width:220px; margin:0; color:#ffffff66; font-size:13px; line-height:1.5; }
+.vv-split-lyrics:has(.vv-comparison-empty) { padding:0 16px; mask-image:none; }
+.vv-split-lyrics { scrollbar-color:#ffffff30 transparent; }
+.vv-split-toolbar { gap:12px; padding:12px 0 0; }
+#SpicyLyricsPage .vv-page-comparison .vv-comparison-play { background:#ffffffe6; color:#17171b; border-color:transparent; }
+#SpicyLyricsPage .vv-page-comparison .vv-comparison-play:hover { background:#fff; }
+.vv-split-toolbar input[type="range"] { appearance:none; height:4px; border-radius:99px; background:#ffffff30; cursor:pointer; accent-color:#fff; }
+.vv-split-toolbar input[type="range"]::-webkit-slider-thumb { appearance:none; width:12px; height:12px; border-radius:50%; background:#fff; box-shadow:0 0 0 4px #ffffff0a; }
+.vv-split-toolbar input[type="range"]::-moz-range-thumb { width:12px; height:12px; border:0; border-radius:50%; background:#fff; }
+.vv-split-clock { font:500 12px var(--comparison-font,SpicyLyrics,sans-serif); color:#ffffff80; font-variant-numeric:tabular-nums; }
+.vv-split-toolbar label { display:flex; align-items:center; gap:8px; color:#ffffff80; font-size:12px; cursor:pointer; }
+.vv-split-toolbar label input { appearance:none; flex:none; width:30px; height:18px; border:1px solid #ffffff30; border-radius:999px; background:#ffffff12; position:relative; cursor:pointer; }
+.vv-split-toolbar label input::after { content:''; position:absolute; top:3px; left:3px; width:10px; height:10px; background:#ffffff80; border-radius:50%; transition:translate .2s; }
+.vv-split-toolbar label input:checked { background:#ffffff30; }
+.vv-split-toolbar label input:checked::after { translate:12px 0; background:#fff; }
+.vv-split-summary { color:#ffffff50; }
+.vv-page-comparison > p[role="status"] { min-height:16px; color:#ffffff66; font-size:11px; }
+@media(max-width:750px) { .vv-split-side-header { padding:8px; gap:6px; } .vv-split-filename { font-size:10px; } #SpicyLyricsPage .vv-page-comparison { padding:12px; gap:8px; } .vv-split-summary { display:none; } .vv-split-toolbar { gap:8px; } }
+
+.vv-page-comparison > p[role="status"]:empty { display:none; }
+
+#SpicyLyricsPage .sl-quick-controls { scrollbar-width:thin; scrollbar-color:#ffffff40 transparent; padding-bottom:6px; }
+/* Chromium's standard scrollbar-color/width override its WebKit pseudo-elements.
+   Reset them here so the custom thickness, rounded thumb and hidden arrows apply. */
+@supports selector(::-webkit-scrollbar) {
+  #SpicyLyricsPage#SpicyLyricsPage .sl-quick-controls { scrollbar-width:auto; scrollbar-color:auto; }
+  #SpicyLyricsPage .sl-quick-controls::-webkit-scrollbar { height:6px; width:6px; background:transparent; }
+  #SpicyLyricsPage .sl-quick-controls::-webkit-scrollbar-track { background:transparent; border:0; box-shadow:none; }
+  #SpicyLyricsPage .sl-quick-controls::-webkit-scrollbar-thumb { background:rgba(255,255,255,.28); border:0; border-radius:999px; box-shadow:none; }
+  #SpicyLyricsPage .sl-quick-controls::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,.5); }
+  #SpicyLyricsPage .sl-quick-controls::-webkit-scrollbar-button { display:none!important; width:0!important; height:0!important; }
+  #SpicyLyricsPage .sl-quick-controls::-webkit-scrollbar-corner { background:transparent; }
+}
+
+#SpicyLyricsPage .vv-page-comparison .vv-split-side.LyricsContainer { display:flex; align-items:stretch; justify-content:flex-start; height:auto; width:auto; overflow:hidden; }
+#SpicyLyricsPage .vv-page-comparison .vv-split-lyrics.LyricsContent { --DefaultLyricsSize:clamp(22px,2.7vw,48px); height:auto; width:100%; font-family:var(--comparison-font,SpicyLyrics,sans-serif); box-sizing:border-box; container-type:inline-size; }
+#SpicyLyricsPage .vv-page-comparison .vv-split-lyrics .SpicyLyricsScrollContainer { padding:0; width:100%; }
+#SpicyLyricsPage .vv-page-comparison .vv-split-lyrics .line { cursor:pointer; border-left:3px solid transparent; }
+#SpicyLyricsPage .vv-page-comparison .vv-split-lyrics .line[data-diff="text"] { border-left-color:#dfae6c; }
+#SpicyLyricsPage .vv-page-comparison .vv-split-lyrics .line[data-diff="timing"] { border-left-color:#84b9dc; }
+#SpicyLyricsPage .vv-page-comparison .vv-split-lyrics .line[data-diff="missing"] { border-left-color:#d88fa4; }
+
+.vv-comparison-heading h2 { flex:1; }
+.vv-comparison-options { padding:0; justify-content:flex-end; }
+
+/* Match the lavender settings actions without retinting the rest of the page. */
+#SpicyLyricsPage#SpicyLyricsPage .LyricsNotice .notice-copy { background:#d0bcf2; color:#271d38; box-shadow:none; }
+#SpicyLyricsPage#SpicyLyricsPage .LyricsNotice .notice-copy:hover { background:#decdf7; }
+#SpicyLyricsPage#SpicyLyricsPage .LyricsNotice .notice-copy:focus-visible { outline-color:#d0bcf2; }

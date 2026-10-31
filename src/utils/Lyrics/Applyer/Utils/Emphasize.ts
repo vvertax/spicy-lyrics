@@ -2,7 +2,7 @@ import { $simpleLyricsMode } from "../../../../utils/stores.ts";
 import { ArabicPersianRegex } from "../../../Addons.ts";
 import { getIdleEmphasisLyricsScale } from "../../Animator/Shared.ts";
 import { ConvertTime } from "../../ConvertTime.ts";
-import { CurrentLineLyricsObject, LyricsObject } from "../../lyrics.ts";
+import { CurrentLineLyricsObject, LyricsObject, type SyllableLead } from "../../lyrics.ts";
 import { isExperimentEnabled } from "../../../experiments.ts";
 
 const Substractions = {
@@ -30,7 +30,8 @@ export default function Emphasize(
   letters: Array<string>,
   applyTo: HTMLElement,
   lead: any,
-  isBgWord: boolean = false
+  isBgWord: boolean = false,
+  target?: SyllableLead[]
 ) {
   const StartTime = ConvertTime(lead.StartTime) - Substractions.StartTime;
   let EndTime = ConvertTime(lead.EndTime) - Substractions.EndTime;
@@ -45,7 +46,7 @@ export default function Emphasize(
   const Letters: LetterData[] = [];
 
   letters.forEach((letter, index) => {
-    const letterElem = document.createElement("span");
+    const letterElem = applyTo.ownerDocument.createElement("span");
     letterElem.textContent = letter;
     letterElem.classList.add("letter");
     letterElem.classList.add("Emphasis");
@@ -108,25 +109,9 @@ export default function Emphasize(
       }
     : {};
 
-  // Make sure CurrentLineLyricsObject is valid and Syllables.Lead exists
-  if (
-    CurrentLineLyricsObject >= 0 &&
-    LyricsObject.Types.Syllable.Lines?.[CurrentLineLyricsObject].Syllables
-  ) {
-    LyricsObject.Types.Syllable.Lines[CurrentLineLyricsObject].Syllables.Lead.push({
-      HTMLElement: word,
-      StartTime: StartTime,
-      EndTime: EndTime,
-      TotalTime: totalDuration,
-      LetterGroup: true,
-      Letters,
-      ...mcont,
-    });
-  } else {
-    console.warn(
-      "Cannot add letter group: CurrentLineLyricsObject is invalid or Syllables.Lead doesn't exist"
-    );
-  }
+  const destination = target ?? LyricsObject.Types.Syllable.Lines[CurrentLineLyricsObject]?.Syllables?.Lead;
+  destination?.push({ HTMLElement: word, StartTime, EndTime, TotalTime: totalDuration,
+    LetterGroup: true, Letters, ...mcont });
 
   // No need to reset Letters as it's a local constant
 }

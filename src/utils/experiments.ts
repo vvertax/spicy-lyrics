@@ -77,6 +77,7 @@ export type Experiment = {
 export const EXPERIMENTS = [
   {
     id: "newSettingsDesign",
+    hidden: true,
     label: "New Settings and Update Design",
     description: "Use the lavender design for settings, update dialogs, and notifications. Disable for classic neutral styling.",
     default: true,

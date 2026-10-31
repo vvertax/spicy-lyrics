@@ -114,6 +114,7 @@ async function quoteCard(doc: Document) {
   const usePalette = doc.createElement("input"); usePalette.type = "checkbox";
   paletteLabel.append(usePalette, " Background from cover colors");
   let palette = ["#382052", "#211735"];
+  let paletteLogoLightness = 0;
   let paletteText = "#eee2ff";
   let paletteMuted = "#c1add9";
   let cover: HTMLImageElement | null = null;
@@ -124,6 +125,8 @@ async function quoteCard(doc: Document) {
 
   const svg = Icons.LyricsPage.replace(/id="[^"]*"/g, "");
   const logo = await loadImage(doc, `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`).catch(() => null);
+  const logoTint = doc.createElement("canvas"); logoTint.width = logoTint.height = 650;
+  const logoCtx = logoTint.getContext("2d")!;
   function wrap(text: string, x: number, y: number, width: number, height: number) {
     const rows = wrapQuoteText(text, width, value => ctx.measureText(value).width);
     for (const row of rows) { ctx.fillText(row, x, y); y += height; }
@@ -135,7 +138,15 @@ async function quoteCard(doc: Document) {
     counter.textContent = `${picked.size} / 12 lines`;
     dimensions.textContent = `1080 × ${height} · PNG`;
     const gradient = ctx.createLinearGradient(0, 0, 1080, height); gradient.addColorStop(0, usePalette.checked ? palette[0] : "#382052"); gradient.addColorStop(1, usePalette.checked ? palette[1] : "#211735"); ctx.fillStyle = gradient; ctx.fillRect(0, 0, 1080, height);
-    if (logo) { ctx.save(); ctx.globalAlpha = .12; ctx.drawImage(logo, 580, -100, 650, 650); ctx.restore(); }
+    if (logo) {
+      // Tint the watermark mask without changing its transparency or the exported artwork.
+      const shade = usePalette.checked ? Math.round(paletteLogoLightness * 255) : 0;
+      logoCtx.clearRect(0, 0, 650, 650);logoCtx.drawImage(logo, 0, 0, 650, 650);
+      logoCtx.globalCompositeOperation = "source-in";
+      logoCtx.fillStyle = `rgb(${shade},${shade},${shade})`;logoCtx.fillRect(0, 0, 650, 650);
+      logoCtx.globalCompositeOperation = "source-over";
+      ctx.save();ctx.globalAlpha = .12;ctx.drawImage(logoTint, 580, -100);ctx.restore();
+    }
     if (useCover.checked && cover) ctx.drawImage(cover, 72, 72, 140, 140);
     ctx.fillStyle = usePalette.checked ? paletteText : "#eee2ff"; ctx.font = "bold 30px SpicyLyrics, sans-serif";
     wrap(String(meta.title ?? "Unknown song").slice(0, 100), useCover.checked && cover ? 240 : 72, 117, useCover.checked && cover ? 760 : 936, 38);
@@ -248,6 +259,11 @@ async function quoteCard(doc: Document) {
         const dominant = [...bins.values()].sort((a,b) => b.count-a.count)[0];
         const rgb = [dominant.r, dominant.g, dominant.b].map(value => value/dominant.count);
         palette = [.38,.16].map(shade => `rgb(${rgb.map(value => Math.round(value*shade + 8)).join(',')})`);
+        // Relative luminance of the actual darkened gradient near the watermark.
+        const linear = rgb.map(value => (value * .38 + 8) / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
+        const luminance = linear[0] * .2126 + linear[1] * .7152 + linear[2] * .0722;
+        const darkness = Math.max(0, Math.min(1, 1 - luminance / .1));
+        paletteLogoLightness = darkness * darkness * (3 - 2 * darkness);
         // Blend toward white to retain the cover hue on the dark palette background.
         paletteText = `rgb(${rgb.map(value => Math.round(220 + value * .13)).join(',')})`;
         paletteMuted = `rgb(${rgb.map(value => Math.round(165 + value * .23)).join(',')})`;

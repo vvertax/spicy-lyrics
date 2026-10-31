@@ -13,3 +13,15 @@ test("dynamic versions and quote counts translate",()=>{
  assert.equal(translateUi("Updated to 1.6.0","ru"),"Обновлено до 1.6.0");
  assert.equal(translateUi("7 / 12 lines","ru"),"7 / 12 строк");
 });
+import { readFileSync } from "node:fs";
+test("Russian covers all lyrics notices and their diagnostic code",()=>{
+ const source=readFileSync(new URL('../src/utils/Lyrics/LyricsNotice.ts',import.meta.url),'utf8');
+ const notices=source.slice(source.indexOf('const NOTICES:'),source.indexOf('export function HasNotice'));
+ for(const [,text] of notices.matchAll(/(?:title|body): "([^"]+)"/g)){
+  assert.notEqual(translateUi(text,'ru'),text,`Untranslated notice: ${text}`);
+  assert.equal(translateUi(text,'en'),text);
+ }
+ assert.equal(translateUi('Code: lyrics-not-found (404)','ru'),'Код: lyrics-not-found (404)');
+ assert.equal(translateUi('Copied','ru'),'Скопировано');
+ assert.equal(translateUi("Couldn't copy",'ru'),'Не удалось скопировать');
+});
