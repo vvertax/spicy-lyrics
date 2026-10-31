@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.6.0
+
+- Add persistent English/Russian interface language selection and localized settings search.
+- Translate interface controls without translating song lyrics or creator names.
+- Add a bilingual Material You download page with light/dark themes at hosting/index.html.
+
+## 1.5.0
+
+- Show TTML A/B simultaneously in a split-screen comparison view.
+- Independent word highlighting and auto-scroll with common playback controls.
+- Highlight text/timing differences and add review notes for each side.
+- Keep comparison isolated from the main lyrics and reject edits after track changes.
+
+## 1.4.0
+
+- Choose which lyrics-menu actions appear as quick buttons in Settings > Interface > Quick Controls.
+- Keep remaining actions in the menu and preserve selection between sessions.
+
 ## 1.3.3
 
 - Copy quote cards as PNG images to the clipboard without downloading.

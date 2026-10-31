@@ -284,3 +284,7 @@ export const $lyricsContainerExists = atom<boolean>(false);
 export const $lyricsRendererPaused = atom<boolean>(false);
 export const $currentlyFetching = atom<boolean>(false);
 export const $currentLyricsData = atom<string>("");
+
+export const $quickControlIds = persistAtom<string[]>("quickControlIds", []);
+
+export const $uiLanguage = persistAtom<"en" | "ru">("uiLanguage", typeof navigator !== "undefined" && navigator.language.toLowerCase().startsWith("ru") ? "ru" : "en");

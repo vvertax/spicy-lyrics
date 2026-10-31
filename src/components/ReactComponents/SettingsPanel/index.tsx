@@ -1,3 +1,4 @@
+import { $uiLanguage } from "../../../utils/stores.ts";
 import { PopupModal } from "../../Modal.ts";
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "@nanostores/react";
@@ -24,6 +25,7 @@ const TABS = [
 
 export type SettingsPanelState = { query: string; sectionFilter: string; scrollTop: number };
 export default function SettingsPanel({ onOpenHiddenSettings, onManageAnimator, initialState, onStateChange }: { onOpenHiddenSettings?: () => void; onManageAnimator?: (state: SettingsPanelState) => void; initialState?: SettingsPanelState; onStateChange?: (state: SettingsPanelState) => void }) {
+  const language = useStore($uiLanguage);
   const [query, setQuery] = useState(initialState?.query ?? "");
   const [sectionFilter, setSectionFilter] = useState<string>(initialState?.sectionFilter ?? "Appearance");
   const allowHidingSettings = useStore($allowHidingSettings);
@@ -69,6 +71,7 @@ export default function SettingsPanel({ onOpenHiddenSettings, onManageAnimator, 
           <span className="sl-sp-brand-line">Spicy Lyrics</span>
           <h1 className="sl-sp-title">Settings</h1>
         </div>
+        <label className="vv-language"><span>Language</span><select aria-label="Language" value={language} onChange={event=>$uiLanguage.set(event.currentTarget.value as "en"|"ru")}><option value="en">English</option><option value="ru">Русский</option></select></label>
         <SearchBar value={query} onChange={(value) => {
           setQuery(value); if (scrollRef.current) scrollRef.current.scrollTop = 0;
         }} />

@@ -1,3 +1,6 @@
+import { localizeDocument } from "../../utils/i18n/runtime.ts";
+import { $quickControlIds } from "../../utils/stores.ts";
+import { controlId, normalizeQuickControls } from "./ControlLayout.ts";
 import { AddReviewMenuRows } from "./ReviewTools.ts";
 import { ScrollToCurrentActiveLine } from "../../utils/Scrolling/ScrollToActiveLine.ts";
 import { CreativeMenuRows } from "./CreativeTools.ts";
@@ -14,6 +17,7 @@ let cleanup: (() => void) | undefined;
 export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   cleanup?.();
   const doc = controls.ownerDocument;
+  localizeDocument(doc);
   const win = doc.defaultView!;
   const menu = doc.createElement('div');
   menu.className = 'sl-fork-menu'; menu.role = 'menu'; menu.hidden = true;
@@ -26,6 +30,8 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   const buttons = Array.from(controls.querySelectorAll<HTMLButtonElement>('button'));
   const addRow = (button: HTMLButtonElement, label: string) => {
     (button as HTMLButtonElement & { _tippy?: { destroy(): void } })._tippy?.destroy();
+    button.dataset.controlId = controlId(button.id, label);
+    button.dataset.controlLabel = label;
     button.role = 'menuitem'; button.className = 'sl-fork-menu-item';
     const text = doc.createElement('span'); text.textContent = label; button.append(text);
     menu.append(button);
@@ -79,6 +85,7 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   const open = () => {
     menu.hidden = false; toggle.setAttribute('aria-expanded', 'true');
     const rect = toggle.getBoundingClientRect();
+    menu.style.left = `${toggle.offsetLeft + toggle.offsetWidth / 2}px`;
     menu.style.setProperty('--menu-shift', '0px');
     const bounds = menu.getBoundingClientRect();
     const shift = Math.max(12 - bounds.left, Math.min(0, win.innerWidth - 12 - bounds.right));
@@ -111,13 +118,38 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
     }
   };
   controls.classList.add('sl-fork-controls'); controls.append(toggle, menu);
+  const quickbar = doc.createElement('div'); quickbar.className='sl-quick-controls'; quickbar.role='toolbar'; quickbar.setAttribute('aria-label','Quick lyrics controls');
+  controls.insertBefore(quickbar, toggle);
+  const allRows=Array.from(menu.querySelectorAll<HTMLButtonElement>('button'));
+  allRows.forEach(row=>row.dataset.menuRole=row.role);
+  const syncPressed=()=>quickbar.querySelectorAll<HTMLButtonElement>('button[aria-checked]').forEach(row=>row.setAttribute('aria-pressed',row.getAttribute('aria-checked')!));
+  const placeControls=(ids: string[])=>{
+    const pinned=new Set(normalizeQuickControls(ids));
+    for(const row of allRows){
+      const quick=pinned.has(row.dataset.controlId!);
+      row.classList.toggle('sl-quick-control',quick);
+      if(quick){row.role='button';row.setAttribute('aria-label',row.dataset.controlLabel!);row.title=row.dataset.controlLabel!;quickbar.append(row);}
+      else {row.role=row.dataset.menuRole!;row.removeAttribute('aria-pressed');row.removeAttribute('aria-label');row.removeAttribute('title');menu.append(row);}
+    }
+    toggle.hidden = !menu.querySelector("button");
+    syncPressed();close();
+  };
+  const unsubscribeQuick=$quickControlIds.subscribe(placeControls);
+  const pressedObserver=new MutationObserver(syncPressed);
+  pressedObserver.observe(quickbar,{subtree:true,attributes:true,attributeFilter:['aria-checked']});
+  quickbar.addEventListener('keydown',event=>{
+    if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+    const rows=Array.from(quickbar.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
+    if(!rows.length)return;event.preventDefault();const index=rows.indexOf(doc.activeElement as HTMLButtonElement);
+    rows[event.key==='Home'?0:event.key==='End'?rows.length-1:(index+(event.key==='ArrowRight'?1:-1)+rows.length)%rows.length]?.focus();
+  });
   const shortcuts = (event: KeyboardEvent) => {
     if (!page.isConnected || !event.altKey || !event.shiftKey || event.ctrlKey || event.metaKey || event.repeat) return;
     const target = event.target as HTMLElement | null;
     if (target?.closest('input, textarea, select, [contenteditable="true"], [role="textbox"]') || doc.querySelector('dialog[open]') || doc.querySelector('sl-generic-modal .sl-modal-overlay.Active')) return;
-    const action = event.code === 'KeyK' ? menu.querySelector<HTMLButtonElement>('[data-vv-action="karaoke"]')
-      : event.code === 'KeyR' ? menu.querySelector<HTMLButtonElement>('[data-vv-action="recording"]')
-      : event.code === 'KeyT' ? menu.querySelector<HTMLButtonElement>('#RomanizationToggle') : null;
+    const action = event.code === 'KeyK' ? controls.querySelector<HTMLButtonElement>('[data-vv-action="karaoke"]')
+      : event.code === 'KeyR' ? controls.querySelector<HTMLButtonElement>('[data-vv-action="recording"]')
+      : event.code === 'KeyT' ? controls.querySelector<HTMLButtonElement>('#RomanizationToggle') : null;
     if (event.code === 'KeyL') { event.preventDefault(); ScrollToCurrentActiveLine(); }
     else if (action) { event.preventDefault(); action.click(); }
   };
@@ -125,5 +157,5 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   doc.addEventListener('pointerdown', outside); doc.addEventListener('keydown', keys, true);
   const observer = new MutationObserver(() => { if (!controls.isConnected) cleanup?.(); });
   observer.observe(doc.body, { childList: true, subtree: true });
-  cleanup = () => { doc.removeEventListener('keydown', shortcuts); close(); win.removeEventListener('resize', closeOnResize); observer.disconnect(); doc.removeEventListener('pointerdown', outside); doc.removeEventListener('keydown', keys, true); cleanup = undefined; };
+  cleanup = () => { unsubscribeQuick(); pressedObserver.disconnect(); doc.removeEventListener('keydown', shortcuts); close(); win.removeEventListener('resize', closeOnResize); observer.disconnect(); doc.removeEventListener('pointerdown', outside); doc.removeEventListener('keydown', keys, true); cleanup = undefined; };
 }

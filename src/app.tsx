@@ -1,3 +1,4 @@
+import { localizeDocument } from "./utils/i18n/runtime.ts";
 // CSS Imports
 import "./css/tokens.css";
 import "./css/primitives.css";
@@ -222,6 +223,7 @@ function bindForkDefaults() {
 bindForkDefaults();
 
 async function main() {
+  localizeDocument(document);
   const appLogger = new Logger("App");
   const dynamicBgLogger = new Logger("Dynamic Background");
   const playbackLogger = new Logger("Playback");

@@ -1,11 +1,10 @@
-import { authorHandle, changedTTMLLines } from "./ReviewModel.ts";
+import GetProgress from "../../utils/Gets/GetProgress.ts";
+import { onAnimationFrame } from "../../utils/AnimationFrameLoop.ts";
+import { authorHandle, changedTTMLLines, comparisonTiming, comparisonDifference } from "./ReviewModel.ts";
 import { toast } from "sonner";
 import { $currentLyricsData } from "../../utils/stores.ts";
 import { SpotifyPlayer } from "../Global/SpotifyPlayer.ts";
 import { ParseTTML } from "../../utils/Lyrics/manager/parseTTML.ts";
-import { ProcessLyrics } from "../../utils/Lyrics/ProcessLyrics.ts";
-import ApplyLyrics from "../../utils/Lyrics/Global/Applyer.ts";
-import { SessionTTMLStore, getSongKey } from "../../utils/Lyrics/fetchLyrics.ts";
 import { quoteLineText } from "./QuoteText.ts";
 import { Icons } from "../Styling/Icons.ts";
 
@@ -73,8 +72,8 @@ function authorSearch(doc:Document) {
   win.addEventListener('message',onMessage);root.addEventListener('close',()=>{clearTimeout(timer);win.removeEventListener('message',onMessage);frame.src='about:blank';},{once:true});
   root.append(form,message,profile,frame);input.focus();
 }
-function reviewLyrics(doc:Document) {
-  const data=currentLyrics();const uri=SpotifyPlayer.GetUri();if(!uri)throw new Error('No current track');
+function reviewLyrics(doc:Document, supplied?:any, initialLine=0) {
+  const data=supplied ?? currentLyrics();const uri=SpotifyPlayer.GetUri();if(!uri)throw new Error('No current track');
   const title=Spicetify.Player.data?.item?.metadata?.title??uri;
   const file=data.reviewFileName??'Current lyrics';
   const root=dialog(doc,'Review Lyrics');root.append(element(doc,'p',`${title} · ${file}`));
@@ -82,6 +81,7 @@ function reviewLyrics(doc:Document) {
   const select=element(doc,'select');select.setAttribute('aria-label','Lyric line');
   const lines=data.Content.map((line:any,index:number)=>({index,text:quoteLineText(line),timeMs:Math.round((line.StartTime??line.Lead?.StartTime??0)*1000)}));
   for(const line of lines){const option=element(doc,'option',`${line.index+1}. ${line.text||'[instrumental]'}`);option.value=String(line.index);select.append(option);}
+  select.value=String(initialLine);
   const kind=element(doc,'select');kind.setAttribute('aria-label','Problem type');for(const name of ['Text','Timing','Markup']){const option=element(doc,'option',name);kind.append(option);}
   const comment=element(doc,'textarea');comment.placeholder='Wrong word, starts too early, missing background vocal…';comment.setAttribute('aria-label','Review comment');comment.maxLength=2000;
   const list=element(doc,'div');list.className='vv-review-notes';const status=element(doc,'p');status.role='status';
@@ -97,34 +97,106 @@ function reviewLyrics(doc:Document) {
   root.append(select,kind,comment,actions,status,list);render();
 }
 function compareTTML(doc:Document) {
-  const original=currentLyrics();const uri=SpotifyPlayer.GetUri();if(!uri)throw new Error('No current track');
-  const key=getSongKey(uri) ?? uri;const oldSession=SessionTTMLStore.get(key);
-  const root=dialog(doc,'Compare TTML A/B');root.append(element(doc,'p','Load two versions for the current track. Switching preserves playback position. Closing restores the original lyrics.'));
-  const status=element(doc,'p');status.role='status';const summary=element(doc,'div');summary.className='vv-compare-summary';
-  const versions:Record<string,any>={};let generation=0;let changed=false;let closing=false;
-  const apply=async(data:any)=>{
-    const request=++generation;
-    if(SpotifyPlayer.GetUri()!==uri)throw new Error('Track changed. Reopen comparison for the new track.');
-    const copy=structuredClone(data);copy.uri=uri;copy.id=SpotifyPlayer.GetId();
-    await ProcessLyrics(copy);
-    if(request!==generation||SpotifyPlayer.GetUri()!==uri||closing)return;
-    SessionTTMLStore.set(key,copy);$currentLyricsData.set(JSON.stringify(copy));changed=true;
-    await ApplyLyrics([copy,200]);
+  const uri=SpotifyPlayer.GetUri();if(!uri)throw new Error('Play a track before comparing TTML');
+  const root=dialog(doc,'Compare TTML A/B');root.classList.add('vv-split-dialog');
+  const win=doc.defaultView!;
+  const title=element(doc,'p',Spicetify.Player.data?.item?.metadata?.title??uri);title.className='vv-split-track';root.append(title);
+  const status=element(doc,'p','Load A and B. Both panels follow the same playback clock. Click any line to seek.');status.role='status';
+  const grid=element(doc,'div');grid.className='vv-split-grid';root.append(grid);
+  type WordView={element:HTMLElement;start:number;end:number};
+  type LineView={element:HTMLElement;start:number;end:number;words:WordView[]};
+  type Side={data:any;rows:LineView[];view:HTMLElement;name:HTMLElement;selected:number;request:number;manualUntil:number;input:HTMLInputElement};
+  const sides:Record<string,Side>={};let closed=false;let mismatched=false;
+  const diffLabel=element(doc,'label');const diff=element(doc,'input');diff.type='checkbox';diff.checked=true;diffLabel.append(diff,' Highlight differences');
+  const summary=element(doc,'span');summary.className='vv-split-summary';
+  const refreshDiff=()=>{
+    for(const [label,side] of Object.entries(sides))side.rows.forEach((row,index)=>{
+      const other=sides[label==='A'?'B':'A'];
+      const kind=side.data&&other?.data?comparisonDifference(side.data.Content[index],other.data.Content[index]):'';
+      row.element.dataset.diff=diff.checked?kind:'';
+    });
+    if(sides.A?.data&&sides.B?.data)summary.textContent=`${changedTTMLLines(sides.A.data.Content,sides.B.data.Content)} differing lines · text / timing`;
   };
-  const refresh=()=>{summary.replaceChildren();for(const label of ['A','B']){const data=versions[label];if(data)summary.append(element(doc,'p',`${label}: ${data.reviewFileName} · ${data.Content.length} lines`));}if(versions.A&&versions.B){const differences=changedTTMLLines(versions.A.Content, versions.B.Content);summary.append(element(doc,'p',`${differences} lines differ in text or timing.`));}};
+  diff.onchange=refreshDiff;
+  const valid=()=>!closed&&SpotifyPlayer.GetUri()===uri;
+  const seek=(position:number)=>{if(valid())SpotifyPlayer.Seek(Math.max(0,position));};
   for(const label of ['A','B']){
-    const row=element(doc,'div');row.className='vv-review-actions';const input=element(doc,'input');input.type='file';input.accept='.ttml';input.setAttribute('aria-label',`Load TTML ${label}`);
-    const use=button(doc,`Show ${label}`,()=>{void apply(versions[label]).then(()=>{if(root.isConnected)status.textContent=`Showing ${label}: ${versions[label].reviewFileName}`;}).catch(error=>{status.textContent=(error as Error).message;});});use.disabled=true;
-    input.onchange=async()=>{const file=input.files?.[0];if(!file)return;use.disabled=true;try{if(file.size>5*1024*1024)throw new Error('TTML must be smaller than 5 MB');const parsed=await ParseTTML(await file.text());if(!parsed?.Result?.Content?.length)throw new Error('No valid lyrics in this TTML');if(!root.isConnected)return;versions[label]={...parsed.Result,reviewFileName:file.name};use.disabled=false;status.textContent=`Loaded ${label}`;refresh();}catch(error){status.textContent=(error as Error).message;}};
-    row.append(element(doc,'strong',label),input,use);root.append(row);
+    const panel=element(doc,'section');panel.className='vv-split-side';panel.setAttribute('aria-label',`Version ${label}`);
+    const header=element(doc,'div');header.className='vv-split-side-header';
+    const badge=element(doc,'strong',label);const name=element(doc,'span','No TTML loaded');name.className='vv-split-filename';
+    const input=element(doc,'input');input.type='file';input.accept='.ttml';input.setAttribute('aria-label',`Load version ${label}`);
+    const view=element(doc,'div');view.className='vv-split-lyrics';view.tabIndex=0;view.setAttribute('aria-label',`Lyrics ${label}`);view.append(element(doc,'p',`Choose a TTML file for side ${label}`));
+    const side:Side={data:null,rows:[],view,name,selected:0,request:0,manualUntil:0,input};sides[label]=side;
+    const mark=button(doc,`Add note to ${label}`,()=>{if(!side.data||!valid())return;reviewLyrics(doc,{...side.data,reviewFileName:`[${label}] ${side.data.reviewFileName}`},side.selected);});mark.disabled=true;
+    header.append(badge,name,input,mark);panel.append(header,view);grid.append(panel);
+    for(const event of ['wheel','pointerdown'])view.addEventListener(event,()=>side.manualUntil=win.performance.now()+4000,{passive:true});
+    input.onchange=async()=>{
+      const file=input.files?.[0];if(!file)return;const request=++side.request;
+      try{
+        if(!valid())throw new Error('Track changed. Reopen comparison.');
+        if(file.size>5*1024*1024)throw new Error('TTML must be smaller than 5 MB');
+        const parsed=await ParseTTML(await file.text());
+        if(!parsed?.Result?.Content?.length)throw new Error('This TTML has no valid lyric lines');
+        if(!valid()||request!==side.request)return;
+        side.data={...parsed.Result,reviewFileName:file.name};side.rows=[];side.selected=0;side.manualUntil=0;
+        name.textContent=file.name;name.title=file.name;view.replaceChildren();
+        const appendWords=(parent:HTMLElement,parts:any[],fallback:{start:number;end:number},words:WordView[])=>{
+          parts.forEach((part,index)=>{
+            const word=element(doc,'span',part.Text??'');word.className='vv-split-word';
+            const timing=comparisonTiming(part);
+            parent.append(word);
+            if(!part.IsPartOfWord&&index<parts.length-1&&!/\s$/.test(part.Text??''))parent.append(doc.createTextNode(' '));
+            words.push({element:word,start:timing.start??fallback.start,end:timing.end??fallback.end});
+          });
+        };
+        side.data.Content.forEach((line:any,index:number)=>{
+          const row=element(doc,'button');row.type='button';row.className='vv-split-line';row.onclick=()=>{side.selected=index;side.manualUntil=0;seek(comparisonTiming(line).start);};
+          const timing=comparisonTiming(line);const words:WordView[]=[];
+          const text=element(doc,'span');text.className='vv-split-line-text';
+          if(line.Lead?.Syllables?.length)appendWords(text,line.Lead.Syllables,timing,words);
+          else text.textContent=quoteLineText(line)||'♪';
+          row.append(text);
+          for(const background of line.Background??[]){const backing=element(doc,'span');backing.className='vv-split-backing';appendWords(backing,background.Syllables??[],timing,words);row.append(backing);}
+          if(line.OppositeAligned)row.classList.add('vv-split-duet');
+          const stamp=element(doc,'small',`${(timing.start/1000).toFixed(2)} — ${(timing.end/1000).toFixed(2)}s`);row.append(stamp);
+          side.rows.push({element:row,...timing,words});view.append(row);
+        });
+        mark.disabled=false;status.textContent=`Loaded ${label}: ${file.name}`;refreshDiff();
+      }catch(error){if(!closed&&request===side.request)status.textContent=(error as Error).message;}
+    };
   }
-  root.append(button(doc,'Mark a problem in current version',()=>{try{reviewLyrics(doc);}catch(error){toast.error((error as Error).message);}}),summary,status);
-  const restore=async()=>{
-    closing=true;++generation;
-    if(!changed)return;
-    if(oldSession)SessionTTMLStore.set(key,oldSession);else SessionTTMLStore.delete(key);
-    if(SpotifyPlayer.GetUri()!==uri)return;
-    $currentLyricsData.set(JSON.stringify(original));await ApplyLyrics([structuredClone(original),200]);
-  };
-  root.addEventListener('close',()=>{void restore().catch(error=>toast.error((error as Error).message));},{once:true});
+  const toolbar=element(doc,'div');toolbar.className='vv-split-toolbar';
+  const play=button(doc,'Play / Pause',()=>{if(valid())Spicetify.Player.togglePlay();});
+  const clock=element(doc,'span');clock.className='vv-split-clock';
+  const progress=element(doc,'input');progress.type='range';progress.min='0';progress.step='10';progress.value='0';progress.setAttribute('aria-label','Playback position');
+  let dragging=false;progress.onpointerdown=()=>dragging=true;progress.onchange=()=>{seek(Number(progress.value));dragging=false;};progress.onpointercancel=()=>dragging=false;
+  const returnToCurrent=button(doc,'Current line',()=>{for(const side of Object.values(sides)){side.manualUntil=0;side.view.querySelector('.is-active')?.scrollIntoView({block:'center',behavior:'smooth'});}});
+  toolbar.append(button(doc,'−5 s',()=>seek(GetProgress()-5000)),play,button(doc,'+5 s',()=>seek(GetProgress()+5000)),progress,clock,returnToCurrent,diffLabel,summary);
+  root.append(toolbar,status);
+  const format=(ms:number)=>`${Math.floor(ms/60000)}:${String(Math.floor(ms/1000)%60).padStart(2,'0')}`;
+  let lastUpdate=0;
+  const stop=onAnimationFrame((now)=>{
+    if(now-lastUpdate<33)return;lastUpdate=now;
+    if(!valid()){
+      if(!closed&&!mismatched){mismatched=true;status.textContent='Track changed. Close and reopen comparison for the new song.';root.querySelectorAll<HTMLButtonElement|HTMLInputElement>('input,button:not([aria-label="Close"])').forEach(control=>control.disabled=true);}
+      return;
+    }
+    const position=GetProgress();const duration=Math.max(1,Number(Spicetify.Player.getDuration())||1);
+    progress.max=String(Math.max(1,duration));if(!dragging)progress.value=String(Math.max(0,position));
+    clock.textContent=`${format(position)} / ${format(duration)}`;
+    const reduce=win.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    for(const side of Object.values(sides)){
+      let activeIndex=-1;
+      side.rows.forEach((row,index)=>{
+        const active=position>=row.start&&position<row.end;
+        const wasActive=row.element.classList.contains('is-active');
+        if(wasActive!==active)row.element.classList.toggle('is-active',active);
+        const sung=position>=row.end;if(row.element.classList.contains('is-sung')!==sung)row.element.classList.toggle('is-sung',sung);
+        if(active){if(activeIndex<0)activeIndex=index;if(!wasActive&&win.performance.now()>side.manualUntil&&activeIndex===index)row.element.scrollIntoView({block:'center',behavior:reduce?'instant':'smooth'});}
+        for(const word of row.words){const fill=word.end<=word.start?(position>=word.start?100:0):Math.max(0,Math.min(100,(position-word.start)/(word.end-word.start)*100));const value=`${Math.round(fill)}%`;if(word.element.style.getPropertyValue('--word-fill')!==value)word.element.style.setProperty('--word-fill',value);}
+      });
+      if(activeIndex>=0)side.selected=activeIndex;
+    }
+  },win);
+  root.addEventListener('close',()=>{closed=true;stop();for(const side of Object.values(sides))side.request++;},{once:true});
 }

@@ -1,3 +1,5 @@
+import { QUICK_CONTROLS, normalizeQuickControls } from "../../Utils/ControlLayout.ts";
+import { $quickControlIds } from "../../../utils/stores.ts";
 import { useStore } from "@nanostores/react";
 import {
   $alwaysShowInFullscreen,
@@ -29,6 +31,7 @@ const escapeOptions = ["Default", "Exit Fullscreen", "Exit Fully"];
 interface Props { query: string; sectionFilter: string; showHidden?: boolean; }
 
 export default function InterfaceSection({ query, sectionFilter, showHidden = false }: Props) {
+  const quickIds = normalizeQuickControls(useStore($quickControlIds));
   const lockedMediaBox = useStore($lockedMediaBox);
   const allowHidingSettings = useStore($allowHidingSettings);
   const popupLyricsAllowed = useStore($popupLyricsAllowed);
@@ -53,11 +56,17 @@ export default function InterfaceSection({ query, sectionFilter, showHidden = fa
     matches(query, "Remove Spotify's Lyrics Button", "Hide Spotify's built-in lyrics button from the playback bar."),
   ].map((matched, index) => matched && (showHidden ? hiddenSettingIds.includes(ids[index]) : !allowHidingSettings || !hiddenSettingIds.includes(ids[index]) || Boolean(query.trim())));
   const notice = matches(query, "No Lyrics Notice", "Explain why a song has no lyrics. Errors always show their notice.") && (showHidden ? hiddenSettingIds.includes("interface-no-lyrics-notice") : !allowHidingSettings || !hiddenSettingIds.includes("interface-no-lyrics-notice") || Boolean(query.trim()));
-  if (!rows.some(Boolean) && !notice) return null;
+  const quick = !showHidden && matches(query, "Quick Controls", "Pin actions outside the lyrics menu " + QUICK_CONTROLS.map(([,label])=>label).join(" "));
+  if (!rows.some(Boolean) && !notice && !quick) return null;
   const normalizedAlwaysShow = alwaysShowInFullscreen === "All" ? "Both" : alwaysShowInFullscreen;
 
   return <>
     <SectionTitle>Interface</SectionTitle>
+    {quick && <div className="vv-quick-settings">
+      <h3>Quick Controls</h3><p>Enabled actions appear beside the menu button. Disabled actions stay inside the menu. Availability depends on the current view.</p>
+      {QUICK_CONTROLS.map(([id, label]) => <Row key={id} label={label}><Toggle checked={quickIds.includes(id)} onChange={enabled => $quickControlIds.set(enabled ? [...quickIds,id] : quickIds.filter(value=>value!==id))} /></Row>)}
+      <button type="button" className="sl-sp-btn" onClick={()=>$quickControlIds.set([])}>Move all to menu</button>
+    </div>}
     {notice && <Row settingId="interface-no-lyrics-notice" label="No Lyrics Notice" description="Explain why a song has no lyrics. Errors always show their notice."><Toggle checked={showNoLyricsNotice} onChange={(v) => $showNoLyricsNotice.set(v)} /></Row>}
     {rows[0] && <Row settingId="interface-lock-media-box" label="Lock Media Box Size in Compact Mode" description="Prevent the media box from resizing when Forced Compact Mode is active."><Toggle checked={lockedMediaBox} onChange={(v) => $lockedMediaBox.set(v)} /></Row>}
     {rows[1] && <Row settingId="interface-disable-popup" label="Disable Popup Lyrics Window" description="Show or hide the Popup Lyrics button in the playback bar."><Toggle checked={!popupLyricsAllowed} onChange={(v) => $popupLyricsAllowed.set(!v)} /></Row>}

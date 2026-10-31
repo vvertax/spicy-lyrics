@@ -1,0 +1,10 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { transform } from "esbuild";
+const { code } = await transform(readFileSync(new URL("../src/components/Utils/ControlLayout.ts",import.meta.url),"utf8"),{loader:"ts",format:"esm"});
+const { controlId, normalizeQuickControls, QUICK_CONTROLS } = await import(`data:text/javascript;base64,${Buffer.from(code).toString("base64")}`);
+test("quick settings ignore invalid persisted entries and duplicates",()=>assert.deepEqual(normalizeQuickControls(["SettingsToggle","invalid",null,"SettingsToggle","karaoke"]),["SettingsToggle","karaoke"]));
+test("shortcut labels retain stable control IDs",()=>assert.equal(controlId("","Karaoke · Alt+Shift+K"),"karaoke"));
+test("existing controls retain their original IDs",()=>assert.equal(controlId("RomanizationToggle","Enable Romanization"),"RomanizationToggle"));
+test("all quick action identifiers are unique",()=>assert.equal(new Set(QUICK_CONTROLS.map(([id])=>id)).size,QUICK_CONTROLS.length));

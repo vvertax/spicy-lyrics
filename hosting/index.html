@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111014"><meta name="description" content="Spicy Lyrics vE — animated lyrics, quote cards and TTML tools for Spotify through Spicetify.">
+<title>Spicy Lyrics vE — Your music, in words</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap" rel="stylesheet">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('ve-material-theme')||'dark';}catch{}</script>
+<style>
+/* Material 3 tonal palette, pure grey (chroma 0).
+   generated with material-color-utilities, same token names as Material Theme Builder */
+
+:root,
+:root[data-theme="light"] {
+  --md-sys-color-primary: rgb(94 94 94);
+  --md-sys-color-surface-tint: rgb(94 94 94);
+  --md-sys-color-on-primary: rgb(255 255 255);
+  --md-sys-color-primary-container: rgb(226 226 226);
+  --md-sys-color-on-primary-container: rgb(71 71 71);
+  --md-sys-color-secondary: rgb(94 94 94);
+  --md-sys-color-on-secondary: rgb(255 255 255);
+  --md-sys-color-secondary-container: rgb(226 226 226);
+  --md-sys-color-on-secondary-container: rgb(71 71 71);
+  --md-sys-color-tertiary: rgb(94 94 94);
+  --md-sys-color-on-tertiary: rgb(255 255 255);
+  --md-sys-color-tertiary-container: rgb(226 226 226);
+  --md-sys-color-on-tertiary-container: rgb(71 71 71);
+  --md-sys-color-error: rgb(186 26 26);
+  --md-sys-color-on-error: rgb(255 255 255);
+  --md-sys-color-error-container: rgb(255 218 214);
+  --md-sys-color-on-error-container: rgb(147 0 10);
+  --md-sys-color-background: rgb(249 249 249);
+  --md-sys-color-on-background: rgb(27 27 27);
+  --md-sys-color-surface: rgb(249 249 249);
+  --md-sys-color-on-surface: rgb(27 27 27);
+  --md-sys-color-surface-variant: rgb(226 226 226);
+  --md-sys-color-on-surface-variant: rgb(71 71 71);
+  --md-sys-color-outline: rgb(119 119 119);
+  --md-sys-color-outline-variant: rgb(198 198 198);
+  --md-sys-color-shadow: rgb(0 0 0);
+  --md-sys-color-scrim: rgb(0 0 0);
+  --md-sys-color-inverse-surface: rgb(48 48 48);
+  --md-sys-color-inverse-on-surface: rgb(241 241 241);
+  --md-sys-color-inverse-primary: rgb(198 198 198);
+  --md-sys-color-primary-fixed: rgb(226 226 226);
+  --md-sys-color-on-primary-fixed: rgb(27 27 27);
+  --md-sys-color-primary-fixed-dim: rgb(198 198 198);
+  --md-sys-color-on-primary-fixed-variant: rgb(71 71 71);
+  --md-sys-color-secondary-fixed: rgb(226 226 226);
+  --md-sys-color-on-secondary-fixed: rgb(27 27 27);
+  --md-sys-color-secondary-fixed-dim: rgb(198 198 198);
+  --md-sys-color-on-secondary-fixed-variant: rgb(71 71 71);
+  --md-sys-color-tertiary-fixed: rgb(226 226 226);
+  --md-sys-color-on-tertiary-fixed: rgb(27 27 27);
+  --md-sys-color-tertiary-fixed-dim: rgb(198 198 198);
+  --md-sys-color-on-tertiary-fixed-variant: rgb(71 71 71);
+  --md-sys-color-surface-dim: rgb(218 218 218);
+  --md-sys-color-surface-bright: rgb(249 249 249);
+  --md-sys-color-surface-container-lowest: rgb(255 255 255);
+  --md-sys-color-surface-container-low: rgb(243 243 243);
+  --md-sys-color-surface-container: rgb(238 238 238);
+  --md-sys-color-surface-container-high: rgb(232 232 232);
+  --md-sys-color-surface-container-highest: rgb(226 226 226);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --md-sys-color-primary: rgb(198 198 198);
+    --md-sys-color-surface-tint: rgb(198 198 198);
+    --md-sys-color-on-primary: rgb(48 48 48);
+    --md-sys-color-primary-container: rgb(71 71 71);
+    --md-sys-color-on-primary-container: rgb(226 226 226);
+    --md-sys-color-secondary: rgb(198 198 198);
+    --md-sys-color-on-secondary: rgb(48 48 48);
+    --md-sys-color-secondary-container: rgb(71 71 71);
+    --md-sys-color-on-secondary-container: rgb(226 226 226);
+    --md-sys-color-tertiary: rgb(198 198 198);
+    --md-sys-color-on-tertiary: rgb(48 48 48);
+    --md-sys-color-tertiary-container: rgb(71 71 71);
+    --md-sys-color-on-tertiary-container: rgb(226 226 226);
+    --md-sys-color-error: rgb(255 180 171);
+    --md-sys-color-on-error: rgb(105 0 5);
+    --md-sys-color-error-container: rgb(147 0 10);
+    --md-sys-color-on-error-container: rgb(255 218 214);
+    --md-sys-color-background: rgb(19 19 19);
+    --md-sys-color-on-background: rgb(226 226 226);
+    --md-sys-color-surface: rgb(19 19 19);
+    --md-sys-color-on-surface: rgb(226 226 226);
+    --md-sys-color-surface-variant: rgb(71 71 71);
+    --md-sys-color-on-surface-variant: rgb(198 198 198);
+    --md-sys-color-outline: rgb(145 145 145);
+    --md-sys-color-outline-variant: rgb(71 71 71);
+    --md-sys-color-shadow: rgb(0 0 0);
+    --md-sys-color-scrim: rgb(0 0 0);
+    --md-sys-color-inverse-surface: rgb(226 226 226);
+    --md-sys-color-inverse-on-surface: rgb(48 48 48);
+    --md-sys-color-inverse-primary: rgb(94 94 94);
+    --md-sys-color-primary-fixed: rgb(226 226 226);
+    --md-sys-color-on-primary-fixed: rgb(27 27 27);
+    --md-sys-color-primary-fixed-dim: rgb(198 198 198);
+    --md-sys-color-on-primary-fixed-variant: rgb(71 71 71);
+    --md-sys-color-secondary-fixed: rgb(226 226 226);
+    --md-sys-color-on-secondary-fixed: rgb(27 27 27);
+    --md-sys-color-secondary-fixed-dim: rgb(198 198 198);
+    --md-sys-color-on-secondary-fixed-variant: rgb(71 71 71);
+    --md-sys-color-tertiary-fixed: rgb(226 226 226);
+    --md-sys-color-on-tertiary-fixed: rgb(27 27 27);
+    --md-sys-color-tertiary-fixed-dim: rgb(198 198 198);
+    --md-sys-color-on-tertiary-fixed-variant: rgb(71 71 71);
+    --md-sys-color-surface-dim: rgb(19 19 19);
+    --md-sys-color-surface-bright: rgb(57 57 57);
+    --md-sys-color-surface-container-lowest: rgb(14 14 14);
+    --md-sys-color-surface-container-low: rgb(27 27 27);
+    --md-sys-color-surface-container: rgb(31 31 31);
+    --md-sys-color-surface-container-high: rgb(42 42 42);
+    --md-sys-color-surface-container-highest: rgb(53 53 53);
+  }
+}
+
+:root[data-theme="dark"] {
+  --md-sys-color-primary: rgb(198 198 198);
+  --md-sys-color-surface-tint: rgb(198 198 198);
+  --md-sys-color-on-primary: rgb(48 48 48);
+  --md-sys-color-primary-container: rgb(71 71 71);
+  --md-sys-color-on-primary-container: rgb(226 226 226);
+  --md-sys-color-secondary: rgb(198 198 198);
+  --md-sys-color-on-secondary: rgb(48 48 48);
+  --md-sys-color-secondary-container: rgb(71 71 71);
+  --md-sys-color-on-secondary-container: rgb(226 226 226);
+  --md-sys-color-tertiary: rgb(198 198 198);
+  --md-sys-color-on-tertiary: rgb(48 48 48);
+  --md-sys-color-tertiary-container: rgb(71 71 71);
+  --md-sys-color-on-tertiary-container: rgb(226 226 226);
+  --md-sys-color-error: rgb(255 180 171);
+  --md-sys-color-on-error: rgb(105 0 5);
+  --md-sys-color-error-container: rgb(147 0 10);
+  --md-sys-color-on-error-container: rgb(255 218 214);
+  --md-sys-color-background: rgb(19 19 19);
+  --md-sys-color-on-background: rgb(226 226 226);
+  --md-sys-color-surface: rgb(19 19 19);
+  --md-sys-color-on-surface: rgb(226 226 226);
+  --md-sys-color-surface-variant: rgb(71 71 71);
+  --md-sys-color-on-surface-variant: rgb(198 198 198);
+  --md-sys-color-outline: rgb(145 145 145);
+  --md-sys-color-outline-variant: rgb(71 71 71);
+  --md-sys-color-shadow: rgb(0 0 0);
+  --md-sys-color-scrim: rgb(0 0 0);
+  --md-sys-color-inverse-surface: rgb(226 226 226);
+  --md-sys-color-inverse-on-surface: rgb(48 48 48);
+  --md-sys-color-inverse-primary: rgb(94 94 94);
+  --md-sys-color-primary-fixed: rgb(226 226 226);
+  --md-sys-color-on-primary-fixed: rgb(27 27 27);
+  --md-sys-color-primary-fixed-dim: rgb(198 198 198);
+  --md-sys-color-on-primary-fixed-variant: rgb(71 71 71);
+  --md-sys-color-secondary-fixed: rgb(226 226 226);
+  --md-sys-color-on-secondary-fixed: rgb(27 27 27);
+  --md-sys-color-secondary-fixed-dim: rgb(198 198 198);
+  --md-sys-color-on-secondary-fixed-variant: rgb(71 71 71);
+  --md-sys-color-tertiary-fixed: rgb(226 226 226);
+  --md-sys-color-on-tertiary-fixed: rgb(27 27 27);
+  --md-sys-color-tertiary-fixed-dim: rgb(198 198 198);
+  --md-sys-color-on-tertiary-fixed-variant: rgb(71 71 71);
+  --md-sys-color-surface-dim: rgb(19 19 19);
+  --md-sys-color-surface-bright: rgb(57 57 57);
+  --md-sys-color-surface-container-lowest: rgb(14 14 14);
+  --md-sys-color-surface-container-low: rgb(27 27 27);
+  --md-sys-color-surface-container: rgb(31 31 31);
+  --md-sys-color-surface-container-high: rgb(42 42 42);
+  --md-sys-color-surface-container-highest: rgb(53 53 53);
+}
+
+.light-medium-contrast {
+  --md-sys-color-primary: rgb(54 54 54);
+  --md-sys-color-surface-tint: rgb(94 94 94);
+  --md-sys-color-on-primary: rgb(255 255 255);
+  --md-sys-color-primary-container: rgb(109 109 109);
+  --md-sys-color-on-primary-container: rgb(255 255 255);
+  --md-sys-color-secondary: rgb(54 54 54);
+  --md-sys-color-on-secondary: rgb(255 255 255);
+  --md-sys-color-secondary-container: rgb(109 109 109);
+  --md-sys-color-on-secondary-container: rgb(255 255 255);
+  --md-sys-color-tertiary: rgb(54 54 54);
+  --md-sys-color-on-tertiary: rgb(255 255 255);
+  --md-sys-color-tertiary-container: rgb(109 109 109);
+  --md-sys-color-on-tertiary-container: rgb(255 255 255);
+  --md-sys-color-error: rgb(116 0 6);
+  --md-sys-color-on-error: rgb(255 255 255);
+  --md-sys-color-error-container: rgb(207 44 39);
+  --md-sys-color-on-error-container: rgb(255 255 255);
+  --md-sys-color-background: rgb(249 249 249);
+  --md-sys-color-on-background: rgb(27 27 27);
+  --md-sys-color-surface: rgb(249 249 249);
+  --md-sys-color-on-surface: rgb(17 17 17);
+  --md-sys-color-surface-variant: rgb(226 226 226);
+  --md-sys-color-on-surface-variant: rgb(54 54 54);
+  --md-sys-color-outline: rgb(82 82 82);
+  --md-sys-color-outline-variant: rgb(109 109 109);
+  --md-sys-color-shadow: rgb(0 0 0);
+  --md-sys-color-scrim: rgb(0 0 0);
+  --md-sys-color-inverse-surface: rgb(48 48 48);
+  --md-sys-color-inverse-on-surface: rgb(241 241 241);
+  --md-sys-color-inverse-primary: rgb(198 198 198);
+  --md-sys-color-primary-fixed: rgb(109 109 109);
+  --md-sys-color-on-primary-fixed: rgb(255 255 255);
+  --md-sys-color-primary-fixed-dim: rgb(85 85 85);
+  --md-sys-color-on-primary-fixed-variant: rgb(255 255 255);
+  --md-sys-color-secondary-fixed: rgb(109 109 109);
+  --md-sys-color-on-secondary-fixed: rgb(255 255 255);
+  --md-sys-color-secondary-fixed-dim: rgb(85 85 85);
+  --md-sys-color-on-secondary-fixed-variant: rgb(255 255 255);
+  --md-sys-color-tertiary-fixed: rgb(109 109 109);
+  --md-sys-color-on-tertiary-fixed: rgb(255 255 255);
+  --md-sys-color-tertiary-fixed-dim: rgb(85 85 85);
+  --md-sys-color-on-tertiary-fixed-variant: rgb(255 255 255);
+  --md-sys-color-surface-dim: rgb(198 198 198);
+  --md-sys-color-surface-bright: rgb(249 249 249);
+  --md-sys-color-surface-container-lowest: rgb(255 255 255);
+  --md-sys-color-surface-container-low: rgb(243 243 243);
+  --md-sys-color-surface-container: rgb(232 232 232);
+  --md-sys-color-surface-container-high: rgb(221 221 221);
+  --md-sys-color-surface-container-highest: rgb(209 209 209);
+}
+
+.light-high-contrast {
+  --md-sys-color-primary: rgb(44 44 44);
+  --md-sys-color-surface-tint: rgb(94 94 94);
+  --md-sys-color-on-primary: rgb(255 255 255);
+  --md-sys-color-primary-container: rgb(73 73 73);
+  --md-sys-color-on-primary-container: rgb(255 255 255);
+  --md-sys-color-secondary: rgb(44 44 44);
+  --md-sys-color-on-secondary: rgb(255 255 255);
+  --md-sys-color-secondary-container: rgb(73 73 73);
+  --md-sys-color-on-secondary-container: rgb(255 255 255);
+  --md-sys-color-tertiary: rgb(44 44 44);
+  --md-sys-color-on-tertiary: rgb(255 255 255);
+  --md-sys-color-tertiary-container: rgb(73 73 73);
+  --md-sys-color-on-tertiary-container: rgb(255 255 255);
+  --md-sys-color-error: rgb(96 0 4);
+  --md-sys-color-on-error: rgb(255 255 255);
+  --md-sys-color-error-container: rgb(152 0 10);
+  --md-sys-color-on-error-container: rgb(255 255 255);
+  --md-sys-color-background: rgb(249 249 249);
+  --md-sys-color-on-background: rgb(27 27 27);
+  --md-sys-color-surface: rgb(249 249 249);
+  --md-sys-color-on-surface: rgb(0 0 0);
+  --md-sys-color-surface-variant: rgb(226 226 226);
+  --md-sys-color-on-surface-variant: rgb(0 0 0);
+  --md-sys-color-outline: rgb(44 44 44);
+  --md-sys-color-outline-variant: rgb(73 73 73);
+  --md-sys-color-shadow: rgb(0 0 0);
+  --md-sys-color-scrim: rgb(0 0 0);
+  --md-sys-color-inverse-surface: rgb(48 48 48);
+  --md-sys-color-inverse-on-surface: rgb(255 255 255);
+  --md-sys-color-inverse-primary: rgb(198 198 198);
+  --md-sys-color-primary-fixed: rgb(73 73 73);
+  --md-sys-color-on-primary-fixed: rgb(255 255 255);
+  --md-sys-color-primary-fixed-dim: rgb(51 51 51);
+  --md-sys-color-on-primary-fixed-variant: rgb(255 255 255);
+  --md-sys-color-secondary-fixed: rgb(73 73 73);
+  --md-sys-color-on-secondary-fixed: rgb(255 255 255);
+  --md-sys-color-secondary-fixed-dim: rgb(51 51 51);
+  --md-sys-color-on-secondary-fixed-variant: rgb(255 255 255);
+  --md-sys-color-tertiary-fixed: rgb(73 73 73);
+  --md-sys-color-on-tertiary-fixed: rgb(255 255 255);
+  --md-sys-color-tertiary-fixed-dim: rgb(51 51 51);
+  --md-sys-color-on-tertiary-fixed-variant: rgb(255 255 255);
+  --md-sys-color-surface-dim: rgb(185 185 185);
+  --md-sys-color-surface-bright: rgb(249 249 249);
+  --md-sys-color-surface-container-lowest: rgb(255 255 255);
+  --md-sys-color-surface-container-low: rgb(241 241 241);
+  --md-sys-color-surface-container: rgb(226 226 226);
+  --md-sys-color-surface-container-high: rgb(212 212 212);
+  --md-sys-color-surface-container-highest: rgb(198 198 198);
+}
+
+.dark-medium-contrast {
+  --md-sys-color-primary: rgb(220 220 220);
+  --md-sys-color-surface-tint: rgb(198 198 198);
+  --md-sys-color-on-primary: rgb(38 38 38);
+  --md-sys-color-primary-container: rgb(145 145 145);
+  --md-sys-color-on-primary-container: rgb(0 0 0);
+  --md-sys-color-secondary: rgb(220 220 220);
+  --md-sys-color-on-secondary: rgb(38 38 38);
+  --md-sys-color-secondary-container: rgb(145 145 145);
+  --md-sys-color-on-secondary-container: rgb(0 0 0);
+  --md-sys-color-tertiary: rgb(220 220 220);
+  --md-sys-color-on-tertiary: rgb(38 38 38);
+  --md-sys-color-tertiary-container: rgb(145 145 145);
+  --md-sys-color-on-tertiary-container: rgb(0 0 0);
+  --md-sys-color-error: rgb(255 210 204);
+  --md-sys-color-on-error: rgb(84 0 3);
+  --md-sys-color-error-container: rgb(255 84 73);
+  --md-sys-color-on-error-container: rgb(0 0 0);
+  --md-sys-color-background: rgb(19 19 19);
+  --md-sys-color-on-background: rgb(226 226 226);
+  --md-sys-color-surface: rgb(19 19 19);
+  --md-sys-color-on-surface: rgb(255 255 255);
+  --md-sys-color-surface-variant: rgb(71 71 71);
+  --md-sys-color-on-surface-variant: rgb(220 220 220);
+  --md-sys-color-outline: rgb(178 178 178);
+  --md-sys-color-outline-variant: rgb(144 144 144);
+  --md-sys-color-shadow: rgb(0 0 0);
+  --md-sys-color-scrim: rgb(0 0 0);
+  --md-sys-color-inverse-surface: rgb(226 226 226);
+  --md-sys-color-inverse-on-surface: rgb(42 42 42);
+  --md-sys-color-inverse-primary: rgb(72 72 72);
+  --md-sys-color-primary-fixed: rgb(226 226 226);
+  --md-sys-color-on-primary-fixed: rgb(17 17 17);
+  --md-sys-color-primary-fixed-dim: rgb(198 198 198);
+  --md-sys-color-on-primary-fixed-variant: rgb(54 54 54);
+  --md-sys-color-secondary-fixed: rgb(226 226 226);
+  --md-sys-color-on-secondary-fixed: rgb(17 17 17);
+  --md-sys-color-secondary-fixed-dim: rgb(198 198 198);
+  --md-sys-color-on-secondary-fixed-variant: rgb(54 54 54);
+  --md-sys-color-tertiary-fixed: rgb(226 226 226);
+  --md-sys-color-on-tertiary-fixed: rgb(17 17 17);
+  --md-sys-color-tertiary-fixed-dim: rgb(198 198 198);
+  --md-sys-color-on-tertiary-fixed-variant: rgb(54 54 54);
+  --md-sys-color-surface-dim: rgb(19 19 19);
+  --md-sys-color-surface-bright: rgb(68 68 68);
+  --md-sys-color-surface-container-lowest: rgb(7 7 7);
+  --md-sys-color-surface-container-low: rgb(29 29 29);
+  --md-sys-color-surface-container: rgb(40 40 40);
+  --md-sys-color-surface-container-high: rgb(50 50 50);
+  --md-sys-color-surface-container-highest: rgb(62 62 62);
+}
+
+.dark-high-contrast {
+  --md-sys-color-primary: rgb(240 240 240);
+  --md-sys-color-surface-tint: rgb(198 198 198);
+  --md-sys-color-on-primary: rgb(0 0 0);
+  --md-sys-color-primary-container: rgb(194 194 194);
+  --md-sys-color-on-primary-container: rgb(11 11 11);
+  --md-sys-color-secondary: rgb(240 240 240);
+  --md-sys-color-on-secondary: rgb(0 0 0);
+  --md-sys-color-secondary-container: rgb(194 194 194);
+  --md-sys-color-on-secondary-container: rgb(11 11 11);
+  --md-sys-color-tertiary: rgb(240 240 240);
+  --md-sys-color-on-tertiary: rgb(0 0 0);
+  --md-sys-color-tertiary-container: rgb(194 194 194);
+  --md-sys-color-on-tertiary-container: rgb(11 11 11);
+  --md-sys-color-error: rgb(255 236 233);
+  --md-sys-color-on-error: rgb(0 0 0);
+  --md-sys-color-error-container: rgb(255 174 164);
+  --md-sys-color-on-error-container: rgb(34 0 1);
+  --md-sys-color-background: rgb(19 19 19);
+  --md-sys-color-on-background: rgb(226 226 226);
+  --md-sys-color-surface: rgb(19 19 19);
+  --md-sys-color-on-surface: rgb(255 255 255);
+  --md-sys-color-surface-variant: rgb(71 71 71);
+  --md-sys-color-on-surface-variant: rgb(255 255 255);
+  --md-sys-color-outline: rgb(240 240 240);
+  --md-sys-color-outline-variant: rgb(194 194 194);
+  --md-sys-color-shadow: rgb(0 0 0);
+  --md-sys-color-scrim: rgb(0 0 0);
+  --md-sys-color-inverse-surface: rgb(226 226 226);
+  --md-sys-color-inverse-on-surface: rgb(0 0 0);
+  --md-sys-color-inverse-primary: rgb(72 72 72);
+  --md-sys-color-primary-fixed: rgb(226 226 226);
+  --md-sys-color-on-primary-fixed: rgb(0 0 0);
+  --md-sys-color-primary-fixed-dim: rgb(198 198 198);
+  --md-sys-color-on-primary-fixed-variant: rgb(17 17 17);
+  --md-sys-color-secondary-fixed: rgb(226 226 226);
+  --md-sys-color-on-secondary-fixed: rgb(0 0 0);
+  --md-sys-color-secondary-fixed-dim: rgb(198 198 198);
+  --md-sys-color-on-secondary-fixed-variant: rgb(17 17 17);
+  --md-sys-color-tertiary-fixed: rgb(226 226 226);
+  --md-sys-color-on-tertiary-fixed: rgb(0 0 0);
+  --md-sys-color-tertiary-fixed-dim: rgb(198 198 198);
+  --md-sys-color-on-tertiary-fixed-variant: rgb(17 17 17);
+  --md-sys-color-surface-dim: rgb(19 19 19);
+  --md-sys-color-surface-bright: rgb(80 80 80);
+  --md-sys-color-surface-container-lowest: rgb(0 0 0);
+  --md-sys-color-surface-container-low: rgb(31 31 31);
+  --md-sys-color-surface-container: rgb(48 48 48);
+  --md-sys-color-surface-container-high: rgb(59 59 59);
+  --md-sys-color-surface-container-highest: rgb(71 71 71);
+}
+
+
+/* Material You adaptation of vvertax's supplied neutral Material 3 system. */
+:root{color-scheme:dark;--bg:var(--md-sys-color-background);--ink:var(--md-sys-color-on-surface);--muted:var(--md-sys-color-on-surface-variant);--accent:var(--md-sys-color-primary);--line:var(--md-sys-color-outline-variant);--ease:cubic-bezier(.2,0,0,1)}
+:root[data-theme="light"]{color-scheme:light}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 'Roboto Flex',Roboto,system-ui,sans-serif;transition:background-color .25s,color .25s}a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}button,a{-webkit-tap-highlight-color:transparent}:focus-visible{outline:3px solid var(--accent);outline-offset:4px}header,main,footer{max-width:1220px;margin:auto;padding-inline:32px}.nav{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:20px;padding:12px 16px 12px 22px;background:var(--md-sys-color-surface-container);border-radius:999px}.brand{display:flex;align-items:center;gap:9px;font-weight:650;font-size:18px;letter-spacing:-.5px}.brand svg{width:24px;height:24px;fill:currentColor}.badge{font:600 10px/1 monospace;letter-spacing:.03em;color:var(--md-sys-color-on-secondary-container);background:var(--md-sys-color-secondary-container);border-radius:7px;padding:6px}.nav-right{display:flex;gap:8px;align-items:center;font-size:13px}.nav-right>a{padding:10px 14px;border-radius:999px}.nav-right>a:hover{background:var(--md-sys-color-surface-container-highest)}.lang,.theme{position:relative;overflow:hidden;display:inline-flex;justify-content:center;align-items:center;min-width:44px;height:44px;padding:0 14px;border:0;background:var(--md-sys-color-surface-container-highest);color:var(--ink);border-radius:50px;font-size:12px;font-weight:600}.theme{padding:0;width:44px}.theme svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7}.hero{display:grid;grid-template-columns:1.1fr 1fr;gap:44px;align-items:center;padding-block:76px 72px}.eyebrow{display:inline-block;text-transform:uppercase;letter-spacing:.13em;font-size:10px;font-weight:650;color:var(--muted)}.hero h1{font-size:clamp(48px,6vw,82px);font-weight:650;line-height:1.04;letter-spacing:-.055em;margin:24px 0;color:var(--ink)}.hero h1 span{color:var(--ink)}.intro{font-size:16px;color:var(--muted);max-width:440px;margin-bottom:30px}.cta{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.button{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:18px;border-radius:999px;padding:17px 24px;background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);font-weight:650;font-size:13px;border:1px solid transparent;transition:box-shadow .2s,transform .2s}.button:hover{box-shadow:0 3px 10px #0002}.button:active{transform:scale(.97)}.button.secondary{background:transparent;color:var(--ink);border-color:var(--line)}.release{font:11px/1.5 'Roboto Flex',sans-serif;color:var(--muted);margin-top:22px}.demo{position:relative;background:var(--md-sys-color-surface-container-high);padding:34px;border:0;border-radius:44px 44px 100px 44px;overflow:hidden;min-height:410px;display:flex;flex-direction:column;justify-content:center}.demo:before{content:'';position:absolute;width:260px;height:260px;border:40px solid var(--md-sys-color-surface-container-highest);border-radius:50%;right:-100px;top:-110px;pointer-events:none}.demo-top{position:relative;display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:10px;letter-spacing:.1em}.dots{display:grid;place-items:center;letter-spacing:2px;border-radius:50%;width:32px;height:32px;background:var(--md-sys-color-surface-container-highest)}.demo-lyrics{position:relative;padding:30px 0 38px;font-size:clamp(24px,3vw,35px);font-weight:650;line-height:1.4;letter-spacing:-.8px}.demo-lyrics p{margin:10px 0;color:var(--muted);opacity:.4}.demo-lyrics .lit{color:var(--ink);opacity:1;animation:breath 5s var(--ease) infinite}.demo-lyrics .next{opacity:.7}.progress{height:6px;background:var(--md-sys-color-surface-container-highest);border-radius:4px;overflow:hidden}.progress span{display:block;width:42%;height:100%;background:var(--md-sys-color-primary);border-radius:4px;animation:progress 14s linear infinite}.demo-foot{display:flex;justify-content:space-between;margin-top:12px;font-size:10px;color:var(--muted)}.section{padding:48px 0}.section h2{font-size:clamp(30px,3.7vw,46px);font-weight:550;line-height:1.12;letter-spacing:-1.5px;margin:14px 0 30px}.feature-list{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.feature{padding:28px;border-radius:32px;background:var(--md-sys-color-surface-container);transition:background .2s,border-radius .2s}.feature:nth-child(2){background:var(--md-sys-color-surface-container-high)}.feature:hover{border-radius:24px;background:var(--md-sys-color-surface-container-highest)}.feature-num{display:inline-block;padding:7px 10px;border-radius:12px;background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);font:10px monospace}.feature h3{font-size:21px;font-weight:550;line-height:1.25;margin:24px 0 12px;letter-spacing:-.6px}.feature p{font-size:13px;color:var(--muted);margin:0}.tools{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;margin-top:16px}.tools h2{max-width:400px}.tools p{color:var(--muted);font-size:14px}.split-demo{display:grid;grid-template-columns:1fr 1fr;padding:8px;gap:8px;background:var(--md-sys-color-surface-container);border-radius:32px}.split-side{padding:24px 18px;border-radius:26px;background:var(--md-sys-color-surface-container-low)}.split-side b{display:block;font:11px monospace;color:var(--muted);margin-bottom:28px}.split-side p{font-size:19px;font-weight:550;line-height:1.4;color:var(--muted)}.split-side p:last-child{font:10px monospace;margin-top:24px}.split-side .active{color:var(--ink);background:var(--md-sys-color-secondary-container);border-radius:12px;padding:10px;margin-inline:-10px}.install-grid{display:grid;grid-template-columns:1fr 1.15fr;gap:70px}.steps{list-style:none;padding:0;margin:0;counter-reset:steps}.steps li{counter-increment:steps;display:flex;gap:16px;margin:0 0 24px;font-size:13px;color:var(--muted)}.steps li:before{content:counter(steps);display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:var(--md-sys-color-secondary-container);font-size:13px;color:var(--md-sys-color-on-secondary-container)}.command{padding:28px;background:var(--md-sys-color-surface-container);border:0;border-radius:28px}.command pre{font:12px/1.9 monospace;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink);margin:0 0 20px}.copy{position:relative;overflow:hidden;border:0;background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);padding:10px 16px;border-radius:999px;font-size:12px;font-weight:600}.note{font-size:11px!important;color:var(--muted)}footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;padding-block:30px 45px;margin-top:30px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}footer a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}.md-ripple{position:absolute;pointer-events:none;border-radius:50%;background:currentColor;opacity:0;animation:ripple .6s var(--ease)}@keyframes ripple{from{transform:scale(0);opacity:.16}to{transform:scale(1);opacity:0}}@keyframes breath{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}@keyframes progress{from{width:18%}to{width:94%}}@media(max-width:850px){.hero{grid-template-columns:1fr;gap:36px;padding-block:52px}.hero h1{max-width:650px}.demo{min-height:360px;max-width:650px}.tools,.install-grid{grid-template-columns:1fr;gap:28px}.feature-list{gap:10px}.feature{padding:22px}.nav-right{gap:5px}}@media(max-width:560px){header,main,footer{padding-inline:16px}.nav{margin-top:12px;padding:8px 8px 8px 16px}.brand{font-size:16px;gap:6px}.brand svg{width:20px}.nav-right>a{display:none}.feature-list{grid-template-columns:1fr;gap:12px}.hero h1{font-size:56px}.demo{padding:26px;border-radius:32px 32px 80px 32px}.section{padding-block:32px}.split-side{padding:20px 14px}.split-side p{font-size:16px}.feature h3{margin-top:20px}.button{padding:15px 20px}.install-grid{gap:24px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+
+</style>
+</head>
+<body>
+<header><nav class="nav" aria-label="Main"><a class="brand" href="#">Spicy Lyrics<span class="badge">vE</span></a><div class="nav-right"><a href="#install" data-i="installNav">Установка</a><a href="https://github.com/vvertax/spicy-lyrics" target="_blank" rel="noopener noreferrer">GitHub ↗</a><button class="theme" id="theme" aria-label="Switch theme" title="Theme"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"/></svg></button><button class="lang" id="language" aria-label="Switch language">EN</button></div></nav></header>
+<main>
+<section class="hero"><div><span class="eyebrow">SPOTIFY × SPICETIFY</span><h1><span data-i="headline1">Музыка звучит.</span><br><span data-i="headline2" style="color:var(--ink)">Слова оживают.</span></h1><p class="intro" data-i="intro">Текст в ритме песни. Анимации на твой вкус. Инструменты для тех, кто любит слушать — и создавать.</p><div class="cta"><a class="button" href="./spicy-lyrics-sl.mjs" download><span data-i="download">Скачать расширение</span><span>↓</span></a><a class="button secondary" href="#install" data-i="how">Как установить ↗</a></div><p class="release"><span data-i="release">Актуальная версия</span> <span id="version">—</span> · vvertax Edition</p></div><div class="demo" aria-label="Illustrative lyrics preview"><div class="demo-top"><span>SPICY LYRICS vE</span><span class="dots">•••</span></div><div class="demo-lyrics"><p data-i="demo1">Останови мгновение.</p><p class="lit" data-i="demo2">Почувствуй каждое слово.</p><p class="next" data-i="demo3">И просто слушай.</p></div><div class="progress"><span></span></div><div class="demo-foot"><span data-i="demoLabel">Пример оформления</span><span>✦ WORD BY WORD</span></div></div></section>
+<section class="section"><span class="eyebrow" data-i="details">Больше, чем текст</span><h2 data-i="featuresTitle">Твой способ слушать.</h2><div class="feature-list"><article class="feature"><span class="feature-num">01 / LYRICS</span><h3 data-i="f1">В каждом слове — движение</h3><p data-i="p1">Пословная синхронизация, караоке, романизация и несколько источников текста. Выбирай анимации, шрифты и быстрые кнопки.</p></article><article class="feature"><span class="feature-num">02 / QUOTES</span><h3 data-i="f2">Строки, которыми хочется делиться</h3><p data-i="p2">Создавай карточки с обложкой и её цветами. Выбирай до 12 строк, сохраняй PNG или копируй картинку прямо в чат.</p></article><article class="feature"><span class="feature-num">03 / YOUR SPACE</span><h3 data-i="f3">Меньше лишнего, больше музыки</h3><p data-i="p3">Прячь ненужные настройки, выноси любимые действия из меню. Включай режим записи, чтобы убрать кнопки и подписи.</p></article></div></section>
+<section class="section tools"><div><span class="eyebrow" data-i="creators">Для авторов текста</span><h2 data-i="toolsTitle">Проверь каждую деталь.</h2><p data-i="toolsText">Сравни два TTML рядом на одной позиции песни. Отмечай ошибки в строках, сохраняй замечания и экспортируй отчёт. Находи работы авторов по username.</p><p class="note" data-i="toolsNote">Поиск работ использует публичную страницу профиля Spicy Lyrics.</p></div><div class="split-demo" aria-label="Illustrative A/B comparison"><div class="split-side"><b>A · original.ttml</b><p data-i="split1">Всё начинается</p><p class="active" data-i="split2">с одной строки.</p><p>00:12.40 — 00:14.20</p></div><div class="split-side"><b>B · revised.ttml</b><p data-i="split1">Всё начинается</p><p class="active" data-i="split2">с одной строки.</p><p>00:12.10 — 00:14.40</p></div></div></section>
+<section class="section" id="install"><span class="eyebrow" data-i="start">Начнём</span><h2 data-i="installTitle">Три шага до первого куплета.</h2><div class="install-grid"><div><ol class="steps"><li data-i="s1">Установи Spicetify для настольного Spotify.</li><li data-i="s2">Скачай загрузчик и положи его в папку Extensions. Отключи другие версии Spicy Lyrics.</li><li data-i="s3">Выполни команды справа. Готово — обновления загрузятся при запуске Spotify.</li></ol><a href="https://spicetify.app" target="_blank" rel="noopener noreferrer" class="note">spicetify.app ↗</a></div><div><div class="command"><pre id="commands">spicetify config extensions spicy-lyrics-sl.mjs
+spicetify apply</pre><button class="copy" id="copy" data-i="copy">Скопировать команды</button><span id="copyStatus" role="status" class="note"></span></div><p class="note" data-i="folder">Команда spicetify -c покажет путь к конфигурации. Папка Extensions находится рядом с ней.</p><p class="note" data-i="platform">Только настольный Spotify. Это неофициальное расширение.</p></div></div></section>
+</main>
+<footer><span>Spicy Lyrics · vvertax Edition</span><span>Based on <a href="https://github.com/Spikerko/spicy-lyrics">Spikerko</a>, <a href="https://github.com/iPixelGalaxy/spicy-lyrics">iPixelGalaxy</a> &amp; <a href="https://github.com/Ruytha/spicy-lyrics-ruytha-edition">Ruytha</a> · AGPL v3</span></footer>
+<script>
+const copy={ru:{installNav:'Установка',headline1:'Музыка звучит.',headline2:'Слова оживают.',intro:'Текст в ритме песни. Анимации на твой вкус. Инструменты для тех, кто любит слушать — и создавать.',download:'Скачать расширение',how:'Как установить ↗',release:'Актуальная версия',demo1:'Останови мгновение.',demo2:'Почувствуй каждое слово.',demo3:'И просто слушай.',demoLabel:'Пример оформления',details:'Больше, чем текст',featuresTitle:'Твой способ слушать.',f1:'В каждом слове — движение',p1:'Пословная синхронизация, караоке, романизация и несколько источников текста. Выбирай анимации, шрифты и быстрые кнопки.',f2:'Строки, которыми хочется делиться',p2:'Создавай карточки с обложкой и её цветами. Выбирай до 12 строк, сохраняй PNG или копируй картинку прямо в чат.',f3:'Меньше лишнего, больше музыки',p3:'Прячь ненужные настройки, выноси любимые действия из меню. Включай режим записи, чтобы убрать кнопки и подписи.',creators:'Для авторов текста',toolsTitle:'Проверь каждую деталь.',toolsText:'Сравни два TTML рядом на одной позиции песни. Отмечай ошибки в строках, сохраняй замечания и экспортируй отчёт. Находи работы авторов по username.',toolsNote:'Поиск работ использует публичную страницу профиля Spicy Lyrics.',split1:'Всё начинается',split2:'с одной строки.',start:'Начнём',installTitle:'Три шага до первого куплета.',s1:'Установи Spicetify для настольного Spotify.',s2:'Скачай загрузчик и положи его в папку Extensions. Отключи другие версии Spicy Lyrics.',s3:'Выполни команды справа. Готово — обновления загрузятся при запуске Spotify.',copy:'Скопировать команды',folder:'Команда spicetify -c покажет путь к конфигурации. Папка Extensions находится рядом с ней.',platform:'Только настольный Spotify. Это неофициальное расширение.'},en:{installNav:'Install',headline1:'Music plays.',headline2:'Words come alive.',intro:'Lyrics in time with your music. Motion your way. Tools for people who love to listen — and create.',download:'Download extension',how:'How to install ↗',release:'Latest version',demo1:'Hold the moment.',demo2:'Feel every word.',demo3:'And just listen.',demoLabel:'Illustrative preview',details:'More than lyrics',featuresTitle:'Your way to listen.',f1:'Motion in every word',p1:'Word-synced lyrics, karaoke, romanization and multiple sources. Choose your animations, fonts and quick controls.',f2:'Lines worth sharing',p2:'Make quote cards with cover art and matching colors. Pick up to 12 lines, save a PNG or copy the image straight into a chat.',f3:'Less clutter. More music.',p3:'Hide settings you do not need and bring your favorite actions out of the menu. Recording mode clears controls and credits.',creators:'For lyrics creators',toolsTitle:'Check every detail.',toolsText:'Compare two TTML files side by side at the same playback position. Mark line issues, save notes and export reports. Find author works by username.',toolsNote:'Author search uses the public Spicy Lyrics profile page.',split1:'It all starts',split2:'with a single line.',start:'Get started',installTitle:'Three steps to the first verse.',s1:'Install Spicetify for desktop Spotify.',s2:'Download the loader and place it in Extensions. Disable other Spicy Lyrics versions.',s3:'Run the commands on the right. Updates will load when Spotify starts.',copy:'Copy commands',folder:'Run spicetify -c to locate the configuration file. Extensions is beside it.',platform:'Desktop Spotify only. An unofficial extension.'}};
+let language=navigator.language.toLowerCase().startsWith('ru')?'ru':'en';try{const saved=localStorage.getItem('ve-site-language');if(saved==='ru'||saved==='en')language=saved;}catch{}
+function render(){document.documentElement.lang=language;document.querySelectorAll('[data-i]').forEach(el=>el.textContent=copy[language][el.dataset.i]);document.getElementById('language').textContent=language==='ru'?'EN':'RU';document.getElementById('copyStatus').textContent='';}
+document.getElementById('language').onclick=()=>{language=language==='ru'?'en':'ru';try{localStorage.setItem('ve-site-language',language);}catch{}render();syncTheme();};
+document.getElementById('copy').onclick=async()=>{try{await navigator.clipboard.writeText(document.getElementById('commands').textContent);document.getElementById('copyStatus').textContent=language==='ru'?' Скопировано':' Copied';}catch{document.getElementById('copyStatus').textContent=language==='ru'?' Выделите команды и скопируйте вручную':' Select and copy the commands manually';}};
+const root=document.documentElement;
+function syncTheme(){const dark=root.dataset.theme==='dark';document.querySelector('meta[name="theme-color"]').content=dark?'#131313':'#f9f9f9';document.getElementById('theme').setAttribute('aria-label',language==='ru'?(dark?'Светлая тема':'Тёмная тема'):(dark?'Light theme':'Dark theme'));}
+document.getElementById('theme').onclick=()=>{root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';try{localStorage.setItem('ve-material-theme',root.dataset.theme);}catch{}syncTheme();};
+document.addEventListener('pointerdown',event=>{if(event.button>0||matchMedia('(prefers-reduced-motion: reduce)').matches)return;const host=event.target.closest('.button,.lang,.theme,.copy');if(!host)return;const rect=host.getBoundingClientRect();const size=Math.hypot(Math.max(event.clientX-rect.left,rect.right-event.clientX),Math.max(event.clientY-rect.top,rect.bottom-event.clientY))*2;const ripple=document.createElement('span');ripple.className='md-ripple';ripple.style.cssText=`width:${size}px;height:${size}px;left:${event.clientX-rect.left-size/2}px;top:${event.clientY-rect.top-size/2}px`;host.append(ripple);ripple.addEventListener('animationend',()=>ripple.remove(),{once:true});},{passive:true});
+render();syncTheme();fetch('./version' ,{cache:'no-store',signal:AbortSignal.timeout(6000)}).then(r=>r.ok?r.text():Promise.reject()).then(v=>{v=v.trim();if(/^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/.test(v))document.getElementById('version').textContent='v'+v;}).catch(()=>{});
+</script>
+</body></html>

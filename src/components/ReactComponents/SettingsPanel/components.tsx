@@ -1,3 +1,5 @@
+import { translateUi } from "../../../utils/i18n/translate.ts";
+import { $uiLanguage } from "../../../utils/stores.ts";
 import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useStore } from "@nanostores/react";
@@ -9,7 +11,7 @@ export const ShowHiddenSettingsInSearchContext = React.createContext(false);
 export function matches(query: string, label: string, description?: string): boolean {
   if (!query.trim()) return true;
   const q = query.toLowerCase();
-  return label.toLowerCase().includes(q) || (description ?? "").toLowerCase().includes(q);
+  return [label, description ?? "", translateUi(label,$uiLanguage.get()), translateUi(description ?? "",$uiLanguage.get())].some(text=>text.toLowerCase().includes(q));
 }
 
 export function Row({

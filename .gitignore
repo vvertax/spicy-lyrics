@@ -6,7 +6,7 @@ node_modules/
 .spicetify/
 # Generated bundles and upload directories (keep them locally)
 dist/
-deploy/
+/deploy/
 coverage/
 *.tsbuildinfo
 *.log

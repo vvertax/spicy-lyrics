@@ -1,0 +1,17 @@
+import ru from "./ru.json";
+export type Language = "en" | "ru";
+const dictionary: Record<string,string> = ru;
+export function translateUi(text: string, language: Language): string {
+  if(language!=="ru")return text;
+  if(dictionary[text])return dictionary[text];
+  const core=text.trim();
+  if(dictionary[core])return text.replace(core,dictionary[core]);
+  const shortcut=core.split(" · ");
+  if(shortcut.length>1&&dictionary[shortcut[0]])return text.replace(shortcut[0],dictionary[shortcut[0]]);
+  const lines=core.match(/^(\d+) \/ 12 lines$/);if(lines)return `${lines[1]} / 12 строк`;
+  const version=core.match(/^(Updated to|Changed to|Loaded|Showing) (.+)$/);
+  if(version)return `${({"Updated to":"Обновлено до","Changed to":"Версия изменена на","Loaded":"Загружено","Showing":"Показано"} as Record<string,string>)[version[1]]} ${version[2]}`;
+  const side=core.match(/^(Add note to|Choose a TTML file for side|Load version|Lyrics) ([AB])$/);
+  if(side)return `${({"Add note to":"Замечание к","Choose a TTML file for side":"Выберите TTML для стороны","Load version":"Загрузить версию","Lyrics":"Текст"} as Record<string,string>)[side[1]]} ${side[2]}`;
+  return text;
+}

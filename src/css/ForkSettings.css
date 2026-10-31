@@ -340,3 +340,7 @@ sl-generic-modal.SpicyLyricsModal .vv-preview-text .vv-preview-word {
   text-shadow:0 0 var(--text-shadow-blur-radius) rgb(255 255 255 / var(--text-shadow-opacity));
   transform-origin:center center;
 }
+
+.vv-language { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:0 8px; font-size:12px; color:var(--ry-muted); }
+.vv-language select { min-width:0; padding:6px; background:#ffffff0c; color:var(--ry-text); border:1px solid var(--ry-line); border-radius:8px; }
+.vv-language option { background:#211a35; }
