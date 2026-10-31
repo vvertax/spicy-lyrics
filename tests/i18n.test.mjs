@@ -25,3 +25,14 @@ test("Russian covers all lyrics notices and their diagnostic code",()=>{
  assert.equal(translateUi('Copied','ru'),'Скопировано');
  assert.equal(translateUi("Couldn't copy",'ru'),'Не удалось скопировать');
 });
+
+test("update dialogs translate dynamic versions and split React text nodes",()=>{
+ assert.equal(translateUi('Version 1.7.0 is out','ru'),'Доступна версия 1.7.0');
+ assert.equal(translateUi("You're on ",'ru'),'Установлена версия ');
+ assert.equal(translateUi("You're on 1.6.4.",'ru'),'Установлена версия 1.6.4.');
+ assert.equal(translateUi('Updating reloads Spotify, which takes a few seconds.','ru'),'При обновлении Spotify перезапустится. Это займёт несколько секунд.');
+ assert.equal(translateUi('See what changed in the ','ru'),'Изменения описаны в ');
+ assert.equal(translateUi('patch notes','ru'),'списке изменений');
+ assert.equal(translateUi('Spicy Lyrics 1.7.0 is out','ru'),'Доступна Spicy Lyrics 1.7.0');
+ assert.equal(translateUi('Version 1.7.0 is out','en'),'Version 1.7.0 is out');
+});

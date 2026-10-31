@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.1
+
+- Translate update dialogs and notifications into Russian, including dynamic version text and patch-notes links.
+
 ## 1.7.0
 
 - Move TTML A/B comparison onto the lyrics page with a shared track background, Spicy Lyrics controls, and the production lyric animator running independently for A and B.

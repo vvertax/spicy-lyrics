@@ -7,6 +7,14 @@ export function translateUi(text: string, language: Language): string {
   const core=text.trim();
   if(dictionary[core])return text.replace(core,dictionary[core]);
   if(core.startsWith("Code: "))return `Код: ${core.slice(6)}`;
+  const available=core.match(/^Version (.+) is out$/);
+  if(available)return `Доступна версия ${available[1]}`;
+  const updateToast=core.match(/^Spicy Lyrics (.+) is out$/);
+  if(updateToast)return `Доступна Spicy Lyrics ${updateToast[1]}`;
+  const current=core.match(/^You're on (.+)$/);
+  if(current)return `Установлена версия ${current[1]}`;
+  const staying=core.match(/^Staying on (.+)$/);
+  if(staying)return `Сохранена версия ${staying[1]}`;
   const differences=core.match(/^(\d+) differing lines · text \/ timing$/);
   if(differences)return `${differences[1]} строк с различиями · текст / тайминг`;
   const shortcut=core.split(" · ");

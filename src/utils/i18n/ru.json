@@ -398,5 +398,18 @@
   "No lyrics for local files": "Тексты для локальных файлов недоступны",
   "This song is a file on your computer, so we can't look it up online. You can add your own lyrics for it as a TTML file from the Local Lyrics DB.": "Эта песня — файл на вашем компьютере, поэтому найти её текст онлайн не получается. Можно добавить собственный TTML через менеджер локальных текстов.",
   "Copied": "Скопировано",
-  "Couldn't copy": "Не удалось скопировать"
+  "Couldn't copy": "Не удалось скопировать",
+  "You're on": "Установлена версия",
+  "Updating reloads Spotify, which takes a few seconds.": "При обновлении Spotify перезапустится. Это займёт несколько секунд.",
+  "See what changed in the": "Изменения описаны в",
+  "patch notes": "списке изменений",
+  "An update is out": "Доступно обновление",
+  "A Spicy Lyrics update is out": "Доступно обновление Spicy Lyrics",
+  "Staying on this version": "Текущая версия сохранена",
+  "Some lyrics sources and features need the latest version. Updating reloads Spotify.": "Для некоторых источников текстов и функций нужна последняя версия. При обновлении Spotify перезапустится.",
+  "You were on": "Предыдущая версия:",
+  ". You are now on": ". Текущая версия:",
+  "Need help? Visit our": "Нужна помощь? Загляните в наш",
+  "Couldn't load patch notes.": "Не удалось загрузить список изменений.",
+  "Patch notes": "Список изменений"
 }
