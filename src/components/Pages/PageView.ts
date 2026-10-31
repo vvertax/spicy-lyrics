@@ -666,7 +666,7 @@ function AppendViewControls(ReAppend: boolean = false) {
         }
         ${
           isTTMLMakerMode && !IsPIP
-            ? `<button id="LyricsManager" class="ViewControl">${Icons.LoadTTML}</button>`
+            ? `<button id="LyricsManager" class="ViewControl">${Icons.LyricsManager}</button>`
             : ""
         }
         ${

@@ -37,7 +37,7 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
     menu.append(button);
   };
   for (const button of buttons) addRow(button, labels[button.id] ?? button.id);
-  const cover = doc.createElement('button'); cover.type = 'button'; cover.innerHTML = Icons.NowBar;
+  const cover = doc.createElement('button'); cover.type = 'button'; cover.innerHTML = Icons.CoverOnly;
   addRow(cover, 'Cover Only');
   cover.role = 'menuitemcheckbox';
   cover.setAttribute('aria-checked', String(page.classList.contains('SL_CoverOnly')));
@@ -62,7 +62,7 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
     input.click();
   };
   if (!buttons.some(b => b.id === 'LyricsManager')) {
-    const manager = doc.createElement('button'); manager.type = 'button'; manager.innerHTML = Icons.LoadTTML;
+    const manager = doc.createElement('button'); manager.type = 'button'; manager.innerHTML = Icons.LyricsManager;
     addRow(manager, 'Lyrics Manager'); manager.onclick = () => OpenLyricsDBPanel(doc);
   }
   if (!buttons.some(b => b.id === 'CacheAction')) {

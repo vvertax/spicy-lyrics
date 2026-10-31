@@ -45,14 +45,14 @@ function state(page: HTMLElement): Modes {
 
 export function CreativeMenuRows(menu: HTMLElement, page: HTMLElement, add: (button: HTMLButtonElement, label: string) => void) {
   const doc = menu.ownerDocument;
-  const row = (label: string, action: () => void, active?: boolean) => {
-    const button = doc.createElement("button"); button.type = "button"; button.innerHTML = Icons.Settings;
+  const row = (label: string, icon: string, action: () => void, active?: boolean) => {
+    const button = doc.createElement("button"); button.type = "button"; button.innerHTML = icon;
     add(button, label); button.onclick = action;
     if (active !== undefined) { button.role = "menuitemcheckbox"; button.setAttribute("aria-checked", String(active)); }
     return button;
   };
   const current = modes.get(page);
-  const karaoke = row("Karaoke · Alt+Shift+K", () => {
+  const karaoke = row("Karaoke · Alt+Shift+K", Icons.Karaoke, () => {
     let data; try { data = JSON.parse($currentLyricsData.get()); } catch { /* notice */ }
     if (!data || data.Type === "Static") { toast.error("Karaoke needs synced lyrics"); return; }
     const value = state(page); value.karaoke = !value.karaoke;
@@ -61,14 +61,14 @@ export function CreativeMenuRows(menu: HTMLElement, page: HTMLElement, add: (but
     if (!value.karaoke) page.querySelectorAll(".VV_KaraokeHidden").forEach(el => el.classList.remove("VV_KaraokeHidden"));
   }, current?.karaoke ?? false);
   karaoke.dataset.vvAction = "karaoke";
-  const recording = row("Recording Mode · Alt+Shift+R", () => {
+  const recording = row("Recording Mode · Alt+Shift+R", Icons.RecordingMode, () => {
     const value = state(page); value.recording = !value.recording;
     recording.setAttribute("aria-checked", String(value.recording));
     page.classList.toggle("VV_Recording", value.recording);
     if (value.recording) toast("Recording mode: press Escape to exit", { duration: 2500 });
   }, current?.recording ?? false);
   recording.dataset.vvAction = "recording";
-  row("Create Quote Card", () => { void quoteCard(doc).catch(error => toast.error((error as Error).message)); });
+  row("Create Quote Card", Icons.QuoteCard, () => { void quoteCard(doc).catch(error => toast.error((error as Error).message)); });
 }
 
 async function loadImage(doc: Document, url: string): Promise<HTMLImageElement> {

@@ -35,12 +35,12 @@ function currentLyrics() {
 }
 export function AddReviewMenuRows(menu:HTMLElement, add:(button:HTMLButtonElement,label:string)=>void) {
   const doc=menu.ownerDocument;
-  for (const [label, open] of [
-    ['Find Author Works',()=>authorSearch(doc)],
-    ['Review Lyrics',()=>reviewLyrics(doc)],
-    ['Compare TTML A/B',()=>compareTTML(doc)],
+  for (const [label, icon, open] of [
+    ['Find Author Works',Icons.FindAuthorWorks,()=>authorSearch(doc)],
+    ['Review Lyrics',Icons.ReviewLyrics,()=>reviewLyrics(doc)],
+    ['Compare TTML A/B',Icons.CompareTTML,()=>compareTTML(doc)],
   ] as const) {
-    const row=element(doc,'button');row.type='button';row.innerHTML=Icons.LoadTTML;
+    const row=element(doc,'button');row.type='button';row.innerHTML=icon;
     add(row,label);row.onclick=()=>{ try { open(); } catch(error) {toast.error((error as Error).message);} };
   }
 }

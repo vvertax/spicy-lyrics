@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.4
+
+- Give karaoke, recording, quote cards, author search, lyrics review and TTML comparison distinct icons.
+- Use separate cover-only and lyrics-manager icons in the menu and quick controls.
+
 ## 1.6.3
 
 - Use the original Pixel ViewControl appearance for pinned actions: matching sizes, glass surfaces and icon styles.
