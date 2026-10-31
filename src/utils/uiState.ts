@@ -1,0 +1,103 @@
+import { atom } from "nanostores";
+
+export const UI_STATE_KEY = "SL:uiState";
+
+function readUiStateBlob(): Record<string, any> {
+  try {
+    const raw = Spicetify.LocalStorage.get(UI_STATE_KEY);
+    if (raw === null || raw === undefined) return {};
+    const parsed: unknown = JSON.parse(raw);
+    return parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)
+      ? parsed as Record<string, any>
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveUiStateBlob(obj: Record<string, any>) {
+  try {
+    Spicetify.LocalStorage.set(UI_STATE_KEY, JSON.stringify(obj));
+  } catch (error) {
+    console.warn("Spicy Lyrics: could not save interface state", error);
+  }
+}
+
+function migrateUiStateKeys(blob: Record<string, any>): Record<string, any> {
+  const renames: Record<string, string> = {
+    "IsNowBarOpen": "isNowBarOpen",
+    "NowBarSide": "nowBarSide",
+    "ForceCompactMode": "forceCompactMode",
+    "previous-version": "previousVersion",
+  };
+  let changed = false;
+  for (const [oldKey, newKey] of Object.entries(renames)) {
+    if (oldKey in blob) {
+      if (!(newKey in blob)) blob[newKey] = blob[oldKey];
+      delete blob[oldKey];
+      changed = true;
+    }
+  }
+  if (changed) saveUiStateBlob(blob);
+  return blob;
+}
+
+const _uiState: Record<string, any> = migrateUiStateKeys(readUiStateBlob());
+
+function persistAtom<T>(key: string, defaultValue: T) {
+  const store = atom<T>(_uiState[key] !== undefined ? _uiState[key] : defaultValue);
+  store.listen((v) => {
+    _uiState[key] = v;
+    saveUiStateBlob(_uiState);
+  });
+  return store;
+}
+
+// UI state atoms (persisted, not settings-panel entries)
+export const $isNowBarOpen = persistAtom<boolean>("isNowBarOpen", false);
+export const $nowBarSide = persistAtom<"left" | "right">("nowBarSide", "left");
+export const $forceCompactMode = persistAtom<boolean>("forceCompactMode", false);
+export const $romanization = persistAtom<boolean>("romanization", false);
+export const $fromVersion = persistAtom<string>("fromVersion", "");
+export const $lastFetchedUri = persistAtom<string | null>("lastFetchedUri", null);
+export const $previousVersion = persistAtom<string>("previousVersion", "");
+export const $npvLyricsOpen = persistAtom<boolean>("npvLyricsOpen", true);
+export const $npvLyricsExpanded = persistAtom<boolean>("npvLyricsExpanded", false);
+export const $settingsMenuLocation = persistAtom<{
+  route: "settings" | "hidden" | "animator";
+  query: string;
+  sectionFilter: string;
+  scrollTop: number;
+}>("settingsMenuLocation", {
+  route: "settings",
+  query: "",
+  sectionFilter: "Appearance",
+  scrollTop: 0,
+});
+
+// Runtime (ephemeral) atoms
+export const $isGlobalNav = atom<boolean>(true);
+
+(function watchGlobalNav() {
+  function observe(root: Element) {
+    $isGlobalNav.set(root.classList.contains("global-nav"));
+    new MutationObserver(() => {
+      $isGlobalNav.set(root.classList.contains("global-nav"));
+    }).observe(root, { attributes: true, attributeFilter: ["class"] });
+  }
+
+  const existing = document.querySelector(".Root");
+  if (existing) {
+    observe(existing);
+    return;
+  }
+
+  const mo = new MutationObserver((_, observer) => {
+    const el = document.querySelector(".Root");
+    if (el) {
+      observer.disconnect();
+      observe(el);
+    }
+  });
+  mo.observe(document.documentElement, { childList: true, subtree: true });
+})();

@@ -1,0 +1,100 @@
+/* Adapted from Ruytha Edition's glass settings and page controls. */
+#SpicyLyricsPage#SpicyLyricsPage .ViewControls.sl-fork-controls { width:fit-content!important; height:auto!important; overflow:visible!important; z-index:100; }
+#SpicyLyricsPage .sl-fork-menu-toggle { border-radius:50%; background:rgba(30,25,45,.35); border:1px solid #ffffff30; }
+#SpicyLyricsPage .sl-fork-menu { position:absolute; right:0; width:min(240px,80vw); max-height:70vh; overflow:auto; padding:10px; border-radius:22px; background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,0) 42%),rgba(26,26,28,.55); -webkit-backdrop-filter:blur(32px) saturate(1.2); backdrop-filter:blur(32px) saturate(1.2); border:1px solid #ffffff38; box-shadow:0 18px 48px #0005; color:#f5f0fa; }
+#SpicyLyricsPage .sl-fork-menu[hidden] { display:none!important; }
+#SpicyLyricsPage .sl-fork-menu-item { display:flex; align-items:center; gap:12px; width:100%; min-height:40px; padding:10px 8px; border:0; border-radius:9px; background:transparent; color:inherit; text-align:left; font:600 13px/1.4 sans-serif; cursor:pointer; }
+#SpicyLyricsPage .sl-fork-menu-item svg { position:static; width:16px; height:16px; flex:none; }
+#SpicyLyricsPage .sl-fork-menu-item:hover, #SpicyLyricsPage .sl-fork-menu-item:focus-visible { background:#ffffff18; outline:1px solid #ffffff38; }
+#SpicyLyricsPage .sl-fork-menu-item:disabled { opacity:.45; }
+#SpicyLyricsPage.SL_CoverOnly .LyricsContainer { visibility:hidden; pointer-events:none; }
+
+/* Constrain the sidebar's intrinsic search/input width inside its grid track. */
+#SpicyLyricsPage#SpicyLyricsPage .ViewControls.sl-fork-controls { left:0!important; right:0!important; margin-inline:auto!important; transform:none!important; translate:none!important; display:flex; justify-content:center; }
+#SpicyLyricsPage .sl-fork-menu { box-sizing:border-box; left:50%; right:auto; transform:translateX(calc(-50% + var(--menu-shift, 0px))); }
+#SpicyLyricsPage .sl-fork-menu-item { box-sizing:border-box; }
+#SpicyLyricsPage .sl-fork-menu-item#SettingsToggle { border-top:1px solid #ffffff22; border-radius:0 0 9px 9px; margin-top:6px; padding-top:14px; }
+
+#SpicyLyricsPage .VV_CreatorLyricsBadge {
+  display:inline-block; flex:none; margin:0 0 0 3px; padding:0;
+  border:0; border-radius:0; background:none; box-shadow:none;
+  color:#efcd84; font-size:13px; font-weight:400; line-height:1;
+  vertical-align:middle;
+}
+
+#SpicyLyricsPage.VV_Karaoke .VV_KaraokeHidden,
+#SpicyLyricsPage.VV_Karaoke .VV_KaraokeHidden * { visibility:hidden!important; }
+#SpicyLyricsPage.VV_Recording, #SpicyLyricsPage.VV_Recording * { cursor:none!important; }
+#SpicyLyricsPage.VV_Recording :is(.ViewControls,.SongCredits,.LyricsPinnedFooter,.SongInfo,.PlaybackControls,.SL_BackToLine,.SL_ScrollToActiveButton) { visibility:hidden!important; pointer-events:none!important; }
+.vv-quote-dialog { width:min(620px,92vw); max-height:88vh; overflow:auto; box-sizing:border-box; padding:24px; border:1px solid #ffffff30; border-radius:20px; background:#211735; color:#eee2ff; font:14px/1.5 sans-serif; }
+.vv-quote-dialog::backdrop { background:#000a; backdrop-filter:blur(8px); }
+.vv-quote-dialog h2 { margin:0 0 8px; font-size:22px; }
+.vv-quote-dialog p { color:#c1add9; }
+.vv-quote-lines { display:flex; flex-direction:column; max-height:180px; overflow:auto; margin:16px 0; border:1px solid #ffffff20; border-radius:10px; }
+.vv-quote-lines label { display:flex; gap:10px; padding:8px 12px; cursor:pointer; border-bottom:1px solid #ffffff12; }
+.vv-quote-lines input { flex:none; }
+.vv-quote-dialog canvas { display:block; width:100%; height:auto; border-radius:12px; margin:16px 0; }
+.vv-quote-dialog button { padding:9px 16px; margin:0 8px 0 0; border:1px solid #ffffff30; border-radius:9px; background:#594175; color:#eee2ff; cursor:pointer; }
+.vv-quote-dialog button:focus-visible { outline:2px solid #c9def5; outline-offset:2px; }
+
+#SpicyLyricsPage .sl-fork-menu-item[aria-checked="true"]::after { content:"✓"; margin-left:auto; color:#c9def5; }
+
+.vv-quote-dialog { font-family:SpicyLyrics,sans-serif; }
+.vv-quote-lines { overflow-x:hidden; }
+.vv-quote-lines label { min-width:0; overflow-wrap:anywhere; }
+.vv-quote-dialog > label { display:block; margin:8px 0; }
+
+.vv-review-dialog { box-sizing:border-box; width:min(850px,94vw); max-height:88vh; overflow:auto; padding:24px; border:1px solid #ffffff30; border-radius:20px; background:#171429; color:#e9e3f5; font:14px/1.5 SpicyLyrics,sans-serif; }
+.vv-review-dialog * { box-sizing:border-box; }
+.vv-review-dialog::backdrop { background:#0009; backdrop-filter:blur(7px); }
+.vv-review-dialog header { display:flex; gap:16px; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.vv-review-dialog h2 { margin:0; font-size:22px; }
+.vv-review-dialog p { overflow-wrap:anywhere; }
+.vv-review-dialog form, .vv-review-actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:12px 0; }
+.vv-review-dialog input, .vv-review-dialog select, .vv-review-dialog textarea { min-width:0; max-width:100%; padding:10px; border:1px solid #ffffff25; border-radius:8px; background:#ffffff0a; color:inherit; font:inherit; }
+.vv-review-dialog select { display:block; width:100%; margin:12px 0; }
+.vv-review-dialog option { background:#211b35; }
+.vv-review-dialog form input { flex:1; }
+.vv-review-dialog textarea { display:block; width:100%; min-height:90px; resize:vertical; }
+.vv-review-dialog button { padding:8px 12px; border:1px solid #ffffff25; border-radius:8px; background:#ffffff10; color:inherit; font:inherit; cursor:pointer; }
+.vv-review-dialog button:hover { background:#ffffff20; }
+.vv-review-dialog button:disabled { opacity:.4; cursor:default; }
+.vv-review-dialog :is(button,input,textarea,select,a):focus-visible { outline:2px solid #b4ccf4; outline-offset:2px; }
+.vv-review-dialog a { color:#b4ccf4; }
+.vv-author-frame { display:block; width:100%; height:55vh; border:1px solid #ffffff20; border-radius:12px; margin-top:16px; background:#12101b; }
+.vv-author-frame[hidden] { display:none; }
+.vv-review-notes article { padding:16px; border:1px solid #ffffff20; border-radius:12px; margin-top:12px; }
+.vv-review-notes article button { margin-right:8px; }
+.vv-compare-summary { color:#b8aec8; }
+
+/* Quote studio: independent scroll areas for selection and preview. */
+.vv-quote-dialog { width:min(1120px,95vw); max-height:90vh; padding:0; background:#171421; border:1px solid #ffffff24; box-shadow:0 32px 120px #0009; }
+.vv-quote-header { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; padding:22px 26px; border-bottom:1px solid #ffffff12; }
+.vv-quote-header h2 { font-size:22px; margin:0 0 4px; }
+.vv-quote-header p { margin:0; font-size:12px; color:#a99eb8; }
+.vv-quote-header button { background:transparent; border-color:#ffffff20; margin:0; }
+.vv-quote-body { display:grid; grid-template-columns:minmax(260px,360px) minmax(0,1fr); min-height:0; }
+.vv-quote-editor { padding:20px; border-right:1px solid #ffffff12; max-height:65vh; overflow-y:auto; }
+.vv-quote-list-header { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.vv-quote-counter { font-size:12px; color:#cbb8e9; font-weight:600; }
+.vv-quote-list-header button { padding:4px 8px; margin:0; font-size:11px; border:0; background:transparent; color:#a99eb8; }
+.vv-quote-lines { max-height:35vh; margin:12px 0 20px; border-radius:12px; border-color:#ffffff16; }
+.vv-quote-lines label { align-items:baseline; gap:8px; padding:12px 10px; font-size:12px; line-height:1.5; color:#bdb2cd; }
+.vv-quote-lines label:has(input:checked) { color:#f2e7ff; background:#b18be51b; box-shadow:inset 2px 0 #b696e1; }
+.vv-quote-lines label:hover { background:#ffffff08; }
+.vv-quote-lines label span:last-child { min-width:0; overflow-wrap:anywhere; }
+.vv-quote-line-number { flex:none; font:10px monospace; color:#84768f; }
+.vv-quote-lines input { accent-color:#b696e1; }
+.vv-quote-editor > label { display:block; margin:14px 0; color:#c7bcd6; font-size:12px; }
+.vv-quote-editor select { display:block; width:100%; margin-top:6px; padding:10px; border-radius:9px; border:1px solid #ffffff22; background:#25202f; color:#eee2ff; font:inherit; }
+.vv-quote-preview { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:22px; background:#0e0c15; overflow:auto; max-height:65vh; }
+.vv-quote-preview canvas { width:auto; height:auto; max-width:100%; max-height:55vh; margin:0; border-radius:10px; box-shadow:0 14px 40px #0007; object-fit:contain; }
+.vv-quote-dimensions { color:#8e829f; font-size:11px; letter-spacing:.04em; }
+.vv-quote-footer { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:16px 26px; border-top:1px solid #ffffff12; }
+.vv-quote-footer p { flex:1; margin:0; font-size:12px; }
+.vv-quote-footer button { flex:none; margin:0; padding:10px 22px; color:#181020; background:#d2b8f2; font-weight:700; }
+.vv-quote-footer button:disabled { opacity:.4; cursor:default; }
+@media(max-width:760px) { .vv-quote-body { grid-template-columns:1fr; } .vv-quote-editor { max-height:none; border-right:0; } .vv-quote-preview { max-height:none; } .vv-quote-lines { max-height:220px; } .vv-quote-footer { position:sticky; bottom:0; background:#171421; } }
+
+.vv-quote-footer { flex-wrap:wrap; }
+.vv-quote-footer .vv-quote-copy { background:transparent; color:#e0ceef; border-color:#ffffff30; }

@@ -1,0 +1,666 @@
+// deno-lint-ignore-file no-explicit-any
+import { createTooltip } from "../../utils/tooltip.ts";
+import Global from "./Global.ts";
+import GetProgress, {
+  _DEPRECATED___GetProgress,
+} from "../../utils/Gets/GetProgress.ts";
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+//type ArtworkSize = "s" | "l" | "xl" | "d";
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+//const TrackData_Map = new Map();
+
+/* const old_SpotifyPlayer = {
+    IsPlaying: false,
+    GetTrackPosition: GetProgress,
+    GetTrackDuration: (): number => {
+        if (Spicetify.Player.data.item.duration?.milliseconds) {
+            return Spicetify.Player.data.item.duration.milliseconds;
+        }
+        return 0;
+    },
+    Track: {
+        GetTrackInfo: async () => {
+            const spotifyHexString = SpicyHasher.spotifyHex(SpotifyPlayer.GetSongId());
+            if (TrackData_Map.has(spotifyHexString)) return TrackData_Map.get(spotifyHexString);
+            const URL = `https://spclient.wg.spotify.com/metadata/4/track/${spotifyHexString}?market=from_token`;
+            const [data, status] = await (URL, true, true, false);
+            if (status !== 200) return null;
+            const parsedData = ((data.startsWith(`{"`) || data.startsWith("{"))
+                                    ? JSON.parse(data)
+                                    : data);
+            TrackData_Map.set(spotifyHexString, parsedData);
+            return parsedData;
+        },
+        SortImages: (images: any[]) => {
+            // Define size thresholds
+            const sizeMap = {
+                s: "SMALL",
+                l: "DEFAULT",
+                xl: "LARGE"
+            };
+
+            // Sort the images into categories based on their size
+            const sortedImages = images.reduce((acc, image) => {
+                const { size } = image;
+
+                if (size === sizeMap.s) {
+                    acc.s.push(image);
+                } else if (size === sizeMap.l) {
+                    acc.l.push(image);
+                } else if (size === sizeMap.xl) {
+                    acc.xl.push(image);
+                }
+
+                return acc;
+            }, { s: [], l: [], xl: [] });
+
+
+            return sortedImages;
+        }
+    },
+    Seek: (position: number) => {
+        Spicetify.Player.origin.seekTo(position);
+    },
+    Artwork: {
+        Get: async (size: ArtworkSize): Promise<string> => {
+            const psize = (size === "d" ? null : (size?.toLowerCase() ?? null));
+            const Data = await SpotifyPlayer.Track.GetTrackInfo();
+            const Images = SpotifyPlayer.Track.SortImages(Data.album.cover_group.image);
+            switch (psize) {
+                case "s":
+                    return `spotify:image:${Images.s[0].file_id}`;
+                case "l":
+                    return `spotify:image:${Images.l[0].file_id}`;
+                case "xl":
+                    return `spotify:image:${Images.xl[0].file_id}`;
+                default:
+                    return `spotify:image:${Images.l[0].file_id}`;
+            }
+        }
+    },
+    GetSongName: async (): Promise<string> => {
+        const Data = await SpotifyPlayer.Track.GetTrackInfo();
+        return Data.name;
+    },
+    GetAlbumName: (): string => {
+        return Spicetify.Player.data.item.metadata.album_title;
+    },
+    GetSongId: (): string => {
+        return Spicetify.Player.data.item.uri?.split(":")[2] ?? null;
+    },
+    GetArtists: async (): Promise<string[]> => {
+        const data = await SpotifyPlayer.Track.GetTrackInfo();
+        return data?.artist?.map(a => a.name) ?? [];
+    },
+    JoinArtists: (artists: string[]): string => {
+        return artists?.join(", ") ?? null;
+    },
+    IsPodcast: false,
+    _DEPRECATED_: {
+        GetTrackPosition: _DEPRECATED___GetProgress
+    },
+    Pause: Spicetify.Player.pause,
+    Play: Spicetify.Player.play,
+    TogglePlayState: Spicetify.Player.togglePlay,
+    Skip: {
+        Next: Spicetify.Player.next,
+        Prev: Spicetify.Player.back
+    },
+    LoopType: "none",
+    ShuffleType: "none",
+} */
+
+const GetContentType = (): string => {
+  if (Spicetify?.Player?.data?.item?.type) {
+    return Spicetify.Player.data.item.type;
+  }
+  return "unknown";
+};
+
+const LOCAL_FLAC_METADATA_KEYS = [
+  "file_format",
+  "format",
+  "codec",
+  "container",
+  "mime_type",
+  "media_format",
+  "extension",
+  "filename",
+  "local_file_path",
+  "path",
+  "url",
+  "entity_uri",
+  "media.type",
+  "audio.format",
+] as const;
+
+const hasFlacSignature = (value: unknown): boolean => {
+  if (typeof value !== "string") return false;
+  const normalized = value.trim().toLowerCase();
+  return (
+    normalized === "flac" ||
+    normalized === "audio/flac" ||
+    normalized.endsWith(".flac")
+  );
+};
+/** What GetCover/GetCoverFrom return when the item has no cover of that size. */
+export const COVER_PLACEHOLDER_URL = "https://images.spikerko.org/SongPlaceholderFull.png";
+
+export type CoverSizes = "standard" | "small" | "large" | "xlarge";
+const COVER_PLACEHOLDER = COVER_PLACEHOLDER_URL;
+const COVER_SIZE_PRIORITY: CoverSizes[] = ["xlarge", "large", "standard", "small"];
+
+type CoverImage = { url?: string; label?: string };
+let cachedCoverUri: string | undefined;
+const cachedCovers = new Map<CoverSizes, string>();
+
+function getCoverUrl(size: CoverSizes, source?: CoverImage[]): string | undefined {
+  const covers = source?.filter((cover) => typeof cover?.url === "string" &&
+    cover.url.trim() && cover.url.trim() !== COVER_PLACEHOLDER);
+  if (!covers?.length) return undefined;
+
+  // Some tracks omit the requested size or provide images without labels.
+  for (const label of [size, ...COVER_SIZE_PRIORITY]) {
+    const cover = covers.find((image) => image.label === label);
+    if (cover) return cover.url!.trim();
+  }
+  return covers[0].url!.trim();
+}
+
+export type Artist = {
+  type: "artist";
+  name: string;
+  uri: string;
+};
+
+export const SpotifyPlayer = {
+  IsPlaying: false,
+  _DEPRECATED_: {
+    GetTrackPosition: _DEPRECATED___GetProgress,
+  },
+  GetPosition: GetProgress,
+  GetContentType: GetContentType,
+  GetMediaType: (): string => {
+    return Spicetify?.Player?.data?.item?.mediaType;
+  },
+  GetTrackMetadata: (): Record<string, unknown> => {
+    return (Spicetify?.Player?.data?.item?.metadata ?? {}) as Record<
+      string,
+      unknown
+    >;
+  },
+  IsLocalTrack: (): boolean => {
+    const item = Spicetify?.Player?.data?.item;
+    if (!item) return false;
+    return Boolean(item.isLocal) || item.uri?.startsWith("spotify:local:");
+  },
+  IsLocalFlacTrack: (): boolean => {
+    const item = Spicetify?.Player?.data?.item;
+    if (!item || !SpotifyPlayer.IsLocalTrack()) return false;
+
+    const metadata = SpotifyPlayer.GetTrackMetadata();
+    for (const key of LOCAL_FLAC_METADATA_KEYS) {
+      if (hasFlacSignature(metadata[key])) {
+        return true;
+      }
+    }
+
+    return [item.name, metadata.title].some((value) => hasFlacSignature(value));
+  },
+  GetDuration: (): number => {
+    if (Spicetify?.Player?.data?.item?.duration?.milliseconds) {
+      return Spicetify.Player.data.item.duration.milliseconds;
+    }
+    return 0;
+  },
+  Seek: (position: number): void => {
+    (Spicetify?.Player as any)?.origin?.seekTo(position);
+  },
+  GetCover: (size: CoverSizes): string | undefined => {
+    const item = Spicetify?.Player?.data?.item;
+    if (!item) return COVER_PLACEHOLDER;
+    if (item.uri !== cachedCoverUri) {
+      cachedCoverUri = item.uri;
+      cachedCovers.clear();
+    }
+    const metadataCovers = COVER_SIZE_PRIORITY.map((label) => ({
+      label,
+      url: item.metadata?.[label === "standard" ? "image_url" : `image_${label}_url`],
+    }));
+    const show = (item as typeof item & { show?: { images?: CoverImage[] } }).show;
+
+    const cover =
+      getCoverUrl(size, [...(item.images ?? []), ...metadataCovers]) ??
+      getCoverUrl(size, item.album?.images) ??
+      getCoverUrl(size, show?.images);
+    if (cover) {
+      if (item.uri) cachedCovers.set(size, cover);
+      return cover;
+    }
+    return (item.uri
+      ? getCoverUrl(size, [...cachedCovers].map(([label, url]) => ({ label, url })))
+      : undefined) ?? COVER_PLACEHOLDER;
+  },
+  GetCoverFrom: (
+    size: CoverSizes,
+    source: Array<{ url: string; label: string }> | Spicetify.ImagesEntity[]
+  ): string | undefined => {
+    return getCoverUrl(size, source) ?? COVER_PLACEHOLDER;
+  },
+  GetName: (): string | undefined => {
+    return Spicetify?.Player?.data?.item?.name;
+  },
+  GetShowName: (): string | undefined => {
+    // @ts-ignore aaa
+    return Spicetify?.Player?.data?.item?.show?.name;
+  },
+  GetAlbumName: (): string | undefined => {
+    return Spicetify?.Player?.data?.item?.metadata?.album_title;
+  },
+  GetAlbumUri: (): string | undefined => {
+    return Spicetify?.Player?.data?.item?.metadata?.album_uri;
+  },
+  GetAlbumReleaseYearSync: (): string | undefined => {
+    const item: any = Spicetify?.Player?.data?.item;
+    if (!item) return undefined;
+
+    const metadata: any = item?.metadata;
+    const yearCandidate =
+      metadata?.album_year ??
+      metadata?.albumYear ??
+      metadata?.album_release_year ??
+      metadata?.albumReleaseYear ??
+      metadata?.release_year ??
+      metadata?.releaseYear ??
+      metadata?.year;
+    if (typeof yearCandidate === "string" && /^\d{4}$/.test(yearCandidate)) {
+      return yearCandidate;
+    }
+
+    const dateCandidate =
+      item?.album?.release_date ??
+      metadata?.album_date ??
+      metadata?.albumDate ??
+      metadata?.album_release_date ??
+      metadata?.albumReleaseDate ??
+      metadata?.release_date ??
+      metadata?.releaseDate;
+
+    if (typeof dateCandidate !== "string") return undefined;
+    const year = dateCandidate.slice(0, 4);
+    return /^\d{4}$/.test(year) ? year : undefined;
+  },
+  GetAlbumReleaseYear: async (albumUri?: string): Promise<string | undefined> => {
+    try {
+      const resolvedAlbumUri = albumUri ?? SpotifyPlayer.GetAlbumUri();
+      if (!resolvedAlbumUri) return undefined;
+      const result = await (Spicetify as any).GraphQL.Request(
+        (Spicetify as any).GraphQL.Definitions.getAlbum,
+        { uri: resolvedAlbumUri, locale: "", offset: 0, limit: 1 }
+      );
+      const isoString: string | undefined = result?.data?.albumUnion?.date?.isoString;
+      if (!isoString) return undefined;
+      const year = isoString.slice(0, 4);
+      return /^\d{4}$/.test(year) ? year : undefined;
+    } catch {
+      return undefined;
+    }
+  },
+  GetId: (): string | undefined => {
+    return Spicetify?.Player?.data?.item?.uri?.split(":")[2];
+  },
+  GetReleaseYear: async (trackId: string): Promise<string | undefined> => {
+    try {
+      const resp = await (Spicetify as any).CosmosAsync.get(
+        `https://api.spotify.com/v1/tracks/${trackId}`
+      );
+      const releaseDate: string | undefined = resp?.album?.release_date;
+      const year = releaseDate ? releaseDate.slice(0, 4) : undefined;
+      return year && /^\d{4}$/.test(year) ? year : undefined;
+    } catch {
+      return undefined;
+    }
+  },
+  GetArtists: (): Artist[] | undefined => {
+    return Spicetify?.Player?.data?.item?.artists as Artist[];
+  },
+  GetUri: (): string | undefined => {
+    return (
+      // @ts-ignore aaa
+      Spicetify?.Player?.data?.item?.uri ?? Spicetify?.Player?.data?.track?.uri
+    );
+  },
+  Pause: Spicetify?.Player?.pause,
+  Play: Spicetify?.Player?.play,
+  TogglePlayState: Spicetify?.Player?.togglePlay,
+  Skip: {
+    Next: Spicetify?.Player?.next,
+    Prev: Spicetify?.Player?.back,
+  },
+  LoopType: "none",
+  ShuffleType: "none",
+  IsDJ: (): boolean => {
+    const data = Spicetify?.Player?.data;
+    if (!data) return false;
+    return (
+      data.item?.provider?.startsWith("narration") ||
+      (data.restrictions?.disallowSeekingReasons?.length >
+        0 &&
+        data.restrictions?.disallowSeekingReasons[0]?.includes(
+          "narration"
+        )) ||
+      data.item?.type === "unknown"
+    );
+  },
+  IsLiked: () => Spicetify?.Player?.getHeart(),
+  ToggleLike: async () => {
+    const uris = [SpotifyPlayer.GetUri()];
+    if (SpotifyPlayer.IsLiked()) {
+      await Spicetify.Platform.LibraryAPI.remove({ uris });
+    } else {
+      await Spicetify.Platform.LibraryAPI.add({ uris });
+    }
+  },
+  Playbar: (() => {
+    let rightContainer: HTMLElement | null;
+    const buttonsStash = new Set<HTMLElement>();
+    const NATIVE_LYRICS_BUTTON_CLASSES = new Set(["main-nowPlayingBar-lyricsButton", "vVsHwFW9rx4CZOne"]);
+    // Active-state hashes per build (1.2.98, then 1.3.5), never copied from a native sibling.
+    const ACTIVE_STATE_CLASSES = new Set(["ZfsMQKTLl695iPvUo3GK", "Tjk9xHexUrsjejB5PBbF", "OJsKOflU3SmUHnQ5_QKE"]);
+
+    type ButtonOnClick = (btn: Button) => void;
+
+    class Button {
+      public element: HTMLButtonElement;
+      public iconElement: HTMLSpanElement;
+      private _label: string;
+      private _icon: string;
+      private _onClick: ButtonOnClick;
+      private _disabled: boolean;
+      private _active: boolean;
+      public tippy: any;
+
+      constructor(
+        label: string,
+        icon: string,
+        onClick: ButtonOnClick = () => {},
+        disabled: boolean = false,
+        active: boolean = false,
+        registerOnCreate: boolean = true
+      ) {
+        this.element = document.createElement("button");
+        this.element.classList.add("main-genericButton-button", "SpicyLyrics_PlaybarButton");
+        this.iconElement = document.createElement("span");
+        this.iconElement.classList.add("Wrapper-sm-only", "Wrapper-small-only");
+        this.element.appendChild(this.iconElement);
+        this.icon = icon;
+        this.onClick = onClick;
+        this.disabled = disabled;
+        this.active = active;
+        addClassname(this.element);
+        this.tippy = createTooltip(this.element, {
+          content: label,
+          ...(Spicetify as any).TippyProps,
+        });
+        this.label = label;
+        if (registerOnCreate) this.register();
+      }
+      get label(): string {
+        return this._label;
+      }
+      set label(text: string) {
+        this._label = text;
+        if (!this.tippy) this.element.setAttribute("title", text);
+        else this.tippy.setContent(text);
+      }
+      get icon(): string {
+        return this._icon;
+      }
+      set icon(input: string) {
+        let newInput = input;
+        if (
+          newInput &&
+          (Spicetify as any).SVGIcons &&
+          (Spicetify as any).SVGIcons[newInput]
+        ) {
+          newInput = `<svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor" stroke="currentColor">${
+            (Spicetify as any).SVGIcons[newInput]
+          }</svg>`;
+        }
+        this._icon = newInput;
+        this.iconElement.innerHTML = newInput;
+      }
+      get onClick(): ButtonOnClick {
+        return this._onClick;
+      }
+      set onClick(func: ButtonOnClick) {
+        this._onClick = func;
+        this.element.onclick = () => this._onClick(this);
+      }
+      get disabled(): boolean {
+        return this._disabled;
+      }
+      set disabled(bool: boolean) {
+        this._disabled = bool;
+        this.element.disabled = bool;
+        this.element.classList.toggle("disabled", bool);
+      }
+      set active(bool: boolean) {
+        this._active = bool;
+        this.element.classList.toggle("main-genericButton-buttonActive", bool);
+        this.element.classList.toggle("ZfsMQKTLl695iPvUo3GK", bool);
+        // 1.3.5 hashes of buttonActive / buttonActiveDot (Spicetify no longer maps them).
+        this.element.classList.toggle("Tjk9xHexUrsjejB5PBbF", bool);
+        this.element.classList.toggle("OJsKOflU3SmUHnQ5_QKE", bool);
+        this.element.classList.toggle(
+          "main-genericButton-buttonActiveDot",
+          bool
+        );
+      }
+      get active(): boolean {
+        return this._active;
+      }
+      register() {
+        buttonsStash.add(this.element);
+        mountButtons();
+      }
+      deregister() {
+        buttonsStash.delete(this.element);
+        this.element.remove();
+      }
+    }
+
+    const controlsSelector = '[data-testid="now-playing-bar"], .Root__now-playing-bar, .main-nowPlayingBar-right, .main-nowPlayingBar-extraControls, button[data-testid="lyrics-button"], button[data-testid="pip-toggle-button"], button[data-testid="fullscreen-mode-button"]';
+
+    function GetControls(): HTMLElement | null {
+      const playbar = document.querySelector('[data-testid="now-playing-bar"], .Root__now-playing-bar');
+      const nativeButton = playbar?.querySelector<HTMLElement>(
+        'button[data-testid="lyrics-button"], button[data-testid="pip-toggle-button"], button[data-testid="fullscreen-mode-button"]'
+      );
+      return nativeButton?.parentElement ?? document.querySelector<HTMLElement>(
+        '.main-nowPlayingBar-right > div, .main-nowPlayingBar-extraControls'
+      );
+    }
+
+    function mountButtons() {
+      rightContainer = GetControls();
+      if (!rightContainer) return;
+      for (const button of buttonsStash) {
+        addClassname(button);
+      }
+      if ([...buttonsStash].some(button => button.parentElement !== rightContainer)) {
+        rightContainer.prepend(...buttonsStash);
+      }
+      Global.Event.evoke("playbar:controls", rightContainer);
+    }
+
+    const playbarObserver = new MutationObserver(records => {
+      if (records.some(record => record.target === rightContainer ||
+        [...record.addedNodes, ...record.removedNodes].some(node => node instanceof Element &&
+          (node === rightContainer || (rightContainer !== null && node.contains(rightContainer)) ||
+            node.matches(controlsSelector) || node.querySelector(controlsSelector))))) mountButtons();
+    });
+    playbarObserver.observe(document.documentElement, { childList: true, subtree: true });
+    mountButtons();
+
+    function addClassname(element: HTMLElement) {
+      // Tried in order (a selector list would return the first in DOM order, the
+      // lyrics button): buttons that never turn active come first, so we don't
+      // copy an active-state class such as 1.2.98's hashed active dot.
+      const controls = GetControls();
+      let sibling: HTMLElement | null = null;
+      for (const selector of [
+        'button[data-testid="fullscreen-mode-button"]',
+        'button[data-testid="pip-toggle-button"]',
+        'button[data-testid="lyrics-button"]',
+        ".main-genericButton-button:not(.SpicyLyrics_PlaybarButton)",
+      ]) {
+        sibling = controls?.querySelector<HTMLElement>(selector) ?? null;
+        if (sibling) break;
+      }
+      if (!sibling) return;
+      for (const className of Array.from(sibling.classList)) {
+        if (className.startsWith("main-genericButton") || ACTIVE_STATE_CLASSES.has(className)) continue;
+        if (NATIVE_LYRICS_BUTTON_CLASSES.has(className)) continue;
+        element.classList.add(className);
+      }
+    }
+
+    const widgetStash = new Set<HTMLElement>();
+    let nowPlayingWidget: HTMLElement | null;
+
+    type WidgetOnClick = (widget: Widget) => void;
+
+    class Widget {
+      public element: HTMLButtonElement;
+      private _label: string;
+      private _icon: string;
+      private _onClick: WidgetOnClick;
+      private _disabled: boolean;
+      private _active: boolean;
+      public tippy: any;
+
+      constructor(
+        label: string,
+        icon: string,
+        onClick: WidgetOnClick = () => {},
+        disabled: boolean = false,
+        active: boolean = false,
+        registerOnCreate: boolean = true
+      ) {
+        this.element = document.createElement("button");
+        this.element.className =
+          "main-addButton-button control-button control-button-heart";
+        this.icon = icon;
+        this.onClick = onClick;
+        this.disabled = disabled;
+        this.active = active;
+        this.tippy = createTooltip(this.element, {
+          content: label,
+          ...(Spicetify as any).TippyProps,
+        });
+        this.label = label;
+        if (registerOnCreate) this.register();
+      }
+      get label(): string {
+        return this._label;
+      }
+      set label(text: string) {
+        this._label = text;
+        if (!this.tippy) this.element.setAttribute("title", text);
+        else this.tippy.setContent(text);
+      }
+      get icon(): string {
+        return this._icon;
+      }
+      set icon(input: string) {
+        let newInput = input;
+        if (
+          newInput &&
+          (Spicetify as any).SVGIcons &&
+          (Spicetify as any).SVGIcons[newInput]
+        ) {
+          newInput = `<svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor">${
+            (Spicetify as any).SVGIcons[newInput]
+          }</svg>`;
+        }
+        this._icon = newInput;
+        this.element.innerHTML = newInput;
+      }
+      get onClick(): WidgetOnClick {
+        return this._onClick;
+      }
+      set onClick(func: WidgetOnClick) {
+        this._onClick = func;
+        this.element.onclick = () => this._onClick(this);
+      }
+      get disabled(): boolean {
+        return this._disabled;
+      }
+      set disabled(bool: boolean) {
+        this._disabled = bool;
+        this.element.disabled = bool;
+        this.element.classList.toggle("main-addButton-disabled", bool);
+        (this.element as any).ariaDisabled = bool;
+      }
+      set active(bool: boolean) {
+        this._active = bool;
+        this.element.classList.toggle("main-addButton-active", bool);
+        (this.element as any).ariaChecked = bool;
+      }
+      get active(): boolean {
+        return this._active;
+      }
+      register() {
+        widgetStash.add(this.element);
+        nowPlayingWidget?.append(this.element);
+      }
+      deregister() {
+        widgetStash.delete(this.element);
+        this.element.remove();
+      }
+    }
+
+    function waitForWidgetMounted() {
+      nowPlayingWidget =
+        document.querySelector<HTMLElement>(".main-nowPlayingWidget-nowPlaying") ??
+        // 1.3.5: .main-nowPlayingWidget-nowPlaying is no longer mapped.
+        document.querySelector<HTMLElement>(".nH2R2U626Rdlv05YEt09");
+      if (!nowPlayingWidget) {
+        setTimeout(waitForWidgetMounted, 300);
+        return;
+      }
+      nowPlayingWidget.append(...Array.from(widgetStash));
+    }
+
+    (function attachObserver() {
+      const leftPlayer =
+        document.querySelector<HTMLElement>(".main-nowPlayingBar-left") ??
+        // 1.3.5: .main-nowPlayingBar-left is no longer mapped.
+        document.querySelector<HTMLElement>(".Xaz3TDhhjakUcSaES5TR") ??
+        document.querySelector<HTMLElement>(".qqAX5M23YurntqVJ_8Dt") ??
+        document.querySelector<HTMLElement>(".main-nowPlayingWidget-actionButtonWrapper") ??
+        document.querySelector<HTMLElement>(
+          ".main-nowPlayingWidget-nowPlaying > div:last-of-type"
+        );
+      if (!leftPlayer) {
+        setTimeout(attachObserver, 300);
+        return;
+      }
+      waitForWidgetMounted();
+      const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          if (mutation.removedNodes.length > 0) {
+            nowPlayingWidget = null;
+            waitForWidgetMounted();
+          }
+        }
+      });
+      observer.observe(leftPlayer, { childList: true });
+    })();
+
+    return { Button, Widget, GetControls };
+  })(),
+};

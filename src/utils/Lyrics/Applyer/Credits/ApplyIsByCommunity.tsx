@@ -1,0 +1,352 @@
+import { createTooltip } from "../../../tooltip.ts";
+import { IsPIP } from "../../../../components/Utils/PopupLyrics.ts";
+import {
+  closeIframeProfileModal,
+  resolveProfileIdentity,
+  resolveProfileUsername,
+  showIframeProfileModal,
+} from "../../../../components/ReactComponents/IframeProfile/IframeProfileModal.tsx";
+import { GetLyricsFooterDetails, PinFooterDetailWithoutWriters } from "./CreateLyricsFooter.ts";
+import { $openProfilesInBrowser } from "../../../../utils/stores.ts";
+
+let isByCommunityAbortController: AbortController | null = null;
+let madeTippys = new Set<any>();
+
+export function CleanUpIsByCommunity(closeProfileModal: boolean = false) {
+  if (closeProfileModal) {
+    closeIframeProfileModal();
+  }
+  if (isByCommunityAbortController) {
+    isByCommunityAbortController.abort();
+    isByCommunityAbortController = null;
+  }
+
+  madeTippys.forEach((tippy) => {
+    if (tippy && typeof tippy.destroy === "function") {
+      tippy.destroy();
+    }
+  });
+  madeTippys.clear();
+}
+
+function openProfile(userId: string | undefined, profileElement: HTMLElement, signal: AbortSignal) {
+  if (!userId || signal.aborted) return;
+  if ($openProfilesInBrowser.get()) {
+    void resolveProfileUsername(userId).then((username) => {
+      if (!signal.aborted && username) {
+        window.open(`https://spicylyrics.org/${encodeURIComponent(username)}`, "_blank", "noopener,noreferrer");
+      }
+    });
+    return;
+  }
+  const profileDocument = profileElement.ownerDocument;
+  const url = `https://spicylyrics.org/uid/${encodeURIComponent(userId)}`;
+
+  const feedback = profileDocument.createElement("span");
+  feedback.className = "sl-profile-feedback";
+  const clearFeedback = () => {
+    feedback.remove();
+    feedback.replaceChildren();
+    profileElement.removeAttribute("aria-busy");
+  };
+  signal.addEventListener("abort", clearFeedback, { once: true });
+  showIframeProfileModal(userId, profileDocument, {
+    signal,
+    onState: (state) => {
+      clearFeedback();
+      if (signal.aborted || state === "closed" || state === "ready") return;
+      const status = profileDocument.createElement("span");
+      status.setAttribute("role", "status");
+      if (state === "loading") {
+        profileElement.setAttribute("aria-busy", "true");
+        const spinner = profileDocument.createElement("span");
+        spinner.className = "sl-profile-loading";
+        spinner.setAttribute("aria-hidden", "true");
+        status.className = "sl-profile-status-text";
+        status.textContent = "Loading profile";
+        feedback.append(spinner, status);
+      } else {
+        status.textContent = "Couldn't load profile here.";
+        feedback.appendChild(status);
+        const browserLink = profileDocument.createElement("a");
+        browserLink.className = "sl-profile-action";
+        browserLink.href = url;
+        browserLink.target = "_blank";
+        browserLink.rel = "noopener noreferrer";
+        browserLink.textContent = "Open in browser";
+        browserLink.addEventListener("click", () => {
+          closeIframeProfileModal(userId);
+          clearFeedback();
+        }, { signal });
+        feedback.appendChild(browserLink);
+      }
+      profileElement.after(feedback);
+    },
+  });
+}
+
+let PageDocument: Document = document;
+
+export function ApplyIsByCommunity(data: any, LyricsContainer: HTMLElement): void {
+  if (!LyricsContainer) return;
+  if (
+    data.source !== "spl"
+    && (typeof data.sourceDisplayName !== "string"
+      || data.sourceDisplayName.trim().toLowerCase() !== "spicy lyrics community")
+  ) return;
+  PageDocument = LyricsContainer.ownerDocument;
+
+  // Clean up any previous listeners before adding new ones
+  if (isByCommunityAbortController) {
+    isByCommunityAbortController.abort();
+  }
+
+  if (madeTippys.size > 0) {
+    madeTippys.forEach((tippy) => {
+      if (tippy && typeof tippy.destroy === "function") {
+        tippy.destroy();
+      }
+    });
+    madeTippys.clear();
+  }
+
+  isByCommunityAbortController = new AbortController();
+  const { signal } = isByCommunityAbortController;
+
+  const songInfoElement = PageDocument.createElement("div");
+  songInfoElement.classList.add("SongInfo", "CommunityCredits");
+  LyricsContainer.classList.add("FromCommunity");
+
+  const communityNote = PageDocument.createElement("span");
+  communityNote.classList.add("SongInfoNote");
+  communityNote.textContent = "These lyrics have been provided by our community";
+  const communityLead = PageDocument.createElement("span");
+  communityLead.classList.add("SongInfoLead");
+  communityLead.textContent = "Community lyrics";
+  songInfoElement.append(communityNote, communityLead);
+
+  const creatorBadge = PageDocument.createElement("span");
+  creatorBadge.className = "VV_CreatorLyricsBadge";
+  creatorBadge.textContent = "✦";
+  creatorBadge.setAttribute("aria-label", "Lyrics by the creator of vvertax Edition");
+  const markCreator = (username: unknown) => {
+    if (signal.aborted || typeof username !== "string") return;
+    const handle = username.trim().replace(/^@/, "").toLowerCase();
+    if (handle !== "vvertax." && handle !== "july") return;
+    creatorBadge.title = `Lyrics made by @${username}`;
+    const author = songInfoElement.querySelector(makerUsername ? ".Maker .song-info-profile-section" : ".Uploader .song-info-profile-section");
+    if (author && creatorBadge.parentElement !== author) author.appendChild(creatorBadge);
+  };
+
+
+  const preferredProfileName = (username?: string, displayName?: string) => {
+    const cleanUsername = username?.trim();
+    const cleanDisplayName = displayName?.trim();
+    if (cleanUsername && cleanDisplayName && cleanUsername.toLowerCase() === cleanDisplayName.toLowerCase()) {
+      return cleanDisplayName;
+    }
+    return cleanUsername ?? cleanDisplayName;
+  };
+
+  const makerDisplayName = data.TTMLUploadMetadata?.Maker?.displayName ?? data.TTMLUploadMetadata?.Maker?.display_name ?? data.TTMLUploadMetadata?.Maker?.globalName ?? data.TTMLUploadMetadata?.Maker?.global_name;
+  const makerUsername = preferredProfileName(data.TTMLUploadMetadata?.Maker?.username, makerDisplayName);
+  const makerAvatar = data.TTMLUploadMetadata?.Maker?.avatar;
+  const uploaderDisplayName = data.TTMLUploadMetadata?.Uploader?.displayName ?? data.TTMLUploadMetadata?.Uploader?.display_name ?? data.TTMLUploadMetadata?.Uploader?.globalName ?? data.TTMLUploadMetadata?.Uploader?.global_name;
+  const uploaderUsername = preferredProfileName(data.TTMLUploadMetadata?.Uploader?.username, uploaderDisplayName);
+  const uploaderAvatar = data.TTMLUploadMetadata?.Uploader?.avatar;
+
+  const createProfileSection = (
+    type: "Maker" | "Uploader",
+    labelText: string,
+    username: string,
+    avatarUrl?: string
+  ) => {
+    const wrapperSpan = PageDocument.createElement("span");
+    wrapperSpan.classList.add(type);
+
+    const labelSpan = PageDocument.createElement("span");
+    labelSpan.classList.add("SongInfoRole");
+    labelSpan.textContent = labelText;
+
+    const profileSectionSpan = PageDocument.createElement("button");
+    profileSectionSpan.type = "button";
+    profileSectionSpan.classList.add("song-info-profile-section");
+
+    const nameSpan = PageDocument.createElement("span");
+    nameSpan.classList.add("SongInfoName");
+    const usernameSpan = PageDocument.createElement("span");
+    usernameSpan.textContent = username;
+    nameSpan.append("@", usernameSpan);
+    profileSectionSpan.append(labelSpan, " ");
+
+    if (avatarUrl) {
+      const img = PageDocument.createElement("img");
+      img.src = avatarUrl;
+      img.alt = "";
+      img.onerror = () => {
+        img.style.display = "none";
+      };
+      profileSectionSpan.appendChild(img);
+    }
+
+    profileSectionSpan.appendChild(nameSpan);
+    // Spotify's playback shortcut must not cancel a keyboard button press.
+    profileSectionSpan.addEventListener("keydown", (event) => {
+      if (event.key === " " || event.key === "Enter") event.stopPropagation();
+    }, { signal });
+    wrapperSpan.appendChild(profileSectionSpan);
+
+    songInfoElement.appendChild(wrapperSpan);
+    return usernameSpan;
+  };
+
+  let makerUsernameSpan: HTMLSpanElement | undefined;
+  let uploaderUsernameSpan: HTMLSpanElement | undefined;
+  if (makerUsername) {
+    makerUsernameSpan = createProfileSection("Maker", "Made by", makerUsername, makerAvatar);
+  }
+
+  if (uploaderUsername) {
+    const labelText = makerUsername ? "Uploaded by" : "Made by";
+    uploaderUsernameSpan = createProfileSection("Uploader", labelText, uploaderUsername, uploaderAvatar);
+  }
+  markCreator(makerUsername ? data.TTMLUploadMetadata?.Maker?.username : data.TTMLUploadMetadata?.Uploader?.username);
+  LyricsContainer.appendChild(songInfoElement);
+  PinFooterDetailWithoutWriters(songInfoElement, LyricsContainer);
+
+  const communityCreditElements = [...new Set([
+    ...GetLyricsFooterDetails(LyricsContainer),
+    songInfoElement,
+  ])];
+  const creditStates = communityCreditElements.map((element) => ({
+    element: element as HTMLElement,
+    opacity: element.style.opacity,
+  }));
+  const restoreCreditOpacity = (element: HTMLElement, opacity: string) => {
+    if (opacity) element.style.opacity = opacity;
+    else element.style.removeProperty("opacity");
+  };
+  creditStates.forEach(({ element: creditElement }) => {
+    // Commit the hidden starting state without transitioning away from visible.
+    creditElement.style.transition = "none";
+    creditElement.style.opacity = "0";
+  });
+
+  let creditsRevealed = false;
+  const revealCredits = () => {
+    if (creditsRevealed || signal.aborted) return;
+    creditsRevealed = true;
+
+    // Pinned details can belong to the popout before the writer footer is mounted.
+    const creditDocument = songInfoElement.ownerDocument;
+    if (creditDocument !== document) {
+      creditStates.forEach(({ element, opacity }) => {
+        restoreCreditOpacity(element, opacity);
+      });
+      return;
+    }
+
+    const creditWindow = creditDocument.defaultView ?? window;
+    let revealFrame: number | null = null;
+    signal.addEventListener("abort", () => {
+      if (revealFrame !== null) creditWindow.cancelAnimationFrame(revealFrame);
+    }, { once: true });
+    revealFrame = creditWindow.requestAnimationFrame(() => {
+      if (signal.aborted) return;
+      revealFrame = creditWindow.requestAnimationFrame(() => {
+        revealFrame = null;
+        if (signal.aborted) return;
+        creditStates.forEach(({ element, opacity }) => {
+          element.style.transition = "opacity 180ms cubic-bezier(0.22, 1, 0.36, 1)";
+          restoreCreditOpacity(element, opacity);
+        });
+      });
+    });
+  };
+
+  // Resolve the owning document after the renderer mounts its detached tree.
+  // Popouts show the supplied names while optional profile lookups finish.
+  queueMicrotask(() => {
+    if (songInfoElement.ownerDocument !== document || !data.TTMLUploadMetadata) {
+      revealCredits();
+    }
+  });
+
+  if (!data.TTMLUploadMetadata) {
+    return;
+  }
+
+  const updateDiscordUsername = (
+    userId: string | undefined,
+    element: HTMLSpanElement | undefined,
+    displayName?: string,
+  ) => {
+    if (!userId || !element) return Promise.resolve();
+    return resolveProfileIdentity(userId).then((profile) => {
+      if (!signal.aborted && profile) {
+        const renderedName = element.textContent?.trim();
+        const profileName = preferredProfileName(
+          profile.username,
+          renderedName || displayName || profile.displayName,
+        ) ?? profile.username;
+        element.textContent = profileName;
+        if (element === (makerUsernameSpan ?? uploaderUsernameSpan)) markCreator(profile.username);
+      }
+    });
+  };
+  const profileUpdates = [
+    updateDiscordUsername(data.TTMLUploadMetadata?.Maker?.id, makerUsernameSpan, makerDisplayName),
+    updateDiscordUsername(data.TTMLUploadMetadata?.Uploader?.id, uploaderUsernameSpan, uploaderDisplayName),
+  ];
+  void Promise.allSettled(profileUpdates).then(revealCredits);
+
+  const uploaderSpan = songInfoElement.querySelector<HTMLElement>(".Uploader .song-info-profile-section");
+  if (uploaderSpan) {
+    if (!IsPIP) {
+      madeTippys.add(
+        createTooltip(uploaderSpan, {
+          ...Spicetify.TippyProps,
+          ...(uploaderSpan.ownerDocument === document
+            ? {}
+            : { appendTo: () => uploaderSpan.ownerDocument.body }),
+          content: `View TTML Profile`,
+        })
+      )
+    }
+    uploaderSpan.addEventListener(
+      "click",
+      () => {
+        openProfile(data.TTMLUploadMetadata?.Uploader?.id, uploaderSpan, signal);
+        if (IsPIP) {
+          globalThis.focus();
+        }
+      },
+      { signal }
+    );
+  }
+
+  const makerSpan = songInfoElement.querySelector<HTMLElement>(".Maker .song-info-profile-section");
+  if (makerSpan) {
+    if (!IsPIP) {
+      madeTippys.add(
+        createTooltip(makerSpan, {
+          ...Spicetify.TippyProps,
+          ...(makerSpan.ownerDocument === document
+            ? {}
+            : { appendTo: () => makerSpan.ownerDocument.body }),
+          content: `View TTML Profile`,
+        })
+      )
+    }
+    makerSpan.addEventListener(
+      "click",
+      () => {
+        openProfile(data.TTMLUploadMetadata?.Maker?.id, makerSpan, signal);
+        if (IsPIP) {
+          globalThis.focus();
+        }
+      },
+      { signal }
+    );
+  }
+}

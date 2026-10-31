@@ -1,0 +1,26 @@
+# Dependencies and local caches
+node_modules/
+.npm-cache/
+.npm/
+.cache/
+.spicetify/
+# Generated bundles and upload directories (keep them locally)
+dist/
+deploy/
+coverage/
+*.tsbuildinfo
+*.log
+*.tmp
+# Machine-specific settings and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.claude/
+.cursor/
+.agents/
+.codex/
+.vscode/
+.DS_Store
+Thumbs.db

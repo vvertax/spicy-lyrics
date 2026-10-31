@@ -1,0 +1,17 @@
+# Spicy Lyrics static release host (Apache 2.4)
+AddType application/javascript .mjs
+
+# Set CORS on both successful and error responses, without duplicate headers.
+Header onsuccess unset Access-Control-Allow-Origin
+Header always set Access-Control-Allow-Origin "*"
+
+<Files "version">
+    ForceType text/plain
+    Header onsuccess unset Cache-Control
+    Header always set Cache-Control "no-store, no-cache, must-revalidate"
+</Files>
+
+<FilesMatch "\.mjs$">
+    Header onsuccess unset Cache-Control
+    Header always set Cache-Control "no-cache"
+</FilesMatch>

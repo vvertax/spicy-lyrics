@@ -1,0 +1,28 @@
+name: Check and build
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      SPICETIFY_SKIP: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint
+      - run: npm run release:local
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hosting-files
+          path: deploy/lrc.vvrtx.lol/
+          include-hidden-files: true
+          if-no-files-found: error
