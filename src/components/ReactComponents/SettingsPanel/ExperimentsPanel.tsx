@@ -40,7 +40,7 @@ export function ExperimentSettings({ title = false, experimentIds, advancedOnly 
         labelAccessory={
           <a
             className="sl-sp-help-link"
-            href="https://github.com/iPixelGalaxy/spicy-lyrics/blob/dev/ENABLE_DEVTOOLS.md"
+            href="https://github.com/vvertax/spicy-lyrics/blob/main/DEVTOOLS.md"
             target="_blank"
             rel="noreferrer"
             onClick={(event) => event.stopPropagation()}

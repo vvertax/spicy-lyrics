@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { coerce, gt, lt, lte } from "semver";
 import { NoticeLink, showNotice } from "./NoticeDialog.tsx";
 
-const PATCH_NOTES_URL = "https://raw.githubusercontent.com/iPixelGalaxy/spicy-lyrics/dev/.change-notes/PATCH_NOTES.md";
-const PATCH_NOTES_PAGE_URL = "https://github.com/iPixelGalaxy/spicy-lyrics/blob/dev/.change-notes/PATCH_NOTES.md";
+const PATCH_NOTES_URL = "https://raw.githubusercontent.com/vvertax/spicy-lyrics/main/CHANGELOG.md";
+const PATCH_NOTES_PAGE_URL = "https://github.com/vvertax/spicy-lyrics/blob/main/CHANGELOG.md";
 const FETCH_TIMEOUT_MS = 10_000;
 const DISCORD_URL = "https://discord.com/invite/uqgXU5wh8j";
 
@@ -54,7 +54,6 @@ function renderInlineMarkdown(text: string): React.ReactNode[] {
   return tokens;
 }
 
-function hasPixelEditionVersion(fromVersion: string): boolean { return /^100\.10\.\d+$/i.test(fromVersion.trim()); }
 function isDowngrade(fromVersion: string, installedVersion: string): boolean {
   const from = normalizeVersion(fromVersion);
   const installed = normalizeVersion(installedVersion);
@@ -99,7 +98,7 @@ export function showUpdatedDialog(fromVersion: string, toVersion: string) {
   const content: React.ReactElement<{ style?: React.CSSProperties }>[] = [
     <p className="sl-notice-text">You were on <span className="sl-notice-version">{fromVersion}</span>. You are now on <span className="sl-notice-version">{toVersion}</span>.</p>,
   ];
-  if (hasPixelEditionVersion(fromVersion) && !downgraded) {
+  if (!downgraded) {
     content.push(<PatchNotes fromVersion={fromVersion} toVersion={toVersion} />);
   }
   content.push(<p className="sl-notice-text sl-notice-text--quiet">Need help? Visit our <NoticeLink href={DISCORD_URL}>Discord</NoticeLink>.</p>);

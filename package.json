@@ -47,7 +47,7 @@
     "typescript": "^5.9.3"
   },
   "description": "Spicy Lyrics — based on Spikerko, iPixelGalaxy and Ruytha",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "contributors": [
     {
       "name": "Spikerko"

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.1
+
+- Use this fork's changelog for update notes and show notes for its own version series.
+- Replace Pixel fork issue/help links with this repository.
+- Preserve official Spicy Lyrics services, support links and upstream attribution.
+
 ## 1.6.0
 
 - Add persistent English/Russian interface language selection and localized settings search.

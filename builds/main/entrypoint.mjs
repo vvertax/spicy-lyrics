@@ -1396,7 +1396,7 @@ const text = (...children) => h("p", { class: "sle-text" }, ...children);
 
 const discordNote = (lead) =>
   h("p", { class: "sle-text sle-text--quiet" }, `${lead} `,
-    usesOfficialStatus() ? link(DISCORD_URL, "Discord") : link("https://github.com/iPixelGalaxy/spicy-lyrics/issues", "fork issue tracker"), ".");
+    usesOfficialStatus() ? link(DISCORD_URL, "Discord") : link("https://github.com/vvertax/spicy-lyrics/issues", "fork issue tracker"), ".");
 
 const channelRecoveryControl = () => {
   const button = makeBtn("Switch Build Channel");
