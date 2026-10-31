@@ -13,7 +13,6 @@ copyFileSync(resolve(root, "dist", bundle), resolve(output, bundle));
 copyFileSync(resolve(root, "builds/main/entrypoint.mjs"), resolve(output, "entrypoint.mjs"));
 copyFileSync(resolve(root, "hosting/spicy-lyrics-sl.mjs"), resolve(output, "spicy-lyrics-sl.mjs"));
 copyFileSync(resolve(root, "hosting/index.html"), resolve(output, "index.html"));
-copyFileSync(resolve(root, "hosting/.htaccess"), resolve(output, ".htaccess"));
 writeFileSync(resolve(output, "version"), version + "\n");
 writeFileSync(resolve(output, "_headers"), `/*
   Access-Control-Allow-Origin: *
