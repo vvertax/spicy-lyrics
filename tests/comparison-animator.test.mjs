@@ -12,7 +12,7 @@ const {outputFiles}=await build({entryPoints:['src/utils/Lyrics/Animator/Lyrics/
  b.onLoad({filter:/.*/,namespace:'fixture'},a=>{
  const prefix='const atom=globalThis.__comparisonAnimatorTest.atom;';
  if(a.path.endsWith('/lyrics.ts'))return{contents:'export const LyricsObject=globalThis.__comparisonAnimatorTest.model;export const SimpleLyricsMode_LetterEffectsStrengthConfig={LongerThan:1500,Longer:{Glow:.4,YOffset:.45,Scale:1.103},Shorter:{Glow:.285,YOffset:.1,Scale:1.09}};export const preHiddenDotLineMs=200;'};
- if(a.path.endsWith('stores.ts'))return{contents:prefix+'export const $currentLyricsType=atom("Syllable"),$simpleLyricsMode=atom(false),$simpleLyricsModeRenderingType=atom("calculate"),$spaceGravityMode=atom(false);globalThis.__comparisonAnimatorTest.typeStore=$currentLyricsType;'};
+ if(a.path.endsWith('stores.ts'))return{contents:prefix+'export const $splitWordMotion=atom(true);globalThis.__comparisonAnimatorTest.motionStore=$splitWordMotion;export const $currentLyricsType=atom("Syllable"),$simpleLyricsMode=atom(false),$simpleLyricsModeRenderingType=atom("calculate"),$spaceGravityMode=atom(false);globalThis.__comparisonAnimatorTest.typeStore=$currentLyricsType;'};
  if(a.path.endsWith('experiments.ts'))return{contents:'export const isExperimentEnabled=()=>false;'};
  if(a.path.endsWith('LyricsVirtualizer.ts'))return{contents:'export const isBgPopActive=()=>false,isLyricsListMoving=()=>false,setOnNewElementMounted=()=>{},syncDetachedBackgroundLines=()=>{};'};
  return{contents:prefix+'export const $animatorPreset=atom("Default"),$animatorValues=atom({wordPeakScale:1.0505,letterPeakScale:1.175,verticalStrength:1,glowStrength:1,blurStrength:1,scaleFrequency:.88,scaleDamping:.64,verticalFrequency:1.45,verticalDamping:.4,glowFrequency:1.18,glowDamping:.56});'};
@@ -58,4 +58,29 @@ test('line-synced comparison uses the same line animation',()=>{
  const session=createLyricsAnimationSession('Line',a);Animate(0);session.animate(0);
  for(const position of [500,1500,3500,100]){now+=16;Animate(position);session.animate(position);assert.deepEqual(snapshot(a),snapshot(main));}
  session.destroy();globalThis.__comparisonAnimatorTest.typeStore.set('Syllable');
+});
+
+
+test('joined-syllable motion is identical in normal lyrics and both comparison sessions',()=>{
+ const make=()=>{
+  const value=lines(),parent={classList:{contains:name=>name==='word-group'}};
+  value[0].Syllables.Lead=[0,1].map(i=>({HTMLElement:element(),StartTime:i*1000,EndTime:(i+1)*1000,TotalTime:1000}));
+  value[0].Syllables.Lead.forEach((word,i)=>{
+   const el=word.HTMLElement;el.parentElement=parent;el.offsetTop=0;el.offsetLeft=i*100;el.offsetWidth=100;
+   el.ownerDocument={defaultView:{getComputedStyle:element=>({scale:element.values.scale??'1'})}};
+  });
+  return value;
+ };
+ const main=make(),a=make(),b=make();model.Types.Syllable.Lines=main;
+ const sessionA=createLyricsAnimationSession('Syllable',a),sessionB=createLyricsAnimationSession('Syllable',b);
+ for(const position of [250,750,1250,2500,100]){
+  now+=16;Animate(position);sessionA.animate(position);sessionB.animate(position);
+  const offsets=rows=>rows[0].Syllables.Lead.map(word=>word.HTMLElement.style.translate);
+  assert.deepEqual(offsets(a),offsets(main));assert.deepEqual(offsets(b),offsets(main));
+ }
+ globalThis.__comparisonAnimatorTest.motionStore.set(false);
+ now+=16;Animate(400);sessionA.animate(400);sessionB.animate(400);
+ for(const rows of [main,a,b])for(const word of rows[0].Syllables.Lead)if(word.HTMLElement.parentElement)assert.equal(word.HTMLElement.style.translate,'0.000px 0');
+ globalThis.__comparisonAnimatorTest.motionStore.set(true);
+ sessionA.destroy();sessionB.destroy();
 });

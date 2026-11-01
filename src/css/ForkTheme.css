@@ -98,6 +98,20 @@ sl-generic-modal.SpicyLyricsModal .sl-modal-overlay-animated.Active .sl-modal::b
     0 26px 60px rgba(0, 0, 0, 0.55);
 }
 
+/* Settings subpanels keep the glass and sky gradients without tiled stars.
+   Content selectors also cover the TTML database opened without a modal ID. */
+sl-generic-modal.SpicyLyricsModal .sl-modal-overlay-animated.Active .sl-modal:is(
+  .slmodal-advancedExperiments,
+  .slmodal-buildChannelPanel,
+  .slmodal-lyricsSourcesManager,
+  .slmodal-animatorPreview,
+  :has(.sl-sp-hidden-settings),
+  :has(.sl-ldb-root)
+)::before {
+  background-image: var(--ry-sky);
+  background-size: var(--ry-sky-size);
+}
+
 /* Peeking clears the glass so the lyrics behind show (settings-panel.css), but only its
    colour, blur and shadow; the sky painted above would still cover them. */
 sl-generic-modal.SpicyLyricsModal .sl-modal-overlay.Active[data-peek] .sl-modal.slmodal-settingsPanel::before {

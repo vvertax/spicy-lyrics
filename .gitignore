@@ -24,3 +24,6 @@ coverage/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Local-only online counter: client, Worker, configuration and deployment files
+/local-online/

@@ -1,4 +1,5 @@
-import { $currentLyricsData,$duetColorsEnabled,$duetLeadColor,$duetOtherColor,$uiLanguage } from "../../utils/stores.ts";
+import { getDisplayedLyrics } from "../../utils/Lyrics/DisplayedLyrics.ts";
+import { $duetColorsEnabled,$duetLeadColor,$duetOtherColor,$uiLanguage } from "../../utils/stores.ts";
 import { translateUi } from "../../utils/i18n/translate.ts";
 import { LyricsObject } from "../../utils/Lyrics/lyrics.ts";
 import GetProgress from "../../utils/Gets/GetProgress.ts";
@@ -22,7 +23,7 @@ export function bindLineActions(page:HTMLElement){
   let data:any,index:number;
   const source=comparisonLineSources.get(line);
   if(source){data=source.data;index=source.index;}
-  else{try{data=JSON.parse($currentLyricsData.get());}catch{return;}
+  else{data=getDisplayedLyrics(SpotifyPlayer.GetUri());if(!data)return;
    const model=[...LyricsObject.Types.Syllable.Lines,...LyricsObject.Types.Line.Lines].find(l=>l.HTMLElement===line);
    index=model?data.Content?.findIndex((l:any)=>Math.abs(comparisonTiming(l).start-model.StartTime)<2):Array.from(page.querySelectorAll('.LyricsContent .line:not(.musical-line)')).indexOf(line);
   }

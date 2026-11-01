@@ -500,24 +500,13 @@
   justify-content: flex-end;
 }
 
-/* Joined syllables have no spacing to absorb independent scale expansion.
-   Keep their size fixed when more text follows, including nested emphasis
-   letters; lift and glow still animate. Final syllables, standalone words,
-   and Space Gravity retain their scale effects. */
-#SpicyLyricsPage.SpicyRenderer:not(.SpaceGravityMode):not([data-animator-preset="Default"])
-  .LyricsContainer
-  .LyricsContent
-  .line
-  .word-group
-  > :is(.word, .letterGroup):not(:only-child, .LastWordInLine),
-#SpicyLyricsPage.SpicyRenderer:not(.SpaceGravityMode):not([data-animator-preset="Default"])
-  .LyricsContainer
-  .LyricsContent
-  .line
-  .word-group
-  > .letterGroup:not(:only-child, .LastWordInLine)
-  > .letter {
-  scale: 1 !important;
+/* SplitWordMotion keeps scaled pieces touching around the word's centre.
+   Each piece must scale about its own centre for that layout rule to hold. */
+#SpicyLyricsPage.SpicyRenderer:not(.SpaceGravityMode) .word-group {
+  position: relative;
+}
+#SpicyLyricsPage.SpicyRenderer:not(.SpaceGravityMode) .LyricsContent .line .word-group > :is(.word, .letterGroup) {
+  transform-origin: center center !important;
 }
 
 #SpicyLyricsPage.SpicyRenderer .LyricsContainer .LyricsContent .line.Sung .word,

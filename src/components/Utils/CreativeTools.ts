@@ -1,8 +1,10 @@
+import { getDisplayedLyrics } from "../../utils/Lyrics/DisplayedLyrics.ts";
+import { SpotifyPlayer } from "../Global/SpotifyPlayer.ts";
 import { coverGradient } from "./QuotePalette.ts";
 import { quoteLineText, wrapQuoteText } from "./QuoteText.ts";
 import { hideKaraokeLine } from "./KaraokeTiming.ts";
 import { toast } from "sonner";
-import { $currentLyricsData } from "../../utils/stores.ts";
+
 import { LyricsObject } from "../../utils/Lyrics/lyrics.ts";
 import GetProgress from "../../utils/Gets/GetProgress.ts";
 import { Icons } from "../Styling/Icons.ts";
@@ -54,7 +56,7 @@ export function CreativeMenuRows(menu: HTMLElement, page: HTMLElement, add: (but
   };
   const current = modes.get(page);
   const karaoke = row("Karaoke · Alt+Shift+K", Icons.Karaoke, () => {
-    let data; try { data = JSON.parse($currentLyricsData.get()); } catch { /* notice */ }
+    const data = getDisplayedLyrics(SpotifyPlayer.GetUri());
     if (!data || data.Type === "Static") { toast.error("Karaoke needs synced lyrics"); return; }
     const value = state(page); value.karaoke = !value.karaoke;
     karaoke.setAttribute("aria-checked", String(value.karaoke));
@@ -83,7 +85,8 @@ async function loadImage(doc: Document, url: string): Promise<HTMLImageElement> 
 export async function quoteCard(doc: Document, initialLine=0, supplied?:any) {
   const existing = doc.querySelector<HTMLDialogElement>(".vv-quote-dialog");
   if (existing) { existing.focus(); return; }
-  let lyrics; try { lyrics = supplied ?? JSON.parse($currentLyricsData.get()); } catch { throw new Error("Open a song with lyrics first"); }
+  const lyrics = supplied ?? getDisplayedLyrics(SpotifyPlayer.GetUri());
+  if (!lyrics) throw new Error("Open a song with lyrics first");
   const lines = (lyrics.Content ?? []).map(quoteLineText).filter(Boolean) as string[];
   if (!lines.length) throw new Error("No lines available for a quote");
   // Snapshot track and credits: switching songs must not mix metadata into the card.
@@ -111,13 +114,16 @@ export async function quoteCard(doc: Document, initialLine=0, supplied?:any) {
   const status = doc.createElement("p"); status.role = "status";
   const coverLabel = doc.createElement("label");
   const useCover = doc.createElement("input"); useCover.type = "checkbox"; useCover.checked = true;
-  coverLabel.append(useCover, " Include cover art");
+  const coverText=doc.createElement("span");coverText.textContent="Include cover art";
+  coverLabel.className="vv-quote-option";coverLabel.append(coverText,useCover);
   const paletteLabel = doc.createElement("label");
   const usePalette = doc.createElement("input"); usePalette.type = "checkbox";
-  paletteLabel.append(usePalette, " Background from cover colors");
+  const paletteTextLabel=doc.createElement("span");paletteTextLabel.textContent="Background from cover colors";
+  paletteLabel.className="vv-quote-option";paletteLabel.append(paletteTextLabel,usePalette);
   const gradientLabel = doc.createElement("label");
   const useGradient = doc.createElement("input");useGradient.type="checkbox";useGradient.checked=false;
-  gradientLabel.append(useGradient," Gradient background");
+  const gradientText=doc.createElement("span");gradientText.textContent="Gradient background";
+  gradientLabel.className="vv-quote-option";gradientLabel.append(gradientText,useGradient);
   let palette = ["#382052", "#211735"];
   let paletteLogoLightness = 0;
   let paletteText = "#eee2ff";

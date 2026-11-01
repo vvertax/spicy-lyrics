@@ -99,6 +99,7 @@ function IframeProfileModal({ onClose, attachFrame }: {
       }}
     >
       <div
+        className="sl-profile-dialog"
         role="dialog"
         aria-modal="true"
         aria-label="TTML profile"

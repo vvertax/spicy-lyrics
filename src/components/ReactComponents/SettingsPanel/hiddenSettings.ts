@@ -1,4 +1,5 @@
 export const SETTING_CATALOG = [
+  ["lyrics-split-word-motion", "Split Word Motion", "Move neighbouring syllables as the singing part grows, keeping the word centred.", "Lyrics Display"],
   ["appearance-custom-font", "Use Custom Font", "Use a custom font instead of the bundled Spicy Lyrics font.", "Appearance"],
   ["appearance-background-type", "Background Type", "Choose the dynamic, legacy, static image, or color background.", "Appearance"],
   ["appearance-background-blur", "Background Blur", "Soften the static background image.", "Appearance"],

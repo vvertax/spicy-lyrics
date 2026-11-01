@@ -1,7 +1,8 @@
+import { animateSplitWords } from "./SplitWordMotion.ts";
 // @ts-ignore pkg has no @types on npm
 import Spline from "cubic-spline";
 import { easeSinOut } from "d3-ease";
-import { $currentLyricsType, $simpleLyricsMode, $simpleLyricsModeRenderingType, $spaceGravityMode } from "../../../../utils/stores.ts";
+import { $splitWordMotion, $currentLyricsType, $simpleLyricsMode, $simpleLyricsModeRenderingType, $spaceGravityMode } from "../../../../utils/stores.ts";
 import { LyricsObject, type LyricsLine, type LyricsSyllable, type SyllableLead, SimpleLyricsMode_LetterEffectsStrengthConfig, preHiddenDotLineMs } from "../../lyrics.ts";
 import { isExperimentEnabled } from "../../../experiments.ts";
 import { BlurMultiplier, getIdleEmphasisLyricsScale, getIdleLyricsScale, timeOffset } from "../Shared.ts";
@@ -2673,8 +2674,14 @@ export function Animate(position: number, target?: { type: "Syllable" | "Line"; 
   const lyricsContent = mountedLine?.closest<HTMLElement>(".LyricsContent");
   if (lyricsContent) setClass(lyricsContent, "LinesAllSung", !anyLineUnsung);
 
-  // Commit any queued style changes after completing the animation computations
+  // The layout reads the scales actually rendered this frame, after queued writes.
   flushStyleBatch();
+  if (CurrentLyricsType === "Syllable" && !$spaceGravityMode.get()) {
+    const lines = target?.lines ?? LyricsObject.Types.Syllable.Lines;
+    const win = mountedLine?.ownerDocument?.defaultView;
+    const reduced = win?.matchMedia('(prefers-reduced-motion: reduce)').matches ?? false;
+    animateSplitWords(lines, reduced || !$splitWordMotion.get());
+  }
 }
 
 /** Isolated word sample using the renderer's live curves and spring parameters. */

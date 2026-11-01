@@ -335,7 +335,7 @@ export default function BuildChannelPanel() {
             <div className="sl-build-channel-form">
               <label>
                 <span>Branch Name</span>
-                <input value={name} onChange={(e) => setName(e.currentTarget.value)} placeholder="e.g. iPixel Dev" />
+                <input value={name} onChange={(e) => setName(e.currentTarget.value)} placeholder="e.g. My Build" />
               </label>
               <label>
                 <span>API Host</span>

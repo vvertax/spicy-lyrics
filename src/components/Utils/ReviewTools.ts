@@ -1,10 +1,11 @@
+import { followComparisonLine } from "./ComparisonFollow.ts";
 import { bindTTMLDrop } from "./TTMLDrop.ts";
 import { renderComparisonLyrics } from "./ComparisonRenderer.ts";
 import GetProgress from "../../utils/Gets/GetProgress.ts";
 import { onAnimationFrame } from "../../utils/AnimationFrameLoop.ts";
 import { authorHandle, changedTTMLLines, comparisonTiming, comparisonDifference } from "./ReviewModel.ts";
 import { toast } from "sonner";
-import { $currentLyricsData } from "../../utils/stores.ts";
+import { getDisplayedLyrics } from "../../utils/Lyrics/DisplayedLyrics.ts";
 import { SpotifyPlayer } from "../Global/SpotifyPlayer.ts";
 import { ParseTTML } from "../../utils/Lyrics/manager/parseTTML.ts";
 import { quoteLineText } from "./QuoteText.ts";
@@ -32,7 +33,8 @@ function download(doc:Document, name:string, text:string, type:string) {
   const url=URL.createObjectURL(new Blob([text],{type})); const link=element(doc,'a'); link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
 function currentLyrics() {
-  try { const data=JSON.parse($currentLyricsData.get()); if (Array.isArray(data.Content)) return data; } catch { /* notice */ }
+  const data=getDisplayedLyrics(SpotifyPlayer.GetUri());
+  if (Array.isArray(data?.Content)) return data;
   throw new Error('Open a song with lyrics first');
 }
 export function AddReviewMenuRows(menu:HTMLElement, add:(button:HTMLButtonElement,label:string)=>void) {
@@ -133,7 +135,7 @@ function compareTTML(doc:Document) {
   const grid=element(doc,'div');grid.className='vv-split-grid';root.append(grid);
   type WordView={element:HTMLElement;start:number;end:number};
   type LineView={element:HTMLElement;start:number;end:number;words:WordView[]};
-  type Side={data:any;rows:LineView[];view:HTMLElement;name:HTMLElement;selected:number;request:number;manualUntil:number;input:HTMLInputElement;renderer?:ReturnType<typeof renderComparisonLyrics>};
+  type Side={data:any;rows:LineView[];view:HTMLElement;name:HTMLElement;selected:number;request:number;manualUntil:number;followed:number;input:HTMLInputElement;renderer?:ReturnType<typeof renderComparisonLyrics>};
   const sides:Record<string,Side>={};let closed=false;const dropCleanup:(()=>void)[]=[];
   const diffLabel=element(doc,'label');const diff=element(doc,'input');diff.type='checkbox';diff.checked=false;diffLabel.append(diff,' Highlight differences');
   const summary=element(doc,'span');summary.className='vv-split-summary';summary.hidden=true;
@@ -159,11 +161,11 @@ function compareTTML(doc:Document) {
     const choose=button(doc,`Load version ${label}`,()=>input.click());choose.className='vv-comparison-load';
     const hint=element(doc,'p','Select a TTML file to compare its lyrics');
     empty.append(emptyIcon,choose,hint);view.append(empty);
-    const side:Side={data:null,rows:[],view,name,selected:0,request:0,manualUntil:0,input};sides[label]=side;
+    const side:Side={data:null,rows:[],view,name,selected:0,request:0,manualUntil:0,followed:-1,input};sides[label]=side;
     const mark=iconButton(`Add note to ${label}`,Icons.ReviewLyrics,()=>{if(!side.data||!valid())return;reviewLyrics(doc,{...side.data,reviewFileName:`[${label}] ${side.data.reviewFileName}`},side.selected);});mark.disabled=true;
     const load=iconButton(`Load version ${label}`,Icons.LoadTTML,()=>{input.value='';input.click();});
     header.append(badge,name,input,load,mark);panel.append(header,view);grid.append(panel);
-    for(const event of ['wheel','pointerdown'])view.addEventListener(event,()=>side.manualUntil=win.performance.now()+4000,{passive:true});
+    for(const event of ['wheel','pointerdown','touchstart','keydown'])view.addEventListener(event,()=>{side.manualUntil=win.performance.now()+4000;side.followed=-1;},{passive:true});
     const loadSide=async(file:File)=>{
       const request=++side.request;
       try{
@@ -172,7 +174,7 @@ function compareTTML(doc:Document) {
         const parsed=await ParseTTML(await file.text());
         if(!parsed?.Result?.Content?.length)throw new Error('This TTML has no valid lyric lines');
         if(!valid()||request!==side.request)return;
-        side.data={...parsed.Result,reviewFileName:file.name};side.rows=[];side.selected=0;side.manualUntil=0;
+        side.data={...parsed.Result,reviewFileName:file.name};side.rows=[];side.selected=0;side.manualUntil=0;side.followed=-1;
         name.textContent=file.name;name.title=file.name;view.replaceChildren();
         side.renderer?.destroy();
         side.renderer=renderComparisonLyrics(view,side.data,(index,start)=>{side.selected=index;side.manualUntil=0;seek(start);});
@@ -205,10 +207,15 @@ function compareTTML(doc:Document) {
         const wasActive=row.element.classList.contains('is-active');
         if(wasActive!==active)row.element.classList.toggle('is-active',active);
         const sung=position>=row.end;if(row.element.classList.contains('is-sung')!==sung)row.element.classList.toggle('is-sung',sung);
-        if(active){if(activeIndex<0)activeIndex=index;if(!wasActive&&win.performance.now()>side.manualUntil&&activeIndex===index)scrollLine(side.view,row.element,reduce?'instant':'smooth');}
+        if(active&&activeIndex<0)activeIndex=index;
         for(const word of row.words){const fill=word.end<=word.start?(position>=word.start?100:0):Math.max(0,Math.min(100,(position-word.start)/(word.end-word.start)*100));const value=`${Math.round(fill)}%`;if(word.element.style.getPropertyValue('--word-fill')!==value)word.element.style.setProperty('--word-fill',value);}
       });
-      if(activeIndex>=0)side.selected=activeIndex;
+      if(activeIndex>=0) {
+        side.selected=activeIndex;
+        followComparisonLine(side,activeIndex,win.performance.now(),()=>{
+          scrollLine(side.view,side.rows[activeIndex].element,reduce?'instant':'smooth');
+        });
+      }
     }
   },win);
   const escape=(event:KeyboardEvent)=>{

@@ -1,7 +1,7 @@
 import { $uiLanguage } from "../stores.ts";
 import { translateUi } from "./translate.ts";
-const scope='.sl-update-toast,.LyricsNotice,.sl-sp-panel,.slm,.sl-ldb-upload-root,.sl-notice,.vv-quote-dialog,.vv-review-dialog,.vv-page-comparison,.sl-modal-header,.sl-fork-menu,.sl-quick-controls,.tippy-box';
-const exclude='.line,.word,.letter,.SongInfo,.vv-quote-lines,.vv-split-line,.vv-preview-text,.vv-review-notes article,.sl-ldb-row__info,.sl-ldb-upload-subtitle,.vv-split-track,.vv-split-filename';
+const scope='.sl-modal,.sl-ldb-root,.sl-build-channel-panel,[data-sonner-toast],.LyricsSkeleton,.loaderContainer,.sl-profile-dialog,.sl-update-toast,.LyricsNotice,.sl-sp-panel,.slm,.sl-ldb-upload-root,.sl-notice,.vv-quote-dialog,.vv-review-dialog,.vv-page-comparison,.sl-modal-header,.sl-fork-menu,.sl-quick-controls,.tippy-box';
+const exclude='[data-i18n-ignore],script,style,.sl-build-channel-option-title,.sl-build-channel-select option,.line,.word,.letter,.SongInfo,.vv-quote-lines,.vv-split-line,.vv-preview-text,.vv-review-notes article > p,.vv-review-notes article > strong,.sl-ldb-row__info,.sl-ldb-upload-subtitle,.vv-split-track,.vv-split-filename';
 type Source={original:string;rendered:string};
 const sources=new WeakMap<Node,Source>();
 const attributes=new WeakMap<Element,Map<string,Source>>();
@@ -11,7 +11,7 @@ export function localizeDocument(doc:Document) {
   function translateNode(node:Node){
     const parent=node.nodeType===3?node.parentElement:node as Element;
     if(!parent?.closest(scope)||parent.closest(exclude))return;
-    if(node.nodeType===3&&node.nodeValue?.trim()){
+    if(node.nodeType===3&&node.nodeValue?.trim()&&!parent.closest('input,textarea')){
       const current=node.nodeValue;const saved=sources.get(node);
       const original=saved&&saved.rendered===current?saved.original:current;
       const rendered=translateUi(original,$uiLanguage.get());sources.set(node,{original,rendered});

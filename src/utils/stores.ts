@@ -158,6 +158,7 @@ export const $simpleLyricsMode = persistAtom<boolean>("simpleLyricsMode", false)
 export const $simpleLyricsModeRenderingType = persistAtom<string>("simpleLyricsModeRenderingType", "calculate");
 export const $minimalLyricsMode = persistAtom<boolean>("minimalLyricsMode", false);
 // Shows a word sung in syllables as one word when its parts line up evenly.
+export const $splitWordMotion = persistAtom<boolean>("splitWordMotion", true);
 export const $joinSplitWords = persistAtom<boolean>("joinSplitWords", false);
 // Tinted box drawn behind a lyrics line while the pointer is over it.
 export const $lineHoverBackground = persistAtom<boolean>("lineHoverBackground", true);

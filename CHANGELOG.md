@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.8.1
+
+- Add centred split-word growth based on the actual width and animated scale of each syllable, including independently wrapped fragments.
+- Add a persistent Split Word Motion toggle for normal lyrics and both TTML comparison columns.
+- Fix automatic following in both comparison columns, including resuming after manual scrolling.
+- Fix quote cards, review notes and line actions reporting missing lyrics when the displayed text is available but the fetch cache is empty.
+- Style quote-card selection checkboxes and appearance switches with lavender controls.
+- Make Quick Controls visibly expandable with a bordered header, arrow and configuration hint.
+- Remove the star pattern from Experiments, Hidden Settings, Build Channel, Sources, TTML Database and Animator Behavior panels.
+- Complete missing Russian labels, descriptions, errors, notifications and dynamic tooltips; fix localization in channel and TTML dialogs while preserving user content.
+
 ## 1.8.0
 
 - Keep dominant muted cover colors from being displaced by small, highly saturated details in quote palettes.

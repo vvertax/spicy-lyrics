@@ -1,3 +1,4 @@
+import { setDisplayedLyrics } from "../DisplayedLyrics.ts";
 // deno-lint-ignore-file no-explicit-any
 
 import { $currentLyricsData, $currentLyricsType, $customFont, $customFontEnabled, $spaceGravityMode } from "../../stores.ts";
@@ -282,6 +283,7 @@ export default async function ApplyLyrics(lyricsContent: [object | string, numbe
 
   cleanupApplyLyricsAbortController();
   renderedLyrics = null;
+  setDisplayedLyrics(null, null);
   page.classList.remove("LyricsFontFallback");
   EmitNotApplyed();
   ClearSyllableRenderSession();
@@ -327,6 +329,7 @@ export default async function ApplyLyrics(lyricsContent: [object | string, numbe
     EmitApply("None", null)
     appliedLyricsIdentity = null;
     renderedLyrics = null;
+    setDisplayedLyrics(null, null);
     if (uri) await HideLoaderContainer(uri);
     return;
   }
@@ -366,6 +369,7 @@ export default async function ApplyLyrics(lyricsContent: [object | string, numbe
 
   appliedLyricsIdentity = incomingLyricsIdentity;
   renderedLyrics = lyrics;
+  setDisplayedLyrics(uri, lyrics);
   void refreshLyricsFontFallback();
   if (uri) await HideLoaderContainer(uri);
 }

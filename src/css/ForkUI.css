@@ -258,3 +258,45 @@
 
 /* No drop shadows on the lyrics toolbar, including fullscreen and hover. */
 #SpicyLyricsPage#SpicyLyricsPage .ViewControls.sl-fork-controls .ViewControl { box-shadow:none!important; }
+
+/* Each comparison side owns its scroll viewport, independent of the main player. */
+#SpicyLyricsPage .vv-page-comparison .vv-split-lyrics.LyricsContent { flex:1 1 0; min-height:0; overflow-y:auto!important; scroll-behavior:auto; }
+#SpicyLyricsPage .vv-page-comparison .vv-split-lyrics .SpicyLyricsScrollContainer { flex:none; margin:0; padding:0; }
+
+/* Quote selection uses lavender checks; appearance options use compact switches. */
+.vv-quote-dialog input[type="checkbox"] {
+  appearance:none; -webkit-appearance:none; box-sizing:border-box; position:relative;
+  flex:none; width:18px; height:18px; margin:2px 0 0; border:1px solid #b9a8cd80;
+  border-radius:5px; background:#ffffff08; cursor:pointer; vertical-align:middle;
+  transition:background-color .16s,border-color .16s;
+}
+.vv-quote-dialog input[type="checkbox"]:checked {
+  background-color:#d0bcf2; border-color:#d0bcf2;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='m4 9 3 3 7-7' fill='none' stroke='%232b1d40' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.vv-quote-dialog input[type="checkbox"]:focus-visible { outline:2px solid #d0bcf2; outline-offset:3px; }
+.vv-quote-dialog input[type="checkbox"]:disabled { opacity:.4; cursor:default; }
+.vv-quote-editor > label.vv-quote-option { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:44px; margin:0; padding:4px 0; border-bottom:1px solid #ffffff0b; cursor:pointer; }
+.vv-quote-editor > label.vv-quote-option:hover { color:#eee2ff; }
+.vv-quote-option input[type="checkbox"], .vv-quote-option input[type="checkbox"]:checked {
+  width:38px; height:22px; margin:0; border-radius:999px; background-image:none;
+}
+.vv-quote-option input[type="checkbox"] { background-color:#ffffff15; border-color:#b9a8cd50; }
+.vv-quote-option input[type="checkbox"]::before { content:''; position:absolute; width:16px; height:16px; top:2px; left:2px; border-radius:50%; background:#b9aec8; transition:transform .18s,background-color .18s; }
+.vv-quote-option input[type="checkbox"]:checked::before { transform:translateX(16px); background:#39294e; }
+
+.vv-quick-settings > summary { padding:13px 14px; margin:12px 0; border:1px solid #c4a8eb38; border-radius:12px; background:#c4a8eb0b; transition:background-color .16s,border-color .16s; }
+.vv-quick-settings > summary:hover { background:#c4a8eb1a; border-color:#c4a8eb65; }
+.vv-quick-summary-text { display:flex; flex-direction:column; gap:5px; }
+.vv-quick-settings .vv-quick-hint { color:var(--color-text-secondary,#bdb0cf); font-size:12px; font-weight:400; line-height:1.4; }
+.vv-quick-settings:not([open]) .vv-quick-hint--open, .vv-quick-settings[open] .vv-quick-hint--closed { display:none; }
+.vv-quick-settings > summary::after {
+  content:''; box-sizing:border-box; flex:none; width:30px; height:30px; margin:0;
+  border:1px solid #c4a8eb40; border-radius:50%; opacity:1; transform:none;
+  background:#c4a8eb15 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m7 10 5 5 5-5' fill='none' stroke='%23d0bcf2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/18px no-repeat;
+}
+.vv-quick-settings[open] > summary::after { transform:rotate(180deg); }
+@media(prefers-reduced-motion:reduce) {
+  .vv-quote-dialog input[type="checkbox"], .vv-quote-option input[type="checkbox"]::before,
+  .vv-quick-settings > summary { transition:none; }
+}
