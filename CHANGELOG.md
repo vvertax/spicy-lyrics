@@ -1,6 +1,29 @@
 # Changelog
 
+## 1.8.0
+
+- Keep dominant muted cover colors from being displaced by small, highly saturated details in quote palettes.
+
+- Make Quick Controls collapsible, expanding automatically when matching settings search.
+
+- Make Escape with Exit Fully close the lyrics page in one action without waiting for an interruptible fullscreen exit animation.
+
+- Make quote-card gradients optional (solid by default) and preserve the cover hue in gradients for brighter artwork.
+
+- Build quote-card gradients from the cover accent and a separate dark base, preserving colors such as red on black artwork.
+
+- Preserve vivid cover-art hues in quote cards instead of letting neutral background colors dominate the palette.
+
+- Restyle author search and recreate its embedded profile on each search; prevent embedded pages from opening browser popups.
+
+- Drop TTML onto the lyrics page or either comparison column.
+- Add a lyric-line context menu for copying, external translation, quote cards, review notes and line repeat.
+- Add persistent, optional duet voice colors in Lyrics settings.
+
+- Show a minimal no-lyrics message instead of hiding it when detailed notices are disabled; keep loading errors detailed.
+
 ## 1.7.1
+
 
 - Translate update dialogs and notifications into Russian, including dynamic version text and patch-notes links.
 

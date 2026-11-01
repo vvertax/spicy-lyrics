@@ -1,3 +1,4 @@
+import { bindTTMLDrop } from "./TTMLDrop.ts";
 import { renderComparisonLyrics } from "./ComparisonRenderer.ts";
 import GetProgress from "../../utils/Gets/GetProgress.ts";
 import { onAnimationFrame } from "../../utils/AnimationFrameLoop.ts";
@@ -46,23 +47,31 @@ export function AddReviewMenuRows(menu:HTMLElement, add:(button:HTMLButtonElemen
   }
 }
 function authorSearch(doc:Document) {
-  const root=dialog(doc,'Find Author Works'); const win=doc.defaultView!;
+  const root=dialog(doc,'Find Author Works');root.classList.add('vv-author-dialog');const win=doc.defaultView!;
+  const emblem=element(doc,'span');emblem.className='vv-author-emblem';emblem.innerHTML=Icons.FindAuthorWorks;root.querySelector('header h2')!.prepend(emblem);
   const form=element(doc,'form');const input=element(doc,'input');input.placeholder='Username, e.g. vvertax. or july';input.setAttribute('aria-label','Author username');input.required=true;input.maxLength=100;
   const submit=element(doc,'button','Search');submit.type='submit';form.append(input,submit);
   const message=element(doc,'p','Enter a username to view their public works.');message.role='status';
   const profile=element(doc,'a','Open profile in browser');profile.target='_blank';profile.rel='noopener noreferrer';profile.hidden=true;
-  const frame=element(doc,'iframe');frame.title='Author works';frame.className='vv-author-frame';frame.hidden=true;frame.setAttribute('sandbox','allow-scripts allow-same-origin allow-popups');
+  const results=element(doc,'div');results.className='vv-author-results';
+  let frame:HTMLIFrameElement|null=null;let request=0;
   let timer:ReturnType<typeof setTimeout>|undefined;
   form.onsubmit=event=>{
     event.preventDefault(); const name=authorHandle(input.value);
     if (!name) {message.textContent='Enter a username, not a link.';return;}
-    clearTimeout(timer);profile.href=`https://spicylyrics.org/${encodeURIComponent(name)}`;profile.hidden=false;
-    message.textContent='Loading author works…';frame.hidden=false;frame.src=`https://spicylyrics.org/embed/${encodeURIComponent(name)}`;
-    timer=setTimeout(()=>{if(root.isConnected)message.textContent='If the list is unavailable, open the profile in your browser.';},10000);
+    clearTimeout(timer);const generation=++request;profile.href=`https://spicylyrics.org/${encodeURIComponent(name)}`;profile.hidden=false;
+    message.textContent='Loading author works…';root.classList.add('has-results');
+    // A new browsing context avoids reusing the embed's previous router/session.
+    if(frame){frame.onload=null;frame.remove();}
+    frame=element(doc,'iframe');frame.title='Author works';frame.className='vv-author-frame';
+    frame.setAttribute('sandbox','allow-scripts allow-same-origin');
+    frame.referrerPolicy='strict-origin-when-cross-origin';
+    frame.onload=()=>{if(generation!==request||!root.isConnected)return;clearTimeout(timer);message.textContent='Use Listen to play a track. Open profile in browser only if the list is unavailable.';};
+    frame.src=`https://spicylyrics.org/embed/${encodeURIComponent(name)}`;results.replaceChildren(frame);
+    timer=setTimeout(()=>{if(root.isConnected&&generation===request)message.textContent='If the list is unavailable, open the profile in your browser.';},10000);
   };
-  frame.onload=()=>{clearTimeout(timer);message.textContent='Public profile works. Use Listen to play a track; if the page is unavailable, open it in your browser.';};
   const onMessage=(event:MessageEvent)=>{
-    if(event.origin!=='https://spicylyrics.org'||event.source!==frame.contentWindow||event.data?.type!=='events')return;
+    if(event.origin!=='https://spicylyrics.org'||event.source!==frame?.contentWindow||event.data?.type!=='events')return;
     for(const item of Array.isArray(event.data?.data?.events)?event.data.data.events:[]) {
       if(item?.action==='PATCH_PLAYBACK') {
         const uri=item?.patches?.[0]?.playback_uri;
@@ -70,10 +79,10 @@ function authorSearch(doc:Document) {
       }
     }
   };
-  win.addEventListener('message',onMessage);root.addEventListener('close',()=>{clearTimeout(timer);win.removeEventListener('message',onMessage);frame.src='about:blank';},{once:true});
-  root.append(form,message,profile,frame);input.focus();
+  win.addEventListener('message',onMessage);root.addEventListener('close',()=>{++request;clearTimeout(timer);win.removeEventListener('message',onMessage);if(frame){frame.onload=null;frame.remove();frame=null;}},{once:true});
+  root.append(form,message,profile,results);input.focus();
 }
-function reviewLyrics(doc:Document, supplied?:any, initialLine=0) {
+export function reviewLyrics(doc:Document, supplied?:any, initialLine=0) {
   const data=supplied ?? currentLyrics();const uri=SpotifyPlayer.GetUri();if(!uri)throw new Error('No current track');
   const title=Spicetify.Player.data?.item?.metadata?.title??uri;
   const file=data.reviewFileName??'Current lyrics';
@@ -125,7 +134,7 @@ function compareTTML(doc:Document) {
   type WordView={element:HTMLElement;start:number;end:number};
   type LineView={element:HTMLElement;start:number;end:number;words:WordView[]};
   type Side={data:any;rows:LineView[];view:HTMLElement;name:HTMLElement;selected:number;request:number;manualUntil:number;input:HTMLInputElement;renderer?:ReturnType<typeof renderComparisonLyrics>};
-  const sides:Record<string,Side>={};let closed=false;
+  const sides:Record<string,Side>={};let closed=false;const dropCleanup:(()=>void)[]=[];
   const diffLabel=element(doc,'label');const diff=element(doc,'input');diff.type='checkbox';diff.checked=false;diffLabel.append(diff,' Highlight differences');
   const summary=element(doc,'span');summary.className='vv-split-summary';summary.hidden=true;
   const refreshDiff=()=>{
@@ -155,8 +164,8 @@ function compareTTML(doc:Document) {
     const load=iconButton(`Load version ${label}`,Icons.LoadTTML,()=>{input.value='';input.click();});
     header.append(badge,name,input,load,mark);panel.append(header,view);grid.append(panel);
     for(const event of ['wheel','pointerdown'])view.addEventListener(event,()=>side.manualUntil=win.performance.now()+4000,{passive:true});
-    input.onchange=async()=>{
-      const file=input.files?.[0];if(!file)return;const request=++side.request;
+    const loadSide=async(file:File)=>{
+      const request=++side.request;
       try{
         if(!valid())throw new Error('Track changed. Reopen comparison.');
         if(file.size>5*1024*1024)throw new Error('TTML must be smaller than 5 MB');
@@ -171,6 +180,8 @@ function compareTTML(doc:Document) {
         mark.disabled=false;status.textContent='';refreshDiff();
       }catch(error){if(!closed&&request===side.request)status.textContent=(error as Error).message;}
     };
+    input.onchange=()=>{if(input.files?.[0])void loadSide(input.files[0]);};
+    dropCleanup.push(bindTTMLDrop(panel,file=>{void loadSide(file);}));
   }
   const options=element(doc,'div');options.className='vv-split-toolbar vv-comparison-options';
   options.append(diffLabel,summary);heading.insertBefore(options,exit);
@@ -205,7 +216,7 @@ function compareTTML(doc:Document) {
   };
   const observer=new MutationObserver(()=>{if(!root.isConnected||!page.isConnected)closeComparison();});
   function closeComparison(){
-    if(closed)return;closed=true;stop();observer.disconnect();
+    if(closed)return;closed=true;dropCleanup.forEach(dispose=>dispose());stop();observer.disconnect();
     doc.removeEventListener('keydown',escape,true);
     for(const side of Object.values(sides)){side.request++;side.renderer?.destroy();}
     comparisons.delete(doc);page!.classList.remove('VV_ComparingTTML');root.remove();

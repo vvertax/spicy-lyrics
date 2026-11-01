@@ -1,3 +1,4 @@
+import { $duetColorsEnabled,$duetLeadColor,$duetOtherColor } from "../../../utils/stores.ts";
 import { useStore } from "@nanostores/react";
 import React from "react";
 import {
@@ -26,6 +27,7 @@ const uniqueWordFilterOptions = ["Off", "Gibberish", "all lowercase", "ALL UPPER
 interface Props { query: string; sectionFilter: string; showHidden?: boolean; }
 
 export default function LyricsSection({ query, sectionFilter, showHidden = false }: Props) {
+  const duetColors=useStore($duetColorsEnabled);const leadColor=useStore($duetLeadColor);const otherColor=useStore($duetOtherColor);
   const minimalLyricsMode = useStore($minimalLyricsMode);
   const rightAlignLyrics = useStore($rightAlignLyrics);
   const showScrollToActiveButton = useStore($showScrollToActiveButton);
@@ -56,10 +58,14 @@ export default function LyricsSection({ query, sectionFilter, showHidden = false
   const skeleton = visible("lyrics-loading-skeleton") && matches(query, "Lyrics Loading Skeleton", "Show placeholder lines while lyrics load; disable to restore the spinner.");
   const credits = visible("lyrics-credits-follow-singer") && matches(query, "Credits Follow the Last Singer", "Align credits with the last duet line.");
   const joinSplit = matches(query, "Join Split Words", "Show a word that's sung in syllables as one word, when its parts line up evenly.");
-  if (![r3, r4, r5, r8, r9, r10, seek, early, lead, smooth, skeleton, credits, joinSplit].some(Boolean)) return null;
+  const colors=matches(query,"Duet Voice Colors","Customize the two duet voices.");
+  if (![colors,r3, r4, r5, r8, r9, r10, seek, early, lead, smooth, skeleton, credits, joinSplit].some(Boolean)) return null;
 
   return <>
     <SectionTitle>Lyrics Display</SectionTitle>
+    {colors && <Row label="Duet Voice Colors" description="Customize the two duet voices."><Toggle checked={duetColors} onChange={v=>$duetColorsEnabled.set(v)} /></Row>}
+    {colors && duetColors && <Row label="First voice"><input type="color" aria-label="First voice" value={leadColor} onChange={e=>$duetLeadColor.set(e.target.value)} /></Row>}
+    {colors && duetColors && <Row label="Second voice"><input type="color" aria-label="Second voice" value={otherColor} onChange={e=>$duetOtherColor.set(e.target.value)} /></Row>}
     {r3 && <Row settingId="lyrics-minimal-mode" label="Minimal Lyrics Mode" description="Hides sung lyrics lines in Fullscreen and Cinema Mode"><Toggle checked={minimalLyricsMode} onChange={(v) => $minimalLyricsMode.set(v)} /></Row>}
     {r4 && <Row settingId="lyrics-right-align" label="Right Align Lyrics" description="Flip duet/opposite lyric alignment."><Toggle checked={rightAlignLyrics} onChange={(v) => $rightAlignLyrics.set(v)} /></Row>}
     {r5 && <Row settingId="lyrics-scroll-active" label="Show Scroll to Active Button" description="Show an arrow when the active lyric is outside the viewport."><Toggle checked={showScrollToActiveButton} onChange={(v) => $showScrollToActiveButton.set(v)} /></Row>}

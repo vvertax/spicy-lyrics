@@ -611,10 +611,9 @@ async function main() {
           return false;
         }
         case "Exit Fully": {
-          if (Fullscreen.IsOpen || Fullscreen.CinemaViewOpen || IsFullscreenClosing()) {
-            if (await Fullscreen.Close()) Session.GoBackFrom("/SpicyLyrics");
-            return true;
-          }
+          // This action leaves the page, so do not wait for a fullscreen animation
+          // which the browser's own Escape/fullscreenchange can interrupt.
+          Fullscreen.CloseImmediately();
           Session.GoBackFrom("/SpicyLyrics");
           return true;
         }
@@ -642,6 +641,11 @@ async function main() {
     }
 
     if (e.key === "Escape") {
+      if (PageView.IsOpened && Defaults.EscapeKeyFunction === "Exit Fully") {
+        // preventDefault must run during dispatch, not after awaiting close.
+        e.preventDefault();
+        e.stopPropagation();
+      }
       const handled = await handleEscapeKey();
       if (handled) {
         e.preventDefault();
@@ -1473,7 +1477,8 @@ async function main() {
       if (Defaults.EscapeKeyFunction === "Exit Fully") {
         isHandlingDocumentFullscreenExit = true;
         try {
-          if (await Fullscreen.Close()) Session.GoBackFrom("/SpicyLyrics");
+          Fullscreen.CloseImmediately();
+          if (PageView.IsOpened) Session.GoBackFrom("/SpicyLyrics");
         } finally {
           isHandlingDocumentFullscreenExit = false;
         }

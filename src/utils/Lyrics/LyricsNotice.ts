@@ -91,7 +91,7 @@ export function HasNotice(descriptor: string): boolean {
 
 /**
  * The notices that only say the song has no lyrics, with nothing to retry.
- * Turning off `$showNoLyricsNotice` hides these; errors keep theirs.
+ * Turning off `$showNoLyricsNotice` makes these minimal; errors keep their details.
  */
 const NO_LYRICS_NOTICES = new Set([
   "lyrics-not-found",
@@ -113,7 +113,7 @@ function shouldHideLyricsArea(): boolean {
   if (!shownNotice || !PageContainer) return false;
   // The NPV card has its own switch (Hide When a Song Has No Lyrics), which removes it.
   if (IsCardMode) return false;
-  if (!$showNoLyricsNotice.get() && NO_LYRICS_NOTICES.has(shownNotice)) return true;
+  if (!$showNoLyricsNotice.get() && NO_LYRICS_NOTICES.has(shownNotice)) return false;
   // Fullscreen, Cinema View and the popup show the song on its own instead of the
   // notice. Compact mode keeps the notice: the song info is already beside it.
   return (
@@ -131,6 +131,8 @@ function shouldHideLyricsArea(): boolean {
 export function SyncNoLyricsLayout(): void {
   const page = PageContainer;
   if (!page) return;
+  const minimal = !$showNoLyricsNotice.get() && !!shownNotice && NO_LYRICS_NOTICES.has(shownNotice);
+  page.querySelectorAll('.LyricsNotice').forEach(notice => notice.classList.toggle('LyricsNotice--minimal', minimal));
   const hide = shouldHideLyricsArea();
   page.querySelector(".ContentBox .LyricsContainer")?.classList.toggle("Hidden", hide);
   page.querySelector(".ContentBox")?.classList.toggle("LyricsHidden", hide);
@@ -280,6 +282,7 @@ export function BuildLyricsNotice(
   const copy = NOTICES[descriptor];
   const notice = document.createElement("div");
   notice.className = "LyricsNotice";
+  notice.classList.toggle("LyricsNotice--minimal", !$showNoLyricsNotice.get() && NO_LYRICS_NOTICES.has(descriptor));
   notice.dataset.notice = descriptor;
 
   const title = document.createElement("p");

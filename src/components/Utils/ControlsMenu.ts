@@ -1,3 +1,5 @@
+import { bindTTMLDrop } from "./TTMLDrop.ts";
+import { bindLineActions } from "./LineActions.ts";
 import { localizeDocument } from "../../utils/i18n/runtime.ts";
 import { $quickControlIds } from "../../utils/stores.ts";
 import { controlId, normalizeQuickControls } from "./ControlLayout.ts";
@@ -44,23 +46,18 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   cover.onclick = () => { page.classList.toggle('SL_CoverOnly'); cover.setAttribute('aria-checked', String(page.classList.contains('SL_CoverOnly'))); };
   const load = doc.createElement('button'); load.type = 'button'; load.innerHTML = Icons.LoadTTML;
   addRow(load, 'Load TTML File');
-  load.onclick = () => {
-    const input = doc.createElement('input'); input.type = 'file'; input.accept = '.ttml';
-    input.onchange = async () => {
-      const file = input.files?.[0]; const uri = SpotifyPlayer.GetUri();
-      if (!file || !uri) return;
-      try {
-        const parsed = await ParseTTML(await file.text());
-        if (!parsed?.Result) throw new Error('Could not parse TTML');
-        const data = { ...parsed.Result, uri };
-        await ProcessLyrics(data);
-        if (SpotifyPlayer.GetUri() !== uri) return;
-        await ApplyLyrics([data, 200]);
-        toast.success('TTML applied for this playback');
-      } catch (error) { toast.error((error as Error).message); }
-    };
-    input.click();
+  const loadFile=async(file:File)=>{
+    const uri=SpotifyPlayer.GetUri();if(!uri)return;
+    try{
+      if(file.size>5*1024*1024)throw new Error('TTML must be smaller than 5 MB');
+      const parsed=await ParseTTML(await file.text());if(!parsed?.Result)throw new Error('Could not parse TTML');
+      const data={...parsed.Result,uri};await ProcessLyrics(data);
+      if(SpotifyPlayer.GetUri()!==uri)return;await ApplyLyrics([data,200]);toast.success('TTML applied for this playback');
+    }catch(error){toast.error((error as Error).message);}
   };
+  load.onclick=()=>{const input=doc.createElement('input');input.type='file';input.accept='.ttml';input.onchange=()=>{if(input.files?.[0])void loadFile(input.files[0]);};input.click();};
+  const unbindDrop=bindTTMLDrop(page,file=>{void loadFile(file);});
+  const unbindLines=bindLineActions(page);
   if (!buttons.some(b => b.id === 'LyricsManager')) {
     const manager = doc.createElement('button'); manager.type = 'button'; manager.innerHTML = Icons.LyricsManager;
     addRow(manager, 'Lyrics Manager'); manager.onclick = () => OpenLyricsDBPanel(doc);
@@ -159,5 +156,5 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   doc.addEventListener('pointerdown', outside); doc.addEventListener('keydown', keys, true);
   const observer = new MutationObserver(() => { if (!controls.isConnected) cleanup?.(); });
   observer.observe(doc.body, { childList: true, subtree: true });
-  cleanup = () => { unsubscribeQuick(); pressedObserver.disconnect(); doc.removeEventListener('keydown', shortcuts); close(); win.removeEventListener('resize', closeOnResize); observer.disconnect(); doc.removeEventListener('pointerdown', outside); doc.removeEventListener('keydown', keys, true); cleanup = undefined; };
+  cleanup = () => { unbindDrop();unbindLines();unsubscribeQuick(); pressedObserver.disconnect(); doc.removeEventListener('keydown', shortcuts); close(); win.removeEventListener('resize', closeOnResize); observer.disconnect(); doc.removeEventListener('pointerdown', outside); doc.removeEventListener('keydown', keys, true); cleanup = undefined; };
 }

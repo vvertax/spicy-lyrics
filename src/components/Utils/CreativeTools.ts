@@ -1,3 +1,4 @@
+import { coverGradient } from "./QuotePalette.ts";
 import { quoteLineText, wrapQuoteText } from "./QuoteText.ts";
 import { hideKaraokeLine } from "./KaraokeTiming.ts";
 import { toast } from "sonner";
@@ -79,10 +80,10 @@ async function loadImage(doc: Document, url: string): Promise<HTMLImageElement> 
     img.onerror = () => { clearTimeout(timer); reject(new Error("Artwork could not load. Export without cover or retry.")); }; img.src = url;
   });
 }
-async function quoteCard(doc: Document) {
+export async function quoteCard(doc: Document, initialLine=0, supplied?:any) {
   const existing = doc.querySelector<HTMLDialogElement>(".vv-quote-dialog");
   if (existing) { existing.focus(); return; }
-  let lyrics; try { lyrics = JSON.parse($currentLyricsData.get()); } catch { throw new Error("Open a song with lyrics first"); }
+  let lyrics; try { lyrics = supplied ?? JSON.parse($currentLyricsData.get()); } catch { throw new Error("Open a song with lyrics first"); }
   const lines = (lyrics.Content ?? []).map(quoteLineText).filter(Boolean) as string[];
   if (!lines.length) throw new Error("No lines available for a quote");
   // Snapshot track and credits: switching songs must not mix metadata into the card.
@@ -105,7 +106,8 @@ async function quoteCard(doc: Document) {
   let fitsCard = true;
   let copying = false;
 
-  const picked = new Set<number>(lines[0].length <= 1800 ? [0] : []);
+  const selected=Math.max(0,(lyrics.Content??[]).slice(0,initialLine).map(quoteLineText).filter(Boolean).length);
+  const picked = new Set<number>(lines[selected]?.length <= 1800 ? [selected] : []);
   const status = doc.createElement("p"); status.role = "status";
   const coverLabel = doc.createElement("label");
   const useCover = doc.createElement("input"); useCover.type = "checkbox"; useCover.checked = true;
@@ -113,6 +115,9 @@ async function quoteCard(doc: Document) {
   const paletteLabel = doc.createElement("label");
   const usePalette = doc.createElement("input"); usePalette.type = "checkbox";
   paletteLabel.append(usePalette, " Background from cover colors");
+  const gradientLabel = doc.createElement("label");
+  const useGradient = doc.createElement("input");useGradient.type="checkbox";useGradient.checked=false;
+  gradientLabel.append(useGradient," Gradient background");
   let palette = ["#382052", "#211735"];
   let paletteLogoLightness = 0;
   let paletteText = "#eee2ff";
@@ -137,7 +142,11 @@ async function quoteCard(doc: Document) {
     if (canvas.height !== height) canvas.height = height;
     counter.textContent = `${picked.size} / 12 lines`;
     dimensions.textContent = `1080 × ${height} · PNG`;
-    const gradient = ctx.createLinearGradient(0, 0, 1080, height); gradient.addColorStop(0, usePalette.checked ? palette[0] : "#382052"); gradient.addColorStop(1, usePalette.checked ? palette[1] : "#211735"); ctx.fillStyle = gradient; ctx.fillRect(0, 0, 1080, height);
+    const top=usePalette.checked?palette[0]:"#382052";
+    if(useGradient.checked){
+      const gradient=ctx.createLinearGradient(0,0,0,height);gradient.addColorStop(0,top);gradient.addColorStop(1,usePalette.checked?palette[1]:"#211735");ctx.fillStyle=gradient;
+    }else ctx.fillStyle=top;
+    ctx.fillRect(0,0,1080,height);
     if (logo) {
       // Tint the watermark mask without changing its transparency or the exported artwork.
       const shade = usePalette.checked ? Math.round(paletteLogoLightness * 255) : 0;
@@ -222,6 +231,7 @@ async function quoteCard(doc: Document) {
   const close = doc.createElement("button"); close.textContent = "Close"; close.onclick = () => dialog.close();
   useCover.onchange = paint;
   usePalette.onchange = paint;
+  useGradient.onchange = paint;
   format.onchange = () => { status.textContent=""; paint(); };
   const header = doc.createElement("header"); header.className="vv-quote-header";
   const titles = doc.createElement("div"); titles.append(heading,help); header.append(titles,close);
@@ -232,7 +242,7 @@ async function quoteCard(doc: Document) {
   clear.onclick=()=>{picked.clear();list.querySelectorAll<HTMLInputElement>('input').forEach(input=>input.checked=false);status.textContent="";paint();};
   listHeader.append(counter,clear);
   const formatLabel=doc.createElement("label"); formatLabel.textContent="Format"; formatLabel.append(format);
-  editor.append(listHeader,list,formatLabel,coverLabel,paletteLabel);
+  editor.append(listHeader,list,formatLabel,coverLabel,paletteLabel,gradientLabel);
   const preview=doc.createElement("section"); preview.className="vv-quote-preview"; preview.setAttribute("aria-label","Card preview");preview.append(canvas,dimensions);
   body.append(editor,preview);
   const footer=doc.createElement("footer");footer.className="vv-quote-footer";footer.append(status,copy,save);
@@ -250,17 +260,10 @@ async function quoteCard(doc: Document) {
         const sample = doc.createElement("canvas"); sample.width = sample.height = 32;
         const sampleCtx = sample.getContext("2d")!; sampleCtx.drawImage(cover, 0, 0, 32, 32);
         const pixels = sampleCtx.getImageData(0, 0, 32, 32).data;
-        const bins = new Map<string, { count: number; r: number; g: number; b: number }>();
-        for (let i = 0; i < pixels.length; i += 4) {
-          const [r,g,b] = [pixels[i],pixels[i+1],pixels[i+2]];
-          const key = `${r>>5},${g>>5},${b>>5}`;
-          const bin = bins.get(key) ?? { count:0, r:0, g:0, b:0 }; bin.count++; bin.r+=r; bin.g+=g; bin.b+=b; bins.set(key,bin);
-        }
-        const dominant = [...bins.values()].sort((a,b) => b.count-a.count)[0];
-        const rgb = [dominant.r, dominant.g, dominant.b].map(value => value/dominant.count);
-        palette = [.38,.16].map(shade => `rgb(${rgb.map(value => Math.round(value*shade + 8)).join(',')})`);
+        const colors = coverGradient(pixels);const rgb=colors.accent;
+        palette = colors.background.map(color => `rgb(${color.join(',')})`);
         // Relative luminance of the actual darkened gradient near the watermark.
-        const linear = rgb.map(value => (value * .38 + 8) / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
+        const linear = colors.background[0].map(value => value / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
         const luminance = linear[0] * .2126 + linear[1] * .7152 + linear[2] * .0722;
         const darkness = Math.max(0, Math.min(1, 1 - luminance / .1));
         paletteLogoLightness = darkness * darkness * (3 - 2 * darkness);

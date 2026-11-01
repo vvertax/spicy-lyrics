@@ -218,3 +218,43 @@
 #SpicyLyricsPage#SpicyLyricsPage .LyricsNotice .notice-copy { background:#d0bcf2; color:#271d38; box-shadow:none; }
 #SpicyLyricsPage#SpicyLyricsPage .LyricsNotice .notice-copy:hover { background:#decdf7; }
 #SpicyLyricsPage#SpicyLyricsPage .LyricsNotice .notice-copy:focus-visible { outline-color:#d0bcf2; }
+
+#SpicyLyricsPage#SpicyLyricsPage .LyricsNotice.LyricsNotice--minimal { gap:0; padding:24px; }
+#SpicyLyricsPage#SpicyLyricsPage .LyricsNotice.LyricsNotice--minimal > :is(.notice-body,.notice-actions,.notice-code) { display:none; }
+#SpicyLyricsPage#SpicyLyricsPage .LyricsNotice.LyricsNotice--minimal .notice-title { font-size:18px; font-weight:500; line-height:1.4; letter-spacing:0; color:rgba(255,255,255,.6); }
+
+.vv-ttml-drag { outline:2px dashed #d0bcf2!important; outline-offset:-8px; background-color:#d0bcf218!important; }
+.vv-line-menu { position:fixed; z-index:10000; min-width:220px; max-width:calc(100vw - 16px); padding:8px; border:1px solid #ffffff30; border-radius:18px; background:rgba(30,28,34,.85); backdrop-filter:blur(28px); box-shadow:0 16px 40px #0006; }
+.vv-line-menu button { display:block; width:100%; border:0; border-radius:10px; padding:10px 12px; text-align:left; background:transparent; color:#f4edf9; font:500 13px/1.4 SpicyLyrics,sans-serif; cursor:pointer; }
+.vv-line-menu button:hover,.vv-line-menu button:focus-visible { background:#ffffff18; outline:none; }
+#SpicyLyricsPage.VV_DuetColors .LyricsContent:has(.HasDuetLines) .line { --vv-voice-rgb:var(--vv-lead-color-rgb); }
+#SpicyLyricsPage.VV_DuetColors .LyricsContent:has(.HasDuetLines) .line.OppositeAligned { --vv-voice-rgb:var(--vv-other-color-rgb); }
+#SpicyLyricsPage.VV_DuetColors .LyricsContent:has(.HasDuetLines) .line,
+#SpicyLyricsPage.VV_DuetColors .LyricsContent:has(.HasDuetLines) .line :is(.word,.letter,.letterGroup) { --gradient-rgb:var(--vv-voice-rgb)!important; }
+
+.vv-review-dialog.vv-author-dialog { width:min(900px,94vw); padding:28px; border-radius:26px; background:radial-gradient(ellipse at top right,#65458e30,transparent 65%),linear-gradient(145deg,#291b3deb,#171322f5); box-shadow:0 24px 80px #0006; border-color:#d0bcf233; }
+.vv-author-dialog header h2 { display:flex; align-items:center; gap:12px; font-size:22px; letter-spacing:-.025em; }
+.vv-author-emblem { display:flex; color:#d0bcf2; }
+.vv-author-emblem svg { width:26px; height:26px; }
+.vv-author-dialog header > button { display:grid; place-items:center; width:36px; height:36px; padding:0; border-radius:50%; background:#ffffff08; }
+.vv-author-dialog form { flex-wrap:nowrap; margin:24px 0 12px; gap:12px; }
+.vv-author-dialog form input { height:48px; border-radius:14px; padding:0 16px; border-color:#d0bcf22b; background:#ffffff07; }
+.vv-author-dialog form input::placeholder { color:#bfb0cf80; }
+.vv-author-dialog form button { height:48px; padding:0 24px; border:0; border-radius:999px; background:#d0bcf2; color:#271d38; font-weight:700; }
+.vv-author-dialog form button:hover { background:#decdf7; }
+.vv-author-dialog :is(input,button,a):focus-visible { outline:2px solid #d0bcf2; outline-offset:3px; }
+.vv-author-dialog p[role="status"] { color:#c1b4cf; font-size:13px; line-height:1.6; font-weight:400; margin:12px 0; }
+.vv-author-dialog > a { display:inline-flex; color:#d0bcf2; font-size:12px; text-decoration:none; border-bottom:1px solid #d0bcf240; }
+.vv-author-dialog > a[hidden] { display:none; }
+.vv-author-dialog .vv-author-frame { height:55vh; border-color:#ffffff12; border-radius:16px; background:#15111e; }
+@media(max-width:550px) { .vv-review-dialog.vv-author-dialog { padding:20px; } .vv-author-dialog form { gap:8px; } .vv-author-dialog form button { padding:0 16px; } }
+
+.vv-quick-settings > summary { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 0; cursor:pointer; list-style:none; color:var(--color-text-primary,#e9e3f5); font-size:14px; font-weight:700; user-select:none; }
+.vv-quick-settings > summary::-webkit-details-marker { display:none; }
+.vv-quick-settings > summary::after { content:''; width:7px; height:7px; margin-right:8px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:rotate(45deg); transition:transform .18s; opacity:.6; }
+.vv-quick-settings[open] > summary::after { transform:rotate(225deg); }
+.vv-quick-settings > summary:focus-visible { outline:2px solid #d0bcf2; outline-offset:4px; border-radius:8px; }
+@media(prefers-reduced-motion:reduce) { .vv-quick-settings > summary::after { transition:none; } }
+
+/* No drop shadows on the lyrics toolbar, including fullscreen and hover. */
+#SpicyLyricsPage#SpicyLyricsPage .ViewControls.sl-fork-controls .ViewControl { box-shadow:none!important; }

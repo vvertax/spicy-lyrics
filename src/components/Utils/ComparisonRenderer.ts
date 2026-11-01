@@ -1,3 +1,4 @@
+import { comparisonLineSources } from "./TTMLDrop.ts";
 import { createLyricsAnimationSession } from "../../utils/Lyrics/Animator/Lyrics/LyricsAnimator.ts";
 import { getLyricsBetweenShow, type LyricsSyllable } from "../../utils/Lyrics/lyrics.ts";
 import Emphasize from "../../utils/Lyrics/Applyer/Utils/Emphasize.ts";
@@ -22,6 +23,7 @@ export function renderComparisonLyrics(view:HTMLElement, data:any, seek:(index:n
     const next=data.Content[index+1];const nextStart=Number(next?.Lead?.StartTime??next?.StartTime??0)*1000;
     if(!background&&$minimalLyricsMode.get()&&nextStart>timing.end&&nextStart-timing.end<getLyricsBetweenShow()*1000)timing.end=nextStart;
     const element=doc.createElement('div');element.className='line NotSung vv-split-line';
+    comparisonLineSources.set(element,{data,index});
     element.tabIndex=0;element.role='button';element.title=`${(timing.start/1000).toFixed(2)} — ${(timing.end/1000).toFixed(2)}s`;
     element.onclick=()=>seek(index,timing.start);
     element.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();seek(index,timing.start);}};

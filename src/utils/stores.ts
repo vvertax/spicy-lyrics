@@ -288,3 +288,7 @@ export const $currentLyricsData = atom<string>("");
 export const $quickControlIds = persistAtom<string[]>("quickControlIds", []);
 
 export const $uiLanguage = persistAtom<"en" | "ru">("uiLanguage", typeof navigator !== "undefined" && navigator.language.toLowerCase().startsWith("ru") ? "ru" : "en");
+
+export const $duetColorsEnabled=persistAtom<boolean>("duetColorsEnabled",false);
+export const $duetLeadColor=persistAtom<string>("duetLeadColor","#cdb4ff");
+export const $duetOtherColor=persistAtom<string>("duetOtherColor","#ffb4cd");

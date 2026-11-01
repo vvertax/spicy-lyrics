@@ -411,5 +411,17 @@
   ". You are now on": ". Текущая версия:",
   "Need help? Visit our": "Нужна помощь? Загляните в наш",
   "Couldn't load patch notes.": "Не удалось загрузить список изменений.",
-  "Patch notes": "Список изменений"
+  "Patch notes": "Список изменений",
+  "Detailed No Lyrics Notice": "Подробное сообщение об отсутствии текста",
+  "Show the explanation and actions when lyrics are unavailable. Turn off for a minimal message. Loading errors always show full details.": "Показывает пояснение и кнопки, когда текста нет. Выключите для короткого сообщения. Ошибки загрузки всегда показываются подробно.",
+  "Copy line": "Скопировать строку",
+  "Translate in Google Translate": "Перевести в Google Переводчике",
+  "Repeat line": "Повторять строку",
+  "Stop repeating": "Остановить повтор",
+  "Duet Voice Colors": "Цвета голосов в дуэте",
+  "Customize the two duet voices.": "Настройте цвета двух голосов дуэта.",
+  "First voice": "Первый голос",
+  "Second voice": "Второй голос",
+  "Use Listen to play a track. Open profile in browser only if the list is unavailable.": "Нажмите Listen для воспроизведения трека. Если список не загрузился, профиль можно открыть в браузере.",
+  "Gradient background": "Градиентный фон"
 }
