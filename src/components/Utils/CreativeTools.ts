@@ -1,7 +1,8 @@
 import { getDisplayedLyrics } from "../../utils/Lyrics/DisplayedLyrics.ts";
 import { SpotifyPlayer } from "../Global/SpotifyPlayer.ts";
 import { coverGradient } from "./QuotePalette.ts";
-import { quoteLineText, wrapQuoteText } from "./QuoteText.ts";
+import { renderQuoteCard, type QuoteTemplate } from "./QuoteCardRenderer.ts";
+import { quoteLineText } from "./QuoteText.ts";
 import { hideKaraokeLine } from "./KaraokeTiming.ts";
 import { toast } from "sonner";
 
@@ -124,6 +125,28 @@ export async function quoteCard(doc: Document, initialLine=0, supplied?:any) {
   const useGradient = doc.createElement("input");useGradient.type="checkbox";useGradient.checked=false;
   const gradientText=doc.createElement("span");gradientText.textContent="Gradient background";
   gradientLabel.className="vv-quote-option";gradientLabel.append(gradientText,useGradient);
+  const template = doc.createElement("select"); template.setAttribute("aria-label", "Card template");
+  for (const [value, text] of [["classic", "Classic"], ["cover-top", "Cover on Top"], ["poster", "Poster"], ["type", "Typography"]]) {
+    const option = doc.createElement("option"); option.value = value; option.textContent = text; template.append(option);
+  }
+  const templateLabel = doc.createElement("label"); templateLabel.textContent = "Composition"; templateLabel.append(template);
+  const artworkLabel = doc.createElement("label"); artworkLabel.className = "vv-quote-option";
+  const useArtwork = doc.createElement("input"); useArtwork.type = "checkbox";
+  const artworkText = doc.createElement("span"); artworkText.textContent = "Cover art as background";
+  artworkLabel.append(artworkText, useArtwork);
+  function range(label: string, max: number, value: number, unit: string) {
+    const row = doc.createElement("label"); row.className = "vv-quote-range";
+    const text = doc.createElement("span"); text.textContent = label;
+    const output = doc.createElement("output");
+    const input = doc.createElement("input"); input.type = "range"; input.min = "0"; input.max = String(max); input.step = "1"; input.value = String(value);
+    input.setAttribute("aria-label", label);
+    const update = () => { output.value = `${input.value} ${unit}`; };
+    update(); input.oninput = () => { update(); paint(); };
+    row.append(text, output, input); return { row, input };
+  }
+  const { row: blurLabel, input: blur } = range("Artwork Blur", 60, 20, "px");
+  const { row: darkenLabel, input: darken } = range("Artwork Darkening", 90, 55, "%");
+  let paletteAvailable = true;
   let palette = ["#382052", "#211735"];
   let paletteLogoLightness = 0;
   let paletteText = "#eee2ff";
@@ -138,53 +161,34 @@ export async function quoteCard(doc: Document, initialLine=0, supplied?:any) {
   const logo = await loadImage(doc, `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`).catch(() => null);
   const logoTint = doc.createElement("canvas"); logoTint.width = logoTint.height = 650;
   const logoCtx = logoTint.getContext("2d")!;
-  function wrap(text: string, x: number, y: number, width: number, height: number) {
-    const rows = wrapQuoteText(text, width, value => ctx.measureText(value).width);
-    for (const row of rows) { ctx.fillText(row, x, y); y += height; }
-    return y;
-  }
   function paint() {
-    const height = format.value === "auto" ? (picked.size > 7 ? 1920 : picked.size > 4 ? 1440 : 1080) : Number(format.value);
-    if (canvas.height !== height) canvas.height = height;
-    counter.textContent = `${picked.size} / 12 lines`;
-    dimensions.textContent = `1080 × ${height} · PNG`;
-    const top=usePalette.checked?palette[0]:"#382052";
-    if(useGradient.checked){
-      const gradient=ctx.createLinearGradient(0,0,0,height);gradient.addColorStop(0,top);gradient.addColorStop(1,usePalette.checked?palette[1]:"#211735");ctx.fillStyle=gradient;
-    }else ctx.fillStyle=top;
-    ctx.fillRect(0,0,1080,height);
+    // Tint only the decorative logo; the cover keeps its original colors.
     if (logo) {
-      // Tint the watermark mask without changing its transparency or the exported artwork.
       const shade = usePalette.checked ? Math.round(paletteLogoLightness * 255) : 0;
-      logoCtx.clearRect(0, 0, 650, 650);logoCtx.drawImage(logo, 0, 0, 650, 650);
+      logoCtx.clearRect(0, 0, 650, 650); logoCtx.drawImage(logo, 0, 0, 650, 650);
       logoCtx.globalCompositeOperation = "source-in";
-      logoCtx.fillStyle = `rgb(${shade},${shade},${shade})`;logoCtx.fillRect(0, 0, 650, 650);
+      logoCtx.fillStyle = `rgb(${shade},${shade},${shade})`; logoCtx.fillRect(0, 0, 650, 650);
       logoCtx.globalCompositeOperation = "source-over";
-      ctx.save();ctx.globalAlpha = .12;ctx.drawImage(logoTint, 580, -100);ctx.restore();
     }
-    if (useCover.checked && cover) ctx.drawImage(cover, 72, 72, 140, 140);
-    ctx.fillStyle = usePalette.checked ? paletteText : "#eee2ff"; ctx.font = "bold 30px SpicyLyrics, sans-serif";
-    wrap(String(meta.title ?? "Unknown song").slice(0, 100), useCover.checked && cover ? 240 : 72, 117, useCover.checked && cover ? 760 : 936, 38);
-    ctx.fillStyle = usePalette.checked ? paletteMuted : "#c1add9"; ctx.font = "24px SpicyLyrics, sans-serif";
-    wrap(String(meta.artist_name ?? "").slice(0, 100), useCover.checked && cover ? 240 : 72, 198, 760, 30);
-    const quote = [...picked].sort((a,b) => a-b).map(i => lines[i]);
-    let size = 52;
-    const fits = () => {
-      ctx.font = `bold ${size}px SpicyLyrics, sans-serif`;
-      const rows = quote.reduce((count, line) => count + wrapQuoteText(line, 936, value => ctx.measureText(value).width).length, 0);
-      return rows * size * 1.35 + quote.length * 12 <= height - 540;
-    };
-    while (size > 22 && !fits()) size -= 2;
-    fitsCard = fits();
+    fitsCard = renderQuoteCard(ctx, {
+      template: template.value as QuoteTemplate, format: format.value,
+      lines: [...picked].sort((a, b) => a - b).map(i => lines[i]),
+      title: String(meta.title ?? "Unknown song"), artist: String(meta.artist_name ?? ""), author,
+      cover, includeCover: useCover.checked, artworkBackground: useArtwork.checked,
+      blur: Number(blur.value), darken: Number(darken.value),
+      palette, usePalette: usePalette.checked, gradient: useGradient.checked,
+      textColor: paletteText, mutedColor: paletteMuted, logo: logo ? logoTint : null,
+    });
+    counter.textContent = `${picked.size} / 12 lines`;
+    dimensions.textContent = `1080 × ${canvas.height} · PNG`;
     save.disabled = !picked.size || !fitsCard;
     copy.disabled = copying || !picked.size || !fitsCard;
-    if (!fitsCard) status.textContent = "This quote is too long for this format. Choose Portrait / Story or fewer lines.";
-    ctx.font = `bold ${size}px SpicyLyrics, sans-serif`; ctx.fillStyle = usePalette.checked ? paletteText : "#eee2ff";
-    let y = 330; for (const line of quote) y = wrap(line, 72, y, 936, size * 1.35) + 12;
-    ctx.font = "22px SpicyLyrics, sans-serif"; ctx.fillStyle = usePalette.checked ? paletteMuted : "#c1add9";
-    wrap(author, 72, height - 130, 936, 28);
-    ctx.font = "bold 22px SpicyLyrics, sans-serif"; ctx.fillText("Spicy Lyrics", 72, height - 60);
-    ctx.textAlign = "right"; ctx.font = "20px SpicyLyrics, sans-serif"; ctx.fillText("vvertax Edition", 1008, height - 60); ctx.textAlign = "left";
+    const fitMessage = "This quote is too long for this format. Choose Portrait / Story or fewer lines.";
+    if (!fitsCard) status.textContent = fitMessage;
+    else if (status.textContent === fitMessage) status.textContent = "";
+    blurLabel.hidden = darkenLabel.hidden = !useArtwork.checked;
+    usePalette.disabled = useArtwork.checked || !paletteAvailable;
+    useGradient.disabled = useArtwork.checked;
   }
   lines.forEach((line, index) => {
     const label = doc.createElement("label"); const input = doc.createElement("input"); input.type = "checkbox"; input.checked = picked.has(index);
@@ -204,17 +208,17 @@ export async function quoteCard(doc: Document, initialLine=0, supplied?:any) {
   save.onclick = () => {
     if (!fitsCard) { status.textContent = "Choose a taller format or fewer lines."; return; }
     if (!picked.size) { status.textContent = "Select at least one line."; return; }
-    if (useCover.checked && !cover) { status.textContent = "Cover unavailable. Disable Include cover art to export."; return; }
+    if ((useCover.checked || useArtwork.checked) && !cover) { status.textContent = "Cover unavailable. Turn off cover art and the artwork background to export."; return; }
     try { canvas.toBlob(blob => {
       if (!blob) { status.textContent = "PNG export failed"; return; }
       const url = URL.createObjectURL(blob); const link = doc.createElement("a"); link.href = url; link.download = "spicy-lyrics-quote.png"; link.click(); setTimeout(() => URL.revokeObjectURL(url), 30000);
-    }, "image/png"); } catch { status.textContent = "Image export blocked. Disable cover art and try again."; }
+    }, "image/png"); } catch { status.textContent = "Image export blocked. Turn off cover art and the artwork background, then try again."; }
   };
   const copy = doc.createElement("button"); copy.textContent = "Copy image"; copy.className = "vv-quote-copy";
   copy.onclick = () => {
     if (copying) return;
     if (!fitsCard || !picked.size) { status.textContent = "Choose lines that fit the card first."; return; }
-    if (useCover.checked && !cover) { status.textContent = "Cover unavailable. Disable Include cover art to copy."; return; }
+    if ((useCover.checked || useArtwork.checked) && !cover) { status.textContent = "Cover unavailable. Turn off cover art and the artwork background to copy."; return; }
     const clipboardWindow = doc.defaultView as Window & typeof globalThis;
     if (!clipboardWindow?.navigator.clipboard?.write || !clipboardWindow.ClipboardItem) {
       status.textContent = "Image clipboard is unavailable in this window. Use Save PNG."; return;
@@ -238,6 +242,8 @@ export async function quoteCard(doc: Document, initialLine=0, supplied?:any) {
   useCover.onchange = paint;
   usePalette.onchange = paint;
   useGradient.onchange = paint;
+  useArtwork.onchange = paint;
+  template.onchange = () => { status.textContent = ""; paint(); };
   format.onchange = () => { status.textContent=""; paint(); };
   const header = doc.createElement("header"); header.className="vv-quote-header";
   const titles = doc.createElement("div"); titles.append(heading,help); header.append(titles,close);
@@ -248,7 +254,7 @@ export async function quoteCard(doc: Document, initialLine=0, supplied?:any) {
   clear.onclick=()=>{picked.clear();list.querySelectorAll<HTMLInputElement>('input').forEach(input=>input.checked=false);status.textContent="";paint();};
   listHeader.append(counter,clear);
   const formatLabel=doc.createElement("label"); formatLabel.textContent="Format"; formatLabel.append(format);
-  editor.append(listHeader,list,formatLabel,coverLabel,paletteLabel,gradientLabel);
+  editor.append(listHeader,list,templateLabel,formatLabel,coverLabel,artworkLabel,blurLabel,darkenLabel,paletteLabel,gradientLabel);
   const preview=doc.createElement("section"); preview.className="vv-quote-preview"; preview.setAttribute("aria-label","Card preview");preview.append(canvas,dimensions);
   body.append(editor,preview);
   const footer=doc.createElement("footer");footer.className="vv-quote-footer";footer.append(status,copy,save);
@@ -277,9 +283,9 @@ export async function quoteCard(doc: Document, initialLine=0, supplied?:any) {
         paletteText = `rgb(${rgb.map(value => Math.round(220 + value * .13)).join(',')})`;
         paletteMuted = `rgb(${rgb.map(value => Math.round(165 + value * .23)).join(',')})`;
 
-      } catch { usePalette.checked = false; usePalette.disabled = true; status.textContent = "Cover colors unavailable."; }
+      } catch { usePalette.checked = false; paletteAvailable = false; usePalette.disabled = true; status.textContent = "Cover colors unavailable."; }
       paint();
     }
   }
-  else status.textContent = "No cover art available. Disable Include cover art to export.";
+  else status.textContent = "No cover art available. Turn off cover art and the artwork background to export.";
 }

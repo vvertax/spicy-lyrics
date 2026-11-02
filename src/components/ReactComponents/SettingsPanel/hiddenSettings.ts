@@ -1,4 +1,6 @@
 export const SETTING_CATALOG = [
+  ["appearance-scene-transitions", "Smooth Track Transitions", "Fade lyrics and song information when tracks change, alongside the background transition.", "Appearance"],
+  ["lyrics-song-offset", "Timing for This Song", "Save a timing offset for the current song instead of the global value.", "Lyrics Display"],
   ["lyrics-split-word-motion", "Split Word Motion", "Move neighbouring syllables as the singing part grows, keeping the word centred.", "Lyrics Display"],
   ["appearance-custom-font", "Use Custom Font", "Use a custom font instead of the bundled Spicy Lyrics font.", "Appearance"],
   ["appearance-background-type", "Background Type", "Choose the dynamic, legacy, static image, or color background.", "Appearance"],

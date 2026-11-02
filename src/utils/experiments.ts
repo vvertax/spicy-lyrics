@@ -76,6 +76,12 @@ export type Experiment = {
 
 export const EXPERIMENTS = [
   {
+    id: "instrumentalArtwork",
+    label: "Artwork During Instrumental Breaks",
+    description: "Let the cover gently float, sway and breathe during instrumental breaks of at least eight seconds. Song information follows the cover with comfortable spacing. Return before vocals resume. Only applies to synced lyrics in the full lyrics view.",
+    default: false,
+  },
+  {
     id: "newSettingsDesign",
     hidden: true,
     label: "New Settings and Update Design",

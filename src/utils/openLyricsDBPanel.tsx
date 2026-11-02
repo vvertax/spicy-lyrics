@@ -1,7 +1,8 @@
+import { getSettingsReturn } from "./settings.ts";
 import { PopupModal } from "../components/Modal.ts";
 import LyricsDBPanel from "../components/ReactComponents/LyricsManager/index.tsx";
 import UploadTTMLModal from "../components/ReactComponents/LyricsManager/components/UploadTTMLModal.tsx";
-import { createReactModalContent, getModalScrollTop } from "./reactModalContent.tsx";
+import { createReactModalContent } from "./reactModalContent.tsx";
 
 export function OpenLyricsDBPanel(targetDocument: Document = document) {
   _openUpload(targetDocument);
@@ -21,17 +22,8 @@ export function OpenTTMLDatabasePanel() {
 }
 
 export async function OpenTTMLDatabasePanelFromSettings() {
-  const { default: SettingsPanel } = await import("../components/ReactComponents/SettingsPanel/index.tsx");
-  const settingsScrollTop = getModalScrollTop();
   const modalDocument = PopupModal.ownerDocument;
-  const openSettings = () => {
-    PopupModal.transition({
-      title: "Settings",
-      ...createReactModalContent(<SettingsPanel />, modalDocument),
-      contentScrollTop: settingsScrollTop,
-      modalId: "settingsPanel",
-    });
-  };
+  const openSettings = getSettingsReturn(modalDocument);
 
   _openDB(openSettings, "settingsTTMLDatabase");
 }

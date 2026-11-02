@@ -250,6 +250,8 @@ export const $musixmatchToken = persistAtom<string>("musixmatchToken", "");
 export const $showVolumeSlider = persistAtom<boolean>("showVolumeSlider", false);
 // Playback timing offset in milliseconds (bipolar: negative = earlier, positive = later)
 export const $playbackOffset = persistAtom<number>("playbackOffset", 0);
+export const $songPlaybackOffsets = persistAtom<Record<string, number>>("songPlaybackOffsets", {});
+export const $smoothSceneTransitions = persistAtom<boolean>("smoothSceneTransitions", true);
 export const $allowHidingSettings = persistAtom<boolean>("allowHidingSettings", false);
 export const $hideHidingIcon = persistAtom<boolean>("hideHidingIcon", false);
 const initialHiddenSettingIds = Array.isArray(_settings.hiddenSettingIds)

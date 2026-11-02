@@ -24,6 +24,7 @@ const TrackSkip = `
 `;
 
 export const Icons = {
+  More: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>`,
   SeekBackward: Line(`<path d="M3 10a9 9 0 1 1 1 7M3 4v6h6"/><text x="12" y="16" text-anchor="middle" fill="currentColor" stroke="none" font-size="10" font-family="sans-serif" font-weight="700">5</text>`),
   SeekForward: Line(`<path d="M21 10a9 9 0 1 0-1 7M21 4v6h-6"/><text x="12" y="16" text-anchor="middle" fill="currentColor" stroke="none" font-size="10" font-family="sans-serif" font-weight="700">5</text>`),
   Karaoke: Line(`<rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 10v2a6 6 0 0 0 12 0v-2M12 18v3M9 21h6"/>`),

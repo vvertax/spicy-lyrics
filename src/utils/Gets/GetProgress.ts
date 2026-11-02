@@ -1,5 +1,9 @@
-import { $playbackOffset } from "../stores.ts";
+import { $playbackOffset, $songPlaybackOffsets } from "../stores.ts";
+import { effectiveOffset } from "../Lyrics/PlaybackOffsets.ts";
+
 import { SpotifyPlayer } from "./../../components/Global/SpotifyPlayer.ts";
+
+const getOffset = () => effectiveOffset($playbackOffset.get(), $songPlaybackOffsets.get(), SpotifyPlayer.GetUri());
 
 interface SyncedPosition {
   StartedSyncAt: number;
@@ -379,7 +383,7 @@ export default function GetProgress() {
     if (SpotifyPlayer?._DEPRECATED_?.GetTrackPosition) {
       // Also added this backup in case, if the "sycedPosition" is unavailable, but the "_DEPRECATED_" version is available
       console.warn("Synced Position: Skip, Using DEPRECATED Version");
-      return SpotifyPlayer._DEPRECATED_.GetTrackPosition();
+      return normalizeProgress((SpotifyPlayer._DEPRECATED_.GetTrackPosition() ?? 0) - getOffset(), Spicetify.Player.isPlaying());
     }
     console.warn("Synced Position: Skip, Returning 0");
     return 0;
@@ -390,7 +394,7 @@ export default function GetProgress() {
   // and a spurious "drastic change" force-scroll; use the player's own estimate.
   if (syncedPosition.TrackUri !== (SpotifyPlayer.GetUri() ?? null)) {
     const isPlaying = Spicetify.Player.isPlaying();
-    return normalizeProgress(Spicetify.Player.getProgress() - $playbackOffset.get(), isPlaying);
+    return normalizeProgress(Spicetify.Player.getProgress() - getOffset(), isPlaying);
   }
 
   const { StartedSyncAt, Position } = syncedPosition;
@@ -402,7 +406,7 @@ export default function GetProgress() {
   // ahead of the audio (lyrics appear earlier), positive values hold it back
   // (lyrics are delayed). Applied in both play/pause branches so the active
   // line doesn't jump when playback is paused. See $playbackOffset.
-  const playbackOffset = $playbackOffset.get();
+  const playbackOffset = getOffset();
 
   if (!Spicetify.Player.isPlaying()) {
     // Static when paused. The synced position already comes from getPositionState

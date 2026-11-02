@@ -101,7 +101,7 @@
 
 /* The inherited size container collapses fit-content/auto dimensions and wraps
    pinned actions above the menu toggle. Use a normal, single-row flex layout. */
-#SpicyLyricsPage#SpicyLyricsPage .ViewControls.sl-fork-controls { max-width:calc(100% - 24px); gap:8px; align-items:center; container-type:normal; flex-wrap:nowrap; --ViewControlSize:clamp(32px, 5.5vh, 64px); }
+#SpicyLyricsPage#SpicyLyricsPage .ViewControls.sl-fork-controls { max-width:calc(100% - 24px); gap:8px; align-items:flex-start; container-type:normal; flex-wrap:nowrap; --ViewControlSize:clamp(32px, 5.5vh, 64px); }
 /* Quick actions use the upstream ViewControl button rules from default.css. */
 #SpicyLyricsPage .sl-quick-controls { display:flex; flex:0 1 auto; min-width:0; gap:6px; max-width:min(70vw,700px); overflow-x:auto; padding:0; background:none; }
 #SpicyLyricsPage .sl-quick-controls:empty { display:none; }
@@ -111,7 +111,9 @@
 .vv-quick-settings > p { color:var(--ry-muted); font-size:12px; line-height:1.5; }
 .vv-quick-settings > button { margin:12px 0; }
 
-#SpicyLyricsPage .sl-fork-menu-toggle { flex-shrink:0; }
+/* Align button tops: the quick strip alone reserves space below for its 6px scrollbar. */
+#SpicyLyricsPage .sl-fork-menu-toggle, #SpicyLyricsPage .sl-fullscreen-exit { flex-shrink:0; margin:0; align-self:flex-start; }
+#SpicyLyricsPage:not(.Fullscreen) .sl-fullscreen-exit { display:none!important; }
 #SpicyLyricsPage .sl-fork-menu-toggle[hidden] { display:none!important; }
 
 /* Independent A/B timelines; the normal lyrics renderer is left untouched. */
@@ -299,4 +301,38 @@
 @media(prefers-reduced-motion:reduce) {
   .vv-quote-dialog input[type="checkbox"], .vv-quote-option input[type="checkbox"]::before,
   .vv-quick-settings > summary { transition:none; }
+}
+
+/* Quote compositions and artwork controls. */
+.vv-quote-editor > label.vv-quote-range { display:grid; grid-template-columns:1fr auto; gap:8px; }
+.vv-quote-editor > label.vv-quote-range[hidden] { display:none; }
+.vv-quote-range output { color:#d0bcf2; font-variant-numeric:tabular-nums; }
+.vv-quote-range input[type="range"] { grid-column:1 / -1; width:100%; accent-color:#d0bcf2; cursor:pointer; }
+.vv-quote-range input:focus-visible { outline:2px solid #d0bcf2; outline-offset:3px; }
+.vv-quote-option:has(input:disabled) { opacity:.5; cursor:default; }
+.sl-song-offset { display:flex; align-items:center; flex-wrap:wrap; gap:12px; width:100%; }
+.sl-song-offset > span { font-size:12px; color:var(--color-text-secondary); }
+
+/* Outgoing text is a frozen, inert snapshot. It never participates in layout or the animator. */
+#SpicyLyricsPage .vv-scene-outgoing { position:absolute; z-index:10; overflow:hidden; pointer-events:none; }
+#SpicyLyricsPage .vv-scene-outgoing > .LyricsContent { position:relative!important; width:100%!important; height:100%!important; visibility:visible!important; margin:0!important; }
+#SpicyLyricsPage .vv-scene-outgoing * { animation:none!important; transition:none!important; pointer-events:none!important; }
+
+/* Opt-in instrumental artwork stage. Individual word/letter transforms stay with the real animator. */
+#SpicyLyricsPage:not(.CardMode) .LyricsContainer { transition:opacity .7s ease; }
+#SpicyLyricsPage.VV_InstrumentalMotion .ContentBox .NowBar .Header .MediaBox .MediaImageContainer {
+  scale:var(--vv-art-scale,1);
+  translate:0 var(--vv-art-y,0px);
+  rotate:var(--vv-art-angle,0deg);
+  /* The shared capped frame loop owns geometry; keep the existing opacity fade. */
+  transition:opacity var(--CanvasFade,900ms) var(--CanvasEaseOut,ease-out);
+}
+#SpicyLyricsPage.VV_InstrumentalMotion .ContentBox .NowBar .Header > .Metadata { translate:0 var(--vv-caption-y,0px); }
+#SpicyLyricsPage.VV_InstrumentalArtwork .LyricsContainer { opacity:.28; }
+@media (prefers-reduced-motion:reduce) {
+  #SpicyLyricsPage .vv-scene-outgoing { display:none; }
+  #SpicyLyricsPage.VV_InstrumentalMotion .ContentBox .NowBar .Header .MediaBox .MediaImageContainer { scale:1; translate:none; rotate:none; }
+  #SpicyLyricsPage.VV_InstrumentalMotion .ContentBox .NowBar .Header > .Metadata { translate:none; }
+  #SpicyLyricsPage:not(.CardMode) .NowBar .MediaBox .MediaImageContainer,
+  #SpicyLyricsPage:not(.CardMode) .LyricsContainer { transition:none; }
 }

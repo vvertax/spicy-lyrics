@@ -1,3 +1,4 @@
+import { revealSceneLyrics } from "../../../components/Utils/ScenePresentation.ts";
 import { setDisplayedLyrics } from "../DisplayedLyrics.ts";
 // deno-lint-ignore-file no-explicit-any
 
@@ -331,11 +332,13 @@ export default async function ApplyLyrics(lyricsContent: [object | string, numbe
     renderedLyrics = null;
     setDisplayedLyrics(null, null);
     if (uri) await HideLoaderContainer(uri);
+    if (generation === applyGeneration && PageContainer === page) revealSceneLyrics(page, uri);
     return;
   }
 
   if (!lyrics) {
     if (uri) await HideLoaderContainer(uri);
+    if (generation === applyGeneration && PageContainer === page) revealSceneLyrics(page, uri);
     return;
   }
 
@@ -372,4 +375,5 @@ export default async function ApplyLyrics(lyricsContent: [object | string, numbe
   setDisplayedLyrics(uri, lyrics);
   void refreshLyricsFontFallback();
   if (uri) await HideLoaderContainer(uri);
+  if (generation === applyGeneration && PageContainer === page) revealSceneLyrics(page, uri);
 }

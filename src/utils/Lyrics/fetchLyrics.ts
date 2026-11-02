@@ -1,3 +1,4 @@
+import { beginSceneTrackChange } from "../../components/Utils/ScenePresentation.ts";
 import Defaults, { isDev } from "../../components/Global/Defaults.ts";
 import { $currentLyricsData, $currentLyricsType, $currentlyFetching } from "../stores.ts";
 import { SpotifyPlayer } from "../../components/Global/SpotifyPlayer.ts";
@@ -214,6 +215,7 @@ async function fetchLyricsInternal(
   if (isCurrentTrack(uri)) $currentlyFetching.set(true);
 
   if (isCurrentTrack(uri) && !options.keepCurrentLyricsVisible) {
+    beginSceneTrackChange(PageContainer, uri);
     LyricsContent?.classList.add("HiddenTransitioned");
     ShowLoaderContainer(uri);
   }

@@ -3,6 +3,7 @@ import React from "react";
 import { toast } from "sonner";
 import { SaveFontFile, FONT_FILE_FAMILY } from "../../../utils/fonts/FontFile.ts";
 import {
+  $smoothSceneTransitions,
   $allowHidingSettings,
   $animationFpsCap,
   $animationFpsCapEnabled,
@@ -30,6 +31,7 @@ interface Props {
 }
 
 export default function AppearanceSection({ query, sectionFilter, showHidden = false }: Props) {
+  const smoothSceneTransitions = useStore($smoothSceneTransitions);
   const customFontEnabled = useStore($customFontEnabled);
   const customFont = useStore($customFont);
   const staticBackgroundMode = useStore($staticBackgroundMode);
@@ -44,6 +46,7 @@ export default function AppearanceSection({ query, sectionFilter, showHidden = f
   if (sectionFilter !== "All" && sectionFilter !== SECTION_NAME) return null;
 
   const visible = (id: string) => showHidden ? hiddenSettingIds.includes(id) : !allowHidingSettings || !hiddenSettingIds.includes(id) || Boolean(query.trim());
+  const scene = visible("appearance-scene-transitions") && matches(query, "Smooth Track Transitions", "Fade lyrics and song information when tracks change, alongside the background transition.");
   const r1 = visible("appearance-custom-font") && matches(query, "Use Custom Font", "Use a custom font instead of the bundled Spicy Lyrics font.");
   const r2 = visible("appearance-custom-font") && customFontEnabled && matches(query, "Font Name Font Preset Font File", "Font family name file ttf otf woff to use for lyrics.");
   const r3 = visible("appearance-background-type") && matches(query, "Background Type", "Choose the dynamic, legacy, static image, or color background.");
@@ -55,11 +58,12 @@ export default function AppearanceSection({ query, sectionFilter, showHidden = f
   const r9 = visible("appearance-fps-limit") && matches(query, "Limit Animation Frame Rate", FPS_CAP_DESCRIPTION);
   const r10 = visible("appearance-fps-cap") && fpsCapEnabled && matches(query, "Animation Frame Rate", FPS_SLIDER_DESCRIPTION);
 
-  if (!r1 && !r2 && !r3 && !r4 && !r6 && !r7 && !r8 && !r9 && !r10) return null;
+  if (!scene && !r1 && !r2 && !r3 && !r4 && !r6 && !r7 && !r8 && !r9 && !r10) return null;
 
   return (
     <>
       <SectionTitle>Appearance</SectionTitle>
+      {scene && <Row settingId="appearance-scene-transitions" label="Smooth Track Transitions" description="Fade lyrics and song information when tracks change, alongside the background transition."><Toggle checked={smoothSceneTransitions} onChange={value => $smoothSceneTransitions.set(value)} /></Row>}
 
       {r3 && (
         <Row settingId="appearance-background-type" label="Background Type" description="Choose the dynamic, legacy, static image, or color background.">

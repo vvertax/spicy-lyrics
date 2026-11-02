@@ -1,3 +1,4 @@
+import { mountScenePresentation, unmountScenePresentation } from "../Utils/ScenePresentation.ts";
 import { RegisterFontFile, FONT_FILE_FAMILY } from "../../utils/fonts/FontFile.ts";
 import { BuildControlsMenu } from "../Utils/ControlsMenu.ts";
 import { createTooltip } from "../../utils/tooltip.ts";
@@ -418,6 +419,7 @@ async function OpenPage(
   }
 
   pageRoot.appendChild(elem);
+  mountScenePresentation(elem);
 
   addLinesEvListener();
   SetLyricsRendererWindow(targetDocument.defaultView);
@@ -538,6 +540,7 @@ async function DestroyPage() {
   SetLyricsRendererWindow(window);
   InvalidatePendingLyricsApplication();
   ClearLyricsLoader();
+  unmountScenePresentation(PageContainer);
   cleanupApplyLyricsAbortController();
 
   // Skip the exit animation — the page is going away — and cancel any animated

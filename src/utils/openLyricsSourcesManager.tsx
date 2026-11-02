@@ -1,19 +1,11 @@
+import { getSettingsReturn } from "./settings.ts";
 import { PopupModal } from "../components/Modal.ts";
 import LyricsSourcesManager from "../components/ReactComponents/SettingsPanel/LyricsSourcesManager.tsx";
-import { createReactModalContent, getModalScrollTop } from "./reactModalContent.tsx";
+import { createReactModalContent } from "./reactModalContent.tsx";
 
 export async function OpenLyricsSourcesManager() {
-  const { default: SettingsPanel } = await import("../components/ReactComponents/SettingsPanel/index.tsx");
-  const settingsScrollTop = getModalScrollTop();
   const modalDocument = PopupModal.ownerDocument;
-  const openSettings = () => {
-    PopupModal.transition({
-      title: "Settings",
-      ...createReactModalContent(<SettingsPanel />, modalDocument),
-      modalId: "settingsPanel",
-      contentScrollTop: settingsScrollTop,
-    });
-  };
+  const openSettings = getSettingsReturn(modalDocument);
 
   const backButton = modalDocument.createElement("button");
   backButton.className = "sl-sp-btn sl-modal-header-back-btn";

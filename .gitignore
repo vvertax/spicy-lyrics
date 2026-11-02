@@ -4,6 +4,8 @@ node_modules/
 .npm/
 .cache/
 .spicetify/
+__pycache__/
+*.py[cod]
 # Generated bundles and upload directories (keep them locally)
 dist/
 /deploy/
@@ -11,10 +13,18 @@ coverage/
 *.tsbuildinfo
 *.log
 *.tmp
+*.bak
+*.swp
+*.swo
 # Machine-specific settings and credentials
 .env
 .env.*
 !.env.example
+# Wrangler local state and development secrets
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
 *.pem
 *.key
 .claude/
@@ -22,8 +32,10 @@ coverage/
 .agents/
 .codex/
 .vscode/
+.idea/
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # Local-only online counter: client, Worker, configuration and deployment files
 /local-online/

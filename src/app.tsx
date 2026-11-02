@@ -1,3 +1,4 @@
+import { beginSceneTrackChange } from "./components/Utils/ScenePresentation.ts";
 import { localizeDocument } from "./utils/i18n/runtime.ts";
 // CSS Imports
 import "./css/tokens.css";
@@ -1078,6 +1079,7 @@ async function main() {
     let songChangeSeen = false;
     async function onSongChange(event: any) {
       songChangeSeen = true;
+      beginSceneTrackChange(PageContainer, SpotifyPlayer.GetUri());
       playbackLogger.debug("Song change pipeline");
       const contentType = SpotifyPlayer.GetContentType();
       playbackLogger.debug("Detected content type", contentType);

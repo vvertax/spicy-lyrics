@@ -1,3 +1,4 @@
+import Fullscreen from "./Fullscreen.ts";
 import { bindTTMLDrop } from "./TTMLDrop.ts";
 import { bindLineActions } from "./LineActions.ts";
 import { localizeDocument } from "../../utils/i18n/runtime.ts";
@@ -75,7 +76,7 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   menu.insertBefore(load, menu.querySelector('#LyricsManager, #CacheAction, #SettingsToggle'));
   for (const id of ['SettingsToggle', 'Close']) { const item = menu.querySelector('#' + id); if (item) menu.append(item); }
   const toggle = doc.createElement('button'); toggle.type = 'button'; toggle.className = 'ViewControl sl-fork-menu-toggle';
-  toggle.textContent = '•••'; toggle.setAttribute('aria-label', 'Lyrics page controls');
+  toggle.innerHTML = Icons.More; toggle.setAttribute('aria-label', 'Lyrics page controls');
   toggle.setAttribute('aria-haspopup', 'menu'); toggle.setAttribute('aria-expanded', 'false');
   const close = (focus = false) => { menu.hidden = true; toggle.setAttribute('aria-expanded', 'false'); if (focus && toggle.isConnected) toggle.focus(); };
   const items = () => Array.from(menu.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
@@ -114,9 +115,14 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
       list[event.key === 'Home' ? 0 : event.key === 'End' ? list.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : -1) + list.length) % list.length]?.focus();
     }
   };
-  controls.classList.add('sl-fork-controls'); controls.append(toggle, menu);
+  const exitFullscreen = doc.createElement('button');
+  exitFullscreen.type = 'button'; exitFullscreen.className = 'ViewControl sl-fullscreen-exit';
+  exitFullscreen.innerHTML = Icons.CloseFullscreen;
+  exitFullscreen.setAttribute('aria-label', 'Exit Fullscreen'); exitFullscreen.title = 'Exit Fullscreen';
+  exitFullscreen.onclick = () => { close(); void Fullscreen.Close(); };
+  controls.classList.add('sl-fork-controls'); controls.append(exitFullscreen, toggle, menu);
   const quickbar = doc.createElement('div'); quickbar.className='sl-quick-controls'; quickbar.role='toolbar'; quickbar.setAttribute('aria-label','Quick lyrics controls');
-  controls.insertBefore(quickbar, toggle);
+  controls.insertBefore(quickbar, exitFullscreen);
   const allRows=Array.from(menu.querySelectorAll<HTMLButtonElement>('button'));
   allRows.forEach(row=>row.dataset.menuRole=row.role);
   const syncPressed=()=>quickbar.querySelectorAll<HTMLButtonElement>('button[aria-checked]').forEach(row=>row.setAttribute('aria-pressed',row.getAttribute('aria-checked')!));

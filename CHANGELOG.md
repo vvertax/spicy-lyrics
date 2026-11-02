@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.9.0
+
+- Delay loading placeholders for fast responses from both cache and network, preserving the reveal deadline across repeated render calls and showing queue notices immediately.
+
+- Align quick controls with the menu button, including when the quick strip has a scrollbar.
+- Keep a dedicated Exit Fullscreen button immediately before the menu, independently of pinned action settings.
+- Restore functional hidden-settings and animator navigation after returning from Experiments, Sources or the TTML Database.
+
+- Fade outgoing lyrics and reveal the next song after loading, alongside existing cover, metadata and background transitions; add a persistent switch.
+- Add Classic, Cover on Top, Poster and Typography quote-card compositions with automatic text fitting.
+- Add cover artwork as a quote-card background with independent blur and darkening controls for preview, PNG and clipboard export.
+- Save a per-song playback offset that replaces the global value, with an option to return to global timing.
+- Add an opt-in instrumental artwork experiment with gentle floating, swaying and breathing during long gaps in synced vocals. Song information follows the cover with safe spacing; both return before singing resumes.
+
 ## 1.8.1
 
 - Add centred split-word growth based on the actual width and animated scale of each syllable, including independently wrapped fragments.

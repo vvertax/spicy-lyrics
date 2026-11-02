@@ -1,3 +1,4 @@
+import { beginSceneTrackChange, sceneLoaderDelay } from "../../components/Utils/ScenePresentation.ts";
 import { PageContainer } from "../../components/Pages/PageView.ts";
 import { SpotifyPlayer } from "../../components/Global/SpotifyPlayer.ts";
 import { isCurrentTrack } from "./Sources/Track.ts";
@@ -54,26 +55,32 @@ function showPresentation(immediateSpinner = false): void {
   const text = skeleton?.querySelector(".SkeletonLabel");
   if (text) text.textContent = queuedMessage ?? DEFAULT_LABEL;
   skeleton?.classList.toggle("LongLabel", queuedMessage !== null);
-  skeleton?.classList.toggle("active", useSkeleton);
+  if (!useSkeleton) skeleton?.classList.remove("active");
   skeleton?.classList.remove("leaving");
-  skeleton?.setAttribute("aria-hidden", String(!useSkeleton));
-  spinner?.classList.remove("active", "leaving");
+  skeleton?.setAttribute("aria-hidden", String(!useSkeleton || !skeleton.classList.contains("active")));
+  spinner?.classList.remove("leaving");
+  if (useSkeleton) spinner?.classList.remove("active");
   spinner?.classList.toggle("queued", queuedMessage !== null);
-  spinner?.setAttribute("aria-hidden", "true");
+  spinner?.setAttribute("aria-hidden", String(useSkeleton || !spinner.classList.contains("active")));
   const message = spinner?.querySelector<HTMLElement>(".loaderMessage");
   if (message) {
     message.textContent = queuedMessage ?? "";
     message.hidden = queuedMessage === null;
   }
-  if (useSkeleton || !spinner) return;
+  const skin = useSkeleton ? skeleton : spinner;
+  if (!skin || skin.classList.contains("active")) return;
   const reveal = () => {
     revealTimer = null;
     revealWindow = null;
     if (ownerContainer !== container || ownerUri !== uri || !isCurrentTrack(uri)) return;
-    spinner.classList.add("active");
-    spinner.setAttribute("aria-hidden", "false");
+    skin.classList.add("active");
+    skin.setAttribute("aria-hidden", "false");
   };
-  const delay = immediateSpinner || queuedMessage ? 0 : Math.max(0, getRemoteConfig().lyricsFetch.loaderRevealDelayMs - (performance.now() - shownAt));
+  const delay = immediateSpinner || queuedMessage ? 0 : Math.max(
+    0,
+    getRemoteConfig().lyricsFetch.loaderRevealDelayMs - (performance.now() - shownAt),
+    sceneLoaderDelay(PageContainer, uri)
+  );
   if (delay === 0) reveal();
   else {
     revealWindow = container.ownerDocument.defaultView ?? window;
@@ -94,6 +101,7 @@ export function ShowLoaderContainer(uri: string): void {
   }
   ownerUri = uri;
   ownerContainer = container;
+  beginSceneTrackChange(PageContainer, uri);
   container.classList.remove("Hidden");
   container.classList.add("LoadingLyrics");
   container.querySelector(".LyricsContent")?.setAttribute("aria-busy", "true");
@@ -116,7 +124,9 @@ export async function PaintLyricsLoader(uri: string): Promise<void> {
   if (!IsLyricsSkeletonEnabled() || !isCurrentTrack(uri)) return;
   ShowLoaderContainer(uri);
   const container = ownerContainer;
-  if (!container || container.ownerDocument.hidden) return;
+  // Any fast response can finish before the loading indicator is due. Do not
+  // force a placeholder paint just to immediately fade it out again.
+  if (!container || container.ownerDocument.hidden || !container.querySelector(".LyricsSkeleton.active")) return;
   const targetWindow = container.ownerDocument.defaultView ?? window;
   await new Promise<void>((resolve) => {
     let firstFrame: number | null = null;

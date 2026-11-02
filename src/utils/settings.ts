@@ -12,6 +12,12 @@ import { $rememberSettingsMenuLocation } from "./stores.ts";
 import { $experiment } from "./experiments.ts";
 
 const MODAL_ID = "settingsPanel";
+const settingsReturns = new WeakMap<Document, () => () => void>();
+
+/** Capture the current settings location before a subpanel replaces its React root. */
+export function getSettingsReturn(targetDocument: Document = PopupModal.ownerDocument): () => void {
+  return settingsReturns.get(targetDocument)?.() ?? (() => openSettingsPanel(targetDocument));
+}
 $experiment("newSettingsDesign").subscribe((enabled) => {
   PopupModal.classList.toggle("Exp_NewSettingsDesign", enabled);
 });
@@ -40,7 +46,7 @@ export function openSettingsPanel(targetDocument: Document = document) {
   };
   const captureScrollPosition = () => {
     const mainSection = targetDocument.querySelector<HTMLElement>(".slmodal-settingsPanel .sl-modal-main-section");
-    const scrollElement = mainSection?.querySelector<HTMLElement>(".sl-sp-settings-scroll") ?? mainSection;
+    const scrollElement = mainSection?.querySelector<HTMLElement>(".sl-sp-settings-scroll");
     if (scrollElement) currentState.scrollTop = scrollElement.scrollTop;
   };
   const saveLocation = () => {
@@ -98,7 +104,6 @@ export function openSettingsPanel(targetDocument: Document = document) {
     const timers = [0, 50, 150, 350].map((delay) => targetWindow.setTimeout(() => { observeArtwork(); positionPreview(); }, delay));
     targetWindow.requestAnimationFrame(() => { observeArtwork(); positionPreview(); targetWindow.requestAnimationFrame(positionPreview); });
     removePreviewPositioning = () => { resizeObserver?.disconnect(); layoutObserver.disconnect(); timers.forEach((timer) => targetWindow.clearTimeout(timer)); targetWindow.removeEventListener("resize", positionPreview); };
-    (openAnimatorBehaviorPanel as any).state = state;
   };
   const openHiddenSettingsPanel = () => {
     captureScrollPosition();
@@ -107,8 +112,6 @@ export function openSettingsPanel(targetDocument: Document = document) {
     PopupModal.transition({ title: "Hidden Settings", content: container, modalId: MODAL_ID, onClose: () => closePanel(root) });
   };
   const backToSettings = () => {
-    const state = (openAnimatorBehaviorPanel as any).state as SettingsPanelState | undefined;
-    currentState = state ?? currentState;
     currentRoute = "settings";
     restorePreview();
     const { container, root } = renderPanel(
@@ -118,6 +121,12 @@ export function openSettingsPanel(targetDocument: Document = document) {
     );
     PopupModal.transition({ title: "Settings", content: container, modalId: MODAL_ID, contentScrollTop: currentState.scrollTop, onClose: () => closePanel(root) });
   };
+
+  settingsReturns.set(targetDocument, () => {
+    captureScrollPosition();
+    const state = { ...currentState };
+    return () => { currentState = state; backToSettings(); };
+  });
 
   const { container, root } = renderPanel(
     targetDocument,

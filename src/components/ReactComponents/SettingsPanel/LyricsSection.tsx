@@ -1,4 +1,7 @@
 import { $duetColorsEnabled,$duetLeadColor,$duetOtherColor } from "../../../utils/stores.ts";
+import { useCurrentUri } from "../LyricsManager/hooks/useCurrentUri.ts";
+import { songOffset } from "../../../utils/Lyrics/PlaybackOffsets.ts";
+import { $songPlaybackOffsets } from "../../../utils/stores.ts";
 import { useStore } from "@nanostores/react";
 import React from "react";
 import {
@@ -33,6 +36,16 @@ export default function LyricsSection({ query, sectionFilter, showHidden = false
   const rightAlignLyrics = useStore($rightAlignLyrics);
   const showScrollToActiveButton = useStore($showScrollToActiveButton);
   const playbackOffset = useStore($playbackOffset);
+  const uri = useCurrentUri();
+  const songOffsets = useStore($songPlaybackOffsets);
+  const trackOffset = songOffset(songOffsets, uri);
+  const setTrackOffset = (value?: number) => {
+    if (!uri) return;
+    const next = { ...$songPlaybackOffsets.get() };
+    if (value === undefined) delete next[uri];
+    else next[uri] = value;
+    $songPlaybackOffsets.set(next);
+  };
   const seekFadeCompensation = useStore($seekFadeCompensation);
   const scrollLeadEnabled = useStore($scrollLeadEnabled);
   const scrollLeadMs = useStore($scrollLeadMs);
@@ -50,6 +63,7 @@ export default function LyricsSection({ query, sectionFilter, showHidden = false
   const r3 = visible("lyrics-minimal-mode") && matches(query, "Minimal Lyrics Mode", "Hides sung lyrics lines in Fullscreen and Cinema Mode");
   const r4 = visible("lyrics-right-align") && matches(query, "Right Align Lyrics", "Flip duet/opposite lyric alignment.");
   const r5 = visible("lyrics-scroll-active") && matches(query, "Show Scroll to Active Button", "Show an arrow button when the active lyric is outside the viewport.");
+  const trackTiming = visible("lyrics-song-offset") && matches(query, "Timing for This Song", "Save a timing offset for the current song instead of the global value.");
   const r8 = visible("lyrics-playback-offset") && matches(query, "Playback Offset", "Shift lyrics timing earlier or later, in milliseconds.");
   const r9 = visible("lyrics-line-hover") && matches(query, "Line Hover Background", "Shows a highlight box behind a lyrics line when you hover over it");
   const r10 = visible("lyrics-wide-duet-padding") && matches(query, "Wide duet line padding", "Separate duet voices into wider columns. Disable for compact padding.");
@@ -62,7 +76,7 @@ export default function LyricsSection({ query, sectionFilter, showHidden = false
   const splitMotion = visible("lyrics-split-word-motion") && matches(query, "Split Word Motion", "Move neighbouring syllables as the singing part grows, keeping the word centred.");
   const joinSplit = matches(query, "Join Split Words", "Show a word that's sung in syllables as one word, when its parts line up evenly.");
   const colors=matches(query,"Duet Voice Colors","Customize the two duet voices.");
-  if (![colors,r3, r4, r5, r8, r9, r10, seek, early, lead, smooth, skeleton, credits, joinSplit, splitMotion].some(Boolean)) return null;
+  if (![trackTiming, colors,r3, r4, r5, r8, r9, r10, seek, early, lead, smooth, skeleton, credits, joinSplit, splitMotion].some(Boolean)) return null;
 
   return <>
     <SectionTitle>Lyrics Display</SectionTitle>
@@ -73,6 +87,14 @@ export default function LyricsSection({ query, sectionFilter, showHidden = false
     {r4 && <Row settingId="lyrics-right-align" label="Right Align Lyrics" description="Flip duet/opposite lyric alignment."><Toggle checked={rightAlignLyrics} onChange={(v) => $rightAlignLyrics.set(v)} /></Row>}
     {r5 && <Row settingId="lyrics-scroll-active" label="Show Scroll to Active Button" description="Show an arrow when the active lyric is outside the viewport."><Toggle checked={showScrollToActiveButton} onChange={(v) => $showScrollToActiveButton.set(v)} /></Row>}
     {r8 && <Row settingId="lyrics-playback-offset" label="Playback Offset" description="Shift lyrics timing earlier or later, in milliseconds." stacked><Slider value={playbackOffset} min={-5000} max={5000} step={10} defaultValue={0} unit="ms" onChange={(v) => $playbackOffset.set(v)} /></Row>}
+    {trackTiming && <Row settingId="lyrics-song-offset" label="Timing for This Song" description="Save a timing offset for the current song instead of the global value." stacked disabled={!uri}>
+      <div className="sl-song-offset">
+        <Toggle checked={trackOffset !== undefined} onChange={enabled => setTrackOffset(enabled ? playbackOffset : undefined)} />
+        <span>{trackOffset === undefined ? "Using global offset" : "Saved for this song"}</span>
+        {trackOffset !== undefined && <button type="button" className="sl-sp-btn" onClick={() => setTrackOffset()}>Use Global Offset</button>}
+      </div>
+      {trackOffset !== undefined && <Slider value={trackOffset} min={-5000} max={5000} step={10} defaultValue={0} unit="ms" onChange={value => setTrackOffset(value)} />}
+    </Row>}
     {seek && <Row settingId="lyrics-seek-compensation" label="Seek Fade-in Compensation" description="Clicking a lyric seeks 300ms before it, so Spotify's fade-in does not cut off the start."><Toggle checked={seekFadeCompensation} onChange={(v) => $seekFadeCompensation.set(v)} /></Row>}
     {(early || lead || smooth) && <SectionTitle>Scrolling</SectionTitle>}
     {early && <Row settingId="lyrics-early-scroll" label="Early Scroll" description="Start scrolling to the next line before it becomes active."><Toggle checked={scrollLeadEnabled} onChange={(v) => $scrollLeadEnabled.set(v)} /></Row>}
