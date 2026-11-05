@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.10.0
+
+- Hide the resume countdown when automatic following cannot resume for a distant line; soften its opacity, remove the duplicate Sources heading and avoid repeated unchanged DOM writes in source details and subtitle controls.
+
+- Place source diagnostics with the lyric credits, show only remaining seconds above the return arrow, and style subtitle layout controls with translucent preset buttons and a labelled width slider.
+
+- Hide the Favorites tab until it has entries; reveal star controls only in an explicit favorites-editing mode beside Hide Settings.
+- Keep subtitle visibility separate from the experiment, with a menu/quick action, saved drag/resize layout, presets and reset.
+- Smoothly shrink the subtitle panel after wrapped lines without replacing its continuous tape.
+- Add optional displayed-source details and autoscroll-resume feedback, and an opt-in Ctrl+wheel lyric zoom experiment with reset.
+
+- Suspend visual frame loops, UI polling, extension-owned animations and decorative video in hidden windows; keep visible PiP/Cinema independent of host visibility.
+- Defer lyrics, background and artist-image work while hidden, cancel automatic provider requests without error notices and fetch only the current track on return.
+- Load romanization dictionaries/packages on demand and retain functional playback controls, line repeat and local presence heartbeats.
+
+- Add an opt-in glass bottom subtitles bar with cover artwork, current/next lyrics, upward reel transitions, a subtle Spicy Lyrics watermark, the production word/letter animator and click-to-seek while browsing Spotify.
+- Animate subtitle panel entry/exit and text fades, including track changes, playback endings, close; cancel stale transitions safely and respect reduced motion.
+- Scroll subtitles on one continuous tape with persistent rows, stable type size and a single outer viewport; measure the full height of wrapped lyrics so words are not clipped inside a line.
+- Temporarily disable backing vocals in floating subtitles to prevent reel-height jumps; keep the implementation with restoration comments. Normal-page backing vocals remain available.
+- Fix subtitle split-word geometry, promote the upcoming line immediately during gaps and keep reel transitions on transform/opacity, then smoothly settle the viewport height after the tape stops.
+- Add local TTML inspection for empty lines, invalid/reversed timings, words outside lead timing and long instrumental gaps, with an interactive preview.
+- Add persistent favorite settings, star controls and a dedicated Favorites tab.
+- Translate the new controls into Russian.
+
 ## 1.9.0
 
 - Delay loading placeholders for fast responses from both cache and network, preserving the reveal deadline across repeated render calls and showing queue notices immediately.

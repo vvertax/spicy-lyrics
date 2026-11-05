@@ -1,6 +1,6 @@
 import { $uiLanguage } from "../stores.ts";
 import { translateUi } from "./translate.ts";
-const scope='.sl-modal,.sl-ldb-root,.sl-build-channel-panel,[data-sonner-toast],.LyricsSkeleton,.loaderContainer,.sl-profile-dialog,.sl-update-toast,.LyricsNotice,.sl-sp-panel,.slm,.sl-ldb-upload-root,.sl-notice,.vv-quote-dialog,.vv-review-dialog,.vv-page-comparison,.sl-modal-header,.sl-fork-controls,.sl-fork-menu,.sl-quick-controls,.tippy-box';
+const scope='.vv-source-info,.vv-resume-indicator,.vv-zoom-badge,#sl-subtitle-bar .sl-subtitle-layout,.vv-ttml-check,.sl-modal,.sl-ldb-root,.sl-build-channel-panel,[data-sonner-toast],.LyricsSkeleton,.loaderContainer,.sl-profile-dialog,.sl-update-toast,.LyricsNotice,.sl-sp-panel,.slm,.sl-ldb-upload-root,.sl-notice,.vv-quote-dialog,.vv-review-dialog,.vv-page-comparison,.sl-modal-header,.sl-fork-controls,.sl-fork-menu,.sl-quick-controls,.tippy-box';
 const exclude='[data-i18n-ignore],script,style,.sl-build-channel-option-title,.sl-build-channel-select option,.line,.word,.letter,.SongInfo,.vv-quote-lines,.vv-split-line,.vv-preview-text,.vv-review-notes article > p,.vv-review-notes article > strong,.sl-ldb-row__info,.sl-ldb-upload-subtitle,.vv-split-track,.vv-split-filename';
 type Source={original:string;rendered:string};
 const sources=new WeakMap<Node,Source>();

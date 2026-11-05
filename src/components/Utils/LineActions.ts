@@ -3,7 +3,6 @@ import { $duetColorsEnabled,$duetLeadColor,$duetOtherColor,$uiLanguage } from ".
 import { translateUi } from "../../utils/i18n/translate.ts";
 import { LyricsObject } from "../../utils/Lyrics/lyrics.ts";
 import GetProgress from "../../utils/Gets/GetProgress.ts";
-import { onAnimationFrame } from "../../utils/AnimationFrameLoop.ts";
 import { SpotifyPlayer } from "../Global/SpotifyPlayer.ts";
 import { quoteLineText } from "./QuoteText.ts";
 import { comparisonTiming } from "./ReviewModel.ts";
@@ -17,7 +16,9 @@ export function bindLineActions(page:HTMLElement){
  const close=()=>{menu?.remove();menu=null;};
  const color=()=>{page.classList.toggle('VV_DuetColors',$duetColorsEnabled.get());for(const [key,value] of [['--vv-lead-color',$duetLeadColor.get()],['--vv-other-color',$duetOtherColor.get()]])if(/^#[a-f0-9]{6}$/i.test(value)){page.style.setProperty(key,value);page.style.setProperty(key+'-rgb',[1,3,5].map(i=>parseInt(value.slice(i,i+2),16)).join(','));}};
  const subscriptions=[$duetColorsEnabled.subscribe(color),$duetLeadColor.subscribe(color),$duetOtherColor.subscribe(color)];
- const stop=onAnimationFrame(()=>{if(!repeat)return;if(!page.isConnected||SpotifyPlayer.GetUri()!==repeat.uri){repeat=null;return;}if(GetProgress()>=repeat.end)SpotifyPlayer.Seek(repeat.start);},doc.defaultView!);
+ let repeatTimer:number|undefined;
+ const stop=()=>{if(repeatTimer!==undefined)doc.defaultView!.clearInterval(repeatTimer);repeatTimer=undefined;};
+ const startRepeat=()=>{stop();repeatTimer=doc.defaultView!.setInterval(()=>{if(!repeat||!page.isConnected||SpotifyPlayer.GetUri()!==repeat.uri){repeat=null;stop();return;}if(GetProgress()>=repeat.end)SpotifyPlayer.Seek(repeat.start);},50);};
  const open=(event:MouseEvent)=>{
   const line=(event.target as Element).closest<HTMLElement>('.line:not(.musical-line)');if(!line||!page.contains(line))return;
   let data:any,index:number;
@@ -36,8 +37,8 @@ export function bindLineActions(page:HTMLElement){
   add('Create Quote Card',()=>{void quoteCard(doc,index,data).catch(e=>toast.error(String(e)));});
   add('Review Lyrics',()=>reviewLyrics(doc,data,index));
   const timing=comparisonTiming(data.Content[index]);
-  if(timing.end>timing.start)add('Repeat line',()=>{const uri=SpotifyPlayer.GetUri();if(uri){repeat={...timing,uri};SpotifyPlayer.Seek(timing.start);if(!Spicetify.Player.isPlaying())Spicetify.Player.togglePlay();}});
-  if(repeat)add('Stop repeating',()=>{repeat=null;});
+  if(timing.end>timing.start)add('Repeat line',()=>{const uri=SpotifyPlayer.GetUri();if(uri){repeat={...timing,uri};startRepeat();SpotifyPlayer.Seek(timing.start);if(!Spicetify.Player.isPlaying())Spicetify.Player.togglePlay();}});
+  if(repeat)add('Stop repeating',()=>{repeat=null;stop();});
   doc.body.append(menu);const rect=menu.getBoundingClientRect();menu.style.left=Math.max(8,Math.min(event.clientX,doc.defaultView!.innerWidth-rect.width-8))+'px';menu.style.top=Math.max(8,Math.min(event.clientY,doc.defaultView!.innerHeight-rect.height-8))+'px';menu.querySelector('button')?.focus();
  };
  const outside=(event:PointerEvent)=>{if(!menu?.contains(event.target as Node))close();};

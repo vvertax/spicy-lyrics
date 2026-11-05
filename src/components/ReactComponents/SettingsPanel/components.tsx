@@ -1,3 +1,4 @@
+import { $favoriteSettings } from "../../../utils/stores.ts";
 import { translateUi } from "../../../utils/i18n/translate.ts";
 import { $uiLanguage } from "../../../utils/stores.ts";
 import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
@@ -5,6 +6,8 @@ import { createPortal } from "react-dom";
 import { useStore } from "@nanostores/react";
 import { $allowHidingSettings, $hiddenSettingIds, $hideHidingIcon } from "../../../utils/stores.ts";
 
+export const FavoriteSettingsContext = React.createContext(false);
+export const EditFavoritesContext = React.createContext(false);
 export const HiddenSettingsContext = React.createContext(false);
 export const ShowHiddenSettingsInSearchContext = React.createContext(false);
 
@@ -33,12 +36,19 @@ export function Row({
   stacked?: boolean;
   settingId?: string;
 }) {
+  const favoritesOnly = useContext(FavoriteSettingsContext);
+  const editFavorites = useContext(EditFavoritesContext);
+  const savedFavorites = useStore($favoriteSettings);
+  const favorites = Array.isArray(savedFavorites) ? savedFavorites.filter(id => typeof id === "string") : [];
+  const favoriteId = `${settingId ?? "label"}:${label}`;
+  const favorite = favorites.includes(favoriteId);
   const showHidden = useContext(HiddenSettingsContext);
   const showHiddenInSearch = useContext(ShowHiddenSettingsInSearchContext);
   const allowHidingSettings = useStore($allowHidingSettings);
   const hideHidingIcon = useStore($hideHidingIcon);
   const hiddenSettingIds = useStore($hiddenSettingIds);
   const isHidden = settingId && hiddenSettingIds.includes(settingId);
+  if (favoritesOnly && !favorite) return null;
   if (settingId && isHidden && allowHidingSettings && !showHidden && !showHiddenInSearch) return null;
   const toggleVisibility = () => {
     if (!settingId) return;
@@ -49,6 +59,10 @@ export function Row({
       className={`sl-sp-row sl-list-row${disabled ? " sl-sp-row--disabled" : ""}${stacked ? " sl-sp-row--stacked" : ""}`}
     >
       <div className="sl-sp-label-area">
+        {editFavorites && <button type="button" className="sl-sp-btn sl-sp-visibility-btn sl-sp-favorite-btn" aria-label={`${favorite ? "Remove from favorites" : "Add to favorites"}: ${label}`} title={favorite ? "Remove from favorites" : "Add to favorites"} aria-pressed={favorite}
+          onClick={() => $favoriteSettings.set(favorite ? favorites.filter(id => id !== favoriteId) : [...favorites, favoriteId])}>
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill={favorite ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6"><path d="m12 3 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2-5.7-3-5.7 3 1.1-6.2-4.5-4.4 6.3-.9Z"/></svg>
+        </button>}
         {settingId && settingId !== "advanced-hide-settings" && ((showHidden && isHidden) || (allowHidingSettings && !hideHidingIcon)) && (
           <button className="sl-sp-btn sl-sp-visibility-btn" onClick={toggleVisibility} aria-label={`${isHidden ? "Restore" : "Hide"} ${label}`} title={`${isHidden ? "Restore" : "Hide"} setting`}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1.5 8s2.3-4 6.5-4 6.5 4 6.5 4-2.3 4-6.5 4-6.5-4-6.5-4Z" stroke="currentColor" strokeWidth="1.4"/><circle cx="8" cy="8" r="1.8" stroke="currentColor" strokeWidth="1.4"/>{!isHidden && <path d="M2 2l12 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>}</svg>

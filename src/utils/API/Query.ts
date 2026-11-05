@@ -4,6 +4,7 @@ import Logger from "../Logger.ts";
 import { getRemoteConfig } from "../remoteConfig.ts";
 import {
   Acquire,
+  SettleCancelled,
   IsTripStatus,
   ParseRetryAfter,
   SettleFailure,
@@ -80,6 +81,7 @@ export type QueryOptions = {
    * must never set this.
    */
   probe?: boolean;
+  signal?: AbortSignal;
 };
 
 export async function Query(
@@ -93,6 +95,7 @@ export async function Query(
   // Throws ServiceUnavailableError rather than touching the network when the
   // breaker is open. Doing this before `fetch` also spares the CORS preflight,
   // so every suppressed call saves two requests, not one.
+  options.signal?.throwIfAborted();
   const lease = Acquire(options.probe === true);
 
   queryLogger.info("Sending API query request", {
@@ -109,6 +112,9 @@ export async function Query(
   // deadline covers the body as well as the headers, and sits well inside the
   // breaker's shortest pause so a stall is recorded before the next request.
   const controller = new AbortController();
+  const abort = () => controller.abort();
+  options.signal?.addEventListener("abort", abort, { once: true });
+  if (options.signal?.aborted) abort();
   const timer = setTimeout(() => controller.abort(), getRemoteConfig().query.requestTimeoutMs);
 
   try {
@@ -135,6 +141,7 @@ export async function Query(
       // preflight, or answered with an error page carrying no CORS headers.
       // There is no status to inspect here, which is the shape a blocked request
       // most often takes, so it counts on the rejection alone.
+      if (options.signal?.aborted) { SettleCancelled(lease); options.signal.throwIfAborted(); }
       SettleFailure(lease);
       throw new QueryNetworkError(error);
     }
@@ -188,9 +195,10 @@ export async function Query(
       },
     };
   } catch (error) {
-    queryLogger.error("Query error", error);
+    if (!options.signal?.aborted) queryLogger.error("Query error", error);
     throw error;
   } finally {
+    options.signal?.removeEventListener("abort", abort);
     clearTimeout(timer);
   }
 }

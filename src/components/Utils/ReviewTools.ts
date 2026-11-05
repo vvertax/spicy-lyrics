@@ -1,3 +1,4 @@
+import { openTTMLCheck } from "./TTMLCheckPanel.ts";
 import { followComparisonLine } from "./ComparisonFollow.ts";
 import { bindTTMLDrop } from "./TTMLDrop.ts";
 import { renderComparisonLyrics } from "./ComparisonRenderer.ts";
@@ -42,6 +43,7 @@ export function AddReviewMenuRows(menu:HTMLElement, add:(button:HTMLButtonElemen
   for (const [label, icon, open] of [
     ['Find Author Works',Icons.FindAuthorWorks,()=>authorSearch(doc)],
     ['Review Lyrics',Icons.ReviewLyrics,()=>reviewLyrics(doc)],
+    ['Check TTML',Icons.ReviewLyrics,()=>openTTMLCheck(doc)],
     ['Compare TTML A/B',Icons.CompareTTML,()=>compareTTML(doc)],
   ] as const) {
     const row=element(doc,'button');row.type='button';row.innerHTML=icon;

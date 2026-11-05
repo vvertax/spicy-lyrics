@@ -295,3 +295,12 @@ export const $uiLanguage = persistAtom<"en" | "ru">("uiLanguage", typeof navigat
 export const $duetColorsEnabled=persistAtom<boolean>("duetColorsEnabled",false);
 export const $duetLeadColor=persistAtom<string>("duetLeadColor","#cdb4ff");
 export const $duetOtherColor=persistAtom<string>("duetOtherColor","#ffb4cd");
+
+export const $favoriteSettings = persistAtom<string[]>("favoriteSettings", []);
+
+// Panel visibility is independent of the experimental feature's availability.
+export const $subtitlePanelVisible = persistAtom<boolean>("subtitlePanelVisible", true);
+export type SubtitleLayout = { anchor: "player" | "top" | "corner" | "free"; width: number; x: number; y: number };
+export const $subtitleLayout = persistAtom<SubtitleLayout>("subtitleLayout", { anchor: "player", width: 780, x: .5, y: .5 });
+export const $showLyricsSourceInfo = persistAtom<boolean>("showLyricsSourceInfo", false);
+export const $showScrollResumeIndicator = persistAtom<boolean>("showScrollResumeIndicator", false);

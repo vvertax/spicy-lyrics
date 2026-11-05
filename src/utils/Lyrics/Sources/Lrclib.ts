@@ -1,3 +1,4 @@
+import { checkRequest, abortable } from "../RequestAbort.ts";
 import { createProviderResult, buildLineLyrics, buildStaticLyrics, parseTimestampToMilliseconds } from "./Shared.ts";
 import type { TrackLyricsInfo, ExternalLyricsResult, TimedLine } from "./Types.ts";
 
@@ -44,8 +45,9 @@ function parseLRCLikeLyrics(text: string): {
 }
 
 export async function fetchLRCLIBLyrics(
-  trackInfo: TrackLyricsInfo
+  trackInfo: TrackLyricsInfo, signal?: AbortSignal
 ): Promise<ExternalLyricsResult | null> {
+  checkRequest(signal);
   try {
     const finalURL = `https://lrclib.net/api/get?${[
       ["track_name", trackInfo.title],
@@ -57,6 +59,7 @@ export async function fetchLRCLIBLyrics(
       .join("&")}`;
 
     const response = await fetch(finalURL, {
+      signal,
       headers: {
         "x-user-agent": `spicetify v${Spicetify.Config.version} (https://github.com/spicetify/cli)`,
       },
@@ -67,6 +70,7 @@ export async function fetchLRCLIBLyrics(
     }
 
     const body = await response.json();
+    checkRequest(signal);
     if (body?.instrumental) {
       const instrumentalLyrics = buildStaticLyrics(
         ["♪ Instrumental ♪"],
@@ -106,6 +110,7 @@ export async function fetchLRCLIBLyrics(
 
     return null;
   } catch (error) {
+    checkRequest(signal);
     console.error("Failed to fetch lyrics from LRCLIB provider:", error);
     return null;
   }

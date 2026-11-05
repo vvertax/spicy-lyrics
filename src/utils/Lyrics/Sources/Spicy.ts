@@ -1,3 +1,4 @@
+import { checkRequest, abortable } from "../RequestAbort.ts";
 import Platform from "../../../components/Global/Platform.ts";
 import { Query } from "../../API/Query.ts";
 import { SLObjPack } from "../../objpack.ts";
@@ -7,7 +8,7 @@ import type { ExternalLyricsResult } from "./Types.ts";
 
 const spicyLyricsPacker = new SLObjPack();
 
-export async function fetchSpicyLyricsRaw(trackId: string): Promise<ExternalLyricsResult | null> {
+export async function fetchSpicyLyricsRaw(trackId: string, signal?: AbortSignal): Promise<ExternalLyricsResult | null> {
   try {
     const queryLyrics = async (token: string) => {
       const queries = await Query(
@@ -25,12 +26,13 @@ export async function fetchSpicyLyricsRaw(trackId: string): Promise<ExternalLyri
         },
         // This user-initiated fetch is the breaker's health probe while the API
         // is paused. Query still limits it to one probe at a time.
-        { probe: true }
+        { probe: true, signal }
       );
       return queries.get("0");
     };
 
-    const token = await Platform.GetSpotifyAccessToken();
+    checkRequest(signal);
+    const token = await abortable(Platform.GetSpotifyAccessToken(), signal);
     let lyricsQuery = await queryLyrics(token);
 
     // A token can be rejected before Spotify updates its local authorization
@@ -41,6 +43,7 @@ export async function fetchSpicyLyricsRaw(trackId: string): Promise<ExternalLyri
       if (retryToken !== token) lyricsQuery = await queryLyrics(retryToken);
     }
 
+    checkRequest(signal);
     if (lyricsQuery?.httpStatus === 503) return { lyrics: null, status: 503 };
 
     if (!lyricsQuery || lyricsQuery.httpStatus !== 200) {
@@ -67,6 +70,7 @@ export async function fetchSpicyLyricsRaw(trackId: string): Promise<ExternalLyri
       status: 200,
     };
   } catch (error) {
+    checkRequest(signal);
     console.error("Failed to fetch lyrics from Spicy Lyrics provider:", error);
     return null;
   }

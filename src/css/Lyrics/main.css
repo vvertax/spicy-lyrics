@@ -37,7 +37,7 @@
   --ActiveTextGlowDef: rgba(255, 255, 255, 0.4) 0px 0px 14px;
   --StrongTextGlowDef: rgba(255, 255, 255, 0.68) 0px 0px 16.4px;
   --StrongerTextGlowDef: rgba(255, 255, 255, 0.74) 0px 0px 16px;
-  --DefaultLyricsSize: clamp(1.85rem, calc(1cqw * 7), 3.5rem);
+  --DefaultLyricsSize: calc((clamp(1.85rem, calc(1cqw * 7), 3.5rem)) * var(--vv-lyrics-zoom, 1));
   --amll-lyric-player-font-size: var(--DefaultLyricsSize);
   --Simplebar-Scrollbar-Color: rgba(255, 255, 255, 0.6);
   --vertical-gap: 0px;
@@ -134,11 +134,11 @@
      still shows a few lines and a tiny window isn't one word per line. vw/vh
      because this var is read inside .LyricsContent, where cq units would
      resolve against a different container than here. */
-  --DefaultLyricsSize: clamp(
+  --DefaultLyricsSize: calc((clamp(
     1.2rem,
     min(max(1.7rem, 5.5vw), 8vh, 8vw),
     2.6rem
-  );
+  )) * var(--vv-lyrics-zoom, 1));
 }
 
 /* #SpicyLyricsPage.Fullscreen.MinimalLyricsMode .LyricsContainer .LyricsContent {
@@ -191,7 +191,7 @@ body:has(.Root:not(.global-nav)) #SpicyLyricsPage .LyricsContainer .LyricsConten
 }
 
 #SpicyLyricsPage:is(.PinnedFooterMode_NoWriters, .PinnedFooterMode_Full):not(.SpaceGravityMode):not(.CardMode) .LyricsContainer .LyricsPinnedFooter {
-  --DefaultLyricsSize: clamp(1.85rem, calc(1cqw * 7), 3.5rem);
+  --DefaultLyricsSize: calc((clamp(1.85rem, calc(1cqw * 7), 3.5rem)) * var(--vv-lyrics-zoom, 1));
   position: absolute;
   z-index: 10;
   right: var(--LyricsRightSidePadding);
@@ -236,7 +236,7 @@ body:has(.Root:not(.global-nav)) #SpicyLyricsPage .LyricsContainer .LyricsConten
 }
 
 .spicy-pip-wrapper #SpicyLyricsPage:is(.PinnedFooterMode_NoWriters, .PinnedFooterMode_Full):not(.SpaceGravityMode):not(.CardMode) .LyricsContainer .LyricsPinnedFooter {
-  --DefaultLyricsSize: clamp(1.7rem, calc(1cqw * 5.5), 2.6rem);
+  --DefaultLyricsSize: calc((clamp(1.7rem, calc(1cqw * 5.5), 2.6rem)) * var(--vv-lyrics-zoom, 1));
 }
 
 #SpicyLyricsPage.SpaceGravityMode .LyricsContainer .LyricsContent .SpicyLyricsScrollContainer.SpaceGravityStage {

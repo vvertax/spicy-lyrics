@@ -35,6 +35,7 @@ type EnhancedLyricsItem = LyricsLineWithIndex | LyricsSyllableWithIndex;
 // Define proper types for variables
 let lastLine: HTMLElement | null = null;
 let isUserScrolling = false;
+let manualResumeEligible = false;
 let lastUserScrollTime = 0;
 let lastPosition: number = 0;
 const USER_SCROLL_COOLDOWN = 750; // 0.75 second cooldown
@@ -46,7 +47,7 @@ let smoothForceScrollQueued = false;
 
 // --- NEW: Module variables for cleanup ---
 let currentSimpleBarInstance: any | null = null;
-let wheelHandler: (() => void) | null = null;
+let wheelHandler: ((event: WheelEvent) => void) | null = null;
 let touchMoveHandler: (() => void) | null = null;
 let scrollHandler: (() => void) | null = null;
 let holdScrollToActiveButton = false;
@@ -259,6 +260,7 @@ const wasDrasticPositionChange = (lastPosition: number, newPosition: number) => 
 
 // Add focus event listener to reset state when window is focused
 window.addEventListener("focus", ResetLastLine);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) ResetLastLine(); });
 // Add resize event listener to reset state when window is resized
 window.addEventListener("resize", ResetLastLine);
 
@@ -305,7 +307,7 @@ export function InitializeScrollEvents(ScrollSimplebar: any) {
   if (!$lyricsContainerExists.get()) return;
   // --- NEW: Store instance and define handlers ---
   currentSimpleBarInstance = ScrollSimplebar;
-  wheelHandler = () => handleUserScroll(currentSimpleBarInstance);
+  wheelHandler = event => { if (!event.ctrlKey) handleUserScroll(currentSimpleBarInstance); };
   touchMoveHandler = () => handleUserScroll(currentSimpleBarInstance);
   scrollHandler = () => {
     UpdateScrollToActiveButton();
@@ -452,6 +454,7 @@ export const GetForceScrollingPolicy = () => {
 };
 
 export function ScrollToActiveLine(ScrollSimplebar: any) {
+  manualResumeEligible = false;
   if (PageContainer?.classList.contains("SpaceGravityMode")) {
     cleanupScrollButtonObserver();
     hideScrollToActiveButton();
@@ -691,6 +694,7 @@ export function ScrollToActiveLine(ScrollSimplebar: any) {
       // user scrolled far away — preserve the original no-scroll behavior.
       const isLineInViewport = hasVirtualizer ? LineElem.isConnected : lastIsLineInViewport;
 
+      manualResumeEligible = isLineInViewport && canAutoScrollToIndex(Lines, currentLine._LineIndex, isPlaybackBacktrack);
       const isSameLine = lastLine === LineElem;
 
       /*
@@ -910,3 +914,8 @@ export function CleanupScrollEvents() {
   //console.log("SpicyLyrics scroll events cleaned up."); // Optional log
 }
 // --- END NEW ---
+
+/** Report the real follow cooldown; zero may still wait for the active line to enter view. */
+export function getScrollResumeState() {
+  return { active: isUserScrolling, eligible: manualResumeEligible, remaining: Math.max(0, USER_SCROLL_COOLDOWN - (performance.now() - lastUserScrollTime)), duration: USER_SCROLL_COOLDOWN };
+}

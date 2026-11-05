@@ -344,3 +344,15 @@ sl-generic-modal.SpicyLyricsModal .vv-preview-text .vv-preview-word {
 .vv-language { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:0 8px; font-size:12px; color:var(--ry-muted); }
 .vv-language select { min-width:0; padding:6px; background:#ffffff0c; color:var(--ry-text); border:1px solid var(--ry-line); border-radius:8px; }
 .vv-language option { background:#211a35; }
+
+.sl-sp-row .sl-sp-favorite-btn { flex:none; display:inline-flex; align-items:center; justify-content:center; width:26px; height:28px; padding:4px; margin:0 6px 0 0; background:none; color:var(--color-text-tertiary,#9aa3bf); border:0; border-radius:6px; cursor:pointer; }
+.sl-sp-row .sl-sp-favorite-btn[aria-pressed="true"] { color:#d0bcf2; }
+.sl-sp-row .sl-sp-favorite-btn:hover { background:#d0bcf21a; color:#e2d1fb; }
+.sl-sp-row .sl-sp-favorite-btn:focus-visible { outline:2px solid #d0bcf2; outline-offset:2px; }
+.sl-sp-favorites-only .sl-sp-card:not(:has(.sl-sp-row)),
+.sl-sp-favorites-only .vv-quick-settings:not(:has(.sl-sp-row)) { display:none; }
+.sl-sp-favorites-only .vv-quick-settings > :is(summary,p,button),
+.sl-sp-favorites-only .vv-animator-preview { display:none; }
+
+/* Editing favorites uses the same compact action as hiding a setting. */
+.sl-sp-row .sl-sp-favorite-btn { width:28px; height:28px; margin:0 6px 0 0; padding:5px; border:1px solid #d0bcf233; background:#d0bcf20d; border-radius:7px; }

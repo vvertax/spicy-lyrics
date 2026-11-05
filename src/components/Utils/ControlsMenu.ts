@@ -1,3 +1,6 @@
+import { bindLyricsExtras } from "./LyricsExtras.ts";
+import { $experiment } from "../../utils/experiments.ts";
+import { $subtitlePanelVisible } from "../../utils/stores.ts";
 import Fullscreen from "./Fullscreen.ts";
 import { bindTTMLDrop } from "./TTMLDrop.ts";
 import { bindLineActions } from "./LineActions.ts";
@@ -59,6 +62,7 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   load.onclick=()=>{const input=doc.createElement('input');input.type='file';input.accept='.ttml';input.onchange=()=>{if(input.files?.[0])void loadFile(input.files[0]);};input.click();};
   const unbindDrop=bindTTMLDrop(page,file=>{void loadFile(file);});
   const unbindLines=bindLineActions(page);
+  const unbindExtras=bindLyricsExtras(page);
   if (!buttons.some(b => b.id === 'LyricsManager')) {
     const manager = doc.createElement('button'); manager.type = 'button'; manager.innerHTML = Icons.LyricsManager;
     addRow(manager, 'Lyrics Manager'); manager.onclick = () => OpenLyricsDBPanel(doc);
@@ -67,6 +71,12 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
     const cache = doc.createElement('button'); cache.type = 'button'; cache.innerHTML = Icons.ClearCache;
     addRow(cache, 'Clear Cached Lyrics'); cache.onclick = () => { void RemoveCurrentLyrics_AllCaches(true); };
   }
+  const subtitles = doc.createElement('button'); subtitles.type = 'button'; subtitles.id = 'subtitles'; subtitles.innerHTML = Icons.QuoteCard;
+  addRow(subtitles, 'Subtitles'); subtitles.role = 'menuitemcheckbox';
+  const syncSubtitles = () => { subtitles.hidden = !$experiment('subtitleBar').get(); subtitles.setAttribute('aria-checked', String($subtitlePanelVisible.get())); };
+  const stopSubtitleFlag = $experiment('subtitleBar').subscribe(syncSubtitles);
+  const stopSubtitleVisible = $subtitlePanelVisible.subscribe(syncSubtitles);
+  subtitles.onclick = () => $subtitlePanelVisible.set(!$subtitlePanelVisible.get());
   CreativeMenuRows(menu, page, addRow);
   AddReviewMenuRows(menu, addRow);
   // Keep the screenshot's primary controls first, and settings/close last.
@@ -79,7 +89,7 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   toggle.innerHTML = Icons.More; toggle.setAttribute('aria-label', 'Lyrics page controls');
   toggle.setAttribute('aria-haspopup', 'menu'); toggle.setAttribute('aria-expanded', 'false');
   const close = (focus = false) => { menu.hidden = true; toggle.setAttribute('aria-expanded', 'false'); if (focus && toggle.isConnected) toggle.focus(); };
-  const items = () => Array.from(menu.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
+  const items = () => Array.from(menu.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')).filter(button => !button.hidden);
   const open = () => {
     menu.hidden = false; toggle.setAttribute('aria-expanded', 'true');
     const rect = toggle.getBoundingClientRect();
@@ -144,7 +154,7 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   pressedObserver.observe(quickbar,{subtree:true,attributes:true,attributeFilter:['aria-checked']});
   quickbar.addEventListener('keydown',event=>{
     if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
-    const rows=Array.from(quickbar.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
+    const rows=Array.from(quickbar.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')).filter(button => !button.hidden);
     if(!rows.length)return;event.preventDefault();const index=rows.indexOf(doc.activeElement as HTMLButtonElement);
     rows[event.key==='Home'?0:event.key==='End'?rows.length-1:(index+(event.key==='ArrowRight'?1:-1)+rows.length)%rows.length]?.focus();
   });
@@ -162,5 +172,5 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   doc.addEventListener('pointerdown', outside); doc.addEventListener('keydown', keys, true);
   const observer = new MutationObserver(() => { if (!controls.isConnected) cleanup?.(); });
   observer.observe(doc.body, { childList: true, subtree: true });
-  cleanup = () => { unbindDrop();unbindLines();unsubscribeQuick(); pressedObserver.disconnect(); doc.removeEventListener('keydown', shortcuts); close(); win.removeEventListener('resize', closeOnResize); observer.disconnect(); doc.removeEventListener('pointerdown', outside); doc.removeEventListener('keydown', keys, true); cleanup = undefined; };
+  cleanup = () => { unbindExtras(); stopSubtitleFlag(); stopSubtitleVisible(); unbindDrop();unbindLines();unsubscribeQuick(); pressedObserver.disconnect(); doc.removeEventListener('keydown', shortcuts); close(); win.removeEventListener('resize', closeOnResize); observer.disconnect(); doc.removeEventListener('pointerdown', outside); doc.removeEventListener('keydown', keys, true); cleanup = undefined; };
 }

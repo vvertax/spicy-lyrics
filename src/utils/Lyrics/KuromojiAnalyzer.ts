@@ -2,8 +2,7 @@
 import { RetrievePackage } from "../ImportPackage.ts";
 import { patchJapaneseTokenReading } from "./JapaneseReadingOverrides.ts";
 
-RetrievePackage("Kuromoji", "1.0.0", "js")
-  .catch(() => {});
+// Load the analyzer only when Japanese romanization is actually requested.
 
 let Analyzer: any;
 export const init = (): Promise<void> => {

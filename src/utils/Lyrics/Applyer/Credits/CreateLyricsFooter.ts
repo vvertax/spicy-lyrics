@@ -3,6 +3,16 @@ type FooterState = {
   details: Set<HTMLElement>;
 };
 
+const pageFooters = new WeakMap<HTMLElement, HTMLElement>();
+
+export function GetPageLyricsFooter(page: HTMLElement): HTMLElement | undefined {
+  return pageFooters.get(page);
+}
+
+export function UnregisterLyricsFooterDetail(detail: HTMLElement, footer: HTMLElement): void {
+  footerStates.get(footer)?.details.delete(detail);
+}
+
 const footerStates = new WeakMap<HTMLElement, FooterState>();
 
 function getFooterState(footer: HTMLElement): FooterState {
@@ -30,6 +40,7 @@ export function PlaceLyricsFooter(
 ): void {
   footer.classList.toggle("SpaceGravityFooter", spaceGravityMode);
   const page = lyricsContent?.closest<HTMLElement>("#SpicyLyricsPage");
+  if (page) pageFooters.set(page, footer);
   const cardMode = page?.classList.contains("CardMode") ?? false;
 
   if (spaceGravityMode) {
@@ -66,6 +77,10 @@ export function PlaceLyricsFooter(
     GetLyricsFooterDetails(footer).filter((detail) => detail.classList.contains("PinnedFooterDetail")).forEach((detail) => {
       pinnedFooterLayer.appendChild(detail);
     });
+  } else {
+    GetLyricsFooterDetails(footer).filter((detail) => detail.classList.contains("PinnedFooterDetail")).forEach((detail) => {
+      if (detail.parentElement !== footer) footer.appendChild(detail);
+    });
   }
   footer.classList.toggle("PinnedLyricsFooter", pinned);
 
@@ -81,7 +96,7 @@ export function PlaceLyricsFooter(
 export function PinFooterDetailWithoutWriters(detail: HTMLElement, footer: HTMLElement): void {
   RegisterLyricsFooterDetail(detail, footer);
   detail.classList.add("PinnedFooterDetail");
-  if (footer.dataset.pinnedFooterMode !== "NoWriters") return;
+  if (footer.dataset.pinnedFooterMode !== "NoWriters" || footer.classList.contains("SpaceGravityFooter")) return;
   const pinnedFooterLayer = noWriterPinnedLayers.get(footer) ?? getFooterState(footer).pinnedFooterLayer;
   pinnedFooterLayer?.appendChild(detail);
 }

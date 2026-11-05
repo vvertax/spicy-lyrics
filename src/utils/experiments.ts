@@ -75,6 +75,13 @@ export type Experiment = {
 };
 
 export const EXPERIMENTS = [
+  { id: "ctrlWheelLyricsZoom", label: "Ctrl + Wheel Lyrics Zoom", description: "Resize lyrics with Ctrl and the mouse wheel. Use the scale badge to reset to 100%.", default: false },
+  {
+    id: "subtitleBar",
+    label: "Bottom Lyrics Subtitles",
+    description: "Show the current and next lyric above the Spotify player while browsing. Hidden while the full lyrics page is open. Click a line to seek.",
+    default: false,
+  },
   {
     id: "instrumentalArtwork",
     label: "Artwork During Instrumental Breaks",

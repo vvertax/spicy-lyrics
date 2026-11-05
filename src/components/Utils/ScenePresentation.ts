@@ -1,3 +1,4 @@
+import { visibleInterval } from "../../utils/WindowActivity.ts";
 import { $smoothSceneTransitions, $lyricsRendererPaused } from "../../utils/stores.ts";
 import { isExperimentEnabled } from "../../utils/experiments.ts";
 import { getDisplayedLyrics } from "../../utils/Lyrics/DisplayedLyrics.ts";
@@ -7,7 +8,7 @@ import { SpotifyPlayer } from "../Global/SpotifyPlayer.ts";
 import { createInstrumentalArtworkMotion } from "./InstrumentalArtworkMotion.ts";
 import { isInstrumentalBreak } from "./InstrumentalBreak.ts";
 
-type Scene = { uri?: string; pending?: string; outgoing?: HTMLElement; animations: Set<Animation>; timer: number; unsubscribe?: () => void; artwork: ReturnType<typeof createInstrumentalArtworkMotion>; cancelReveal?: () => void; outgoingUntil?: number };
+type Scene = { uri?: string; pending?: string; outgoing?: HTMLElement; animations: Set<Animation>; timer: (() => void) | 0; unsubscribe?: () => void; artwork: ReturnType<typeof createInstrumentalArtworkMotion>; cancelReveal?: () => void; outgoingUntil?: number };
 const scenes = new WeakMap<HTMLElement, Scene>();
 const reduced = (page: HTMLElement) => page.ownerDocument.defaultView?.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -27,7 +28,7 @@ export function mountScenePresentation(page: HTMLElement): void {
     scene.outgoing?.remove(); scene.outgoing = undefined;
     scene.animations.forEach(animation => animation.cancel());
   });
-  scene.timer = window.setInterval(() => {
+  scene.timer = visibleInterval(page.ownerDocument.defaultView!,() => {
     if (!page.isConnected) { unmountScenePresentation(page); return; }
     const data = getDisplayedLyrics(SpotifyPlayer.GetUri());
     const layoutEligible = !reduced(page) && !page.ownerDocument.hidden && !$lyricsRendererPaused.get() &&
@@ -133,7 +134,7 @@ export function unmountScenePresentation(page: HTMLElement | null): void {
   if (!page) return;
   const scene = scenes.get(page);
   if (scene) {
-    window.clearInterval(scene.timer);
+    scene.timer && scene.timer();
     scene.cancelReveal?.();
     scene.unsubscribe?.();
     scene.artwork.destroy();

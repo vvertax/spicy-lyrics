@@ -1,3 +1,4 @@
+import { checkRequest, abortable } from "./RequestAbort.ts";
 import Defaults from "../../components/Global/Defaults.ts";
 import type { LyricsSourceProviderId } from "./LyricsSourcePreferences.ts";
 import type { ExternalLyricsResult } from "./Sources/Types.ts";
@@ -76,6 +77,7 @@ function getLyricsTypeScore(lyrics: any): number {
 const FALLBACK_PROVIDER_TIMEOUT_MS = 4000;
 
 type FetchLyricsFromProvidersOptions = {
+  signal?: AbortSignal;
   onFirstLyrics?: (lyrics: any) => void;
 };
 
@@ -83,10 +85,9 @@ function withProviderTimeout<T>(
   promise: Promise<T | null>,
   ms: number
 ): Promise<T | null> {
-  return Promise.race([
-    promise,
-    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
-  ]);
+  let timer: ReturnType<typeof setTimeout>;
+  return Promise.race([promise, new Promise<null>(resolve => { timer = setTimeout(() => resolve(null), ms); })])
+    .finally(() => clearTimeout(timer));
 }
 
 export async function fetchLyricsFromProviders(
@@ -94,7 +95,16 @@ export async function fetchLyricsFromProviders(
   order: LyricsSourceProviderId[],
   options: FetchLyricsFromProvidersOptions = {}
 ): Promise<ExternalLyricsResult | null> {
+  const parentSignal = options.signal;
+  const controller = new AbortController();
+  const cancel = () => controller.abort();
+  parentSignal?.addEventListener("abort", cancel, { once: true });
+  if (parentSignal?.aborted) cancel();
+  options = { ...options, signal: controller.signal };
+  try {
+  checkRequest(options.signal);
   const trackInfo = await getTrackLyricsInfo(uri);
+  checkRequest(options.signal);
   if (!trackInfo) {
     return null;
   }
@@ -103,18 +113,18 @@ export async function fetchLyricsFromProviders(
   const appleIsInOrder = order.includes("apple");
   let spicyRawPromise: Promise<ExternalLyricsResult | null> | null = null;
   const getSpicyRaw = () => {
-    spicyRawPromise ??= fetchSpicyLyricsRaw(trackInfo.id);
+    spicyRawPromise ??= fetchSpicyLyricsRaw(trackInfo.id, options.signal);
     return spicyRawPromise;
   };
 
   function startProviderRequest(provider: LyricsSourceProviderId): Promise<ExternalLyricsResult | null> {
     switch (provider) {
       case "spicy": return fetchSpicyLyrics(getSpicyRaw());
-      case "musixmatch": return fetchMusixmatchLyrics(trackInfo, getSpicyRaw);
+      case "musixmatch": return fetchMusixmatchLyrics(trackInfo, getSpicyRaw, options.signal);
       case "apple": return fetchAppleMusicLyrics(getSpicyRaw());
-      case "spotify": return fetchSpotifyLyrics(trackInfo);
-      case "lrclib": return withProviderTimeout(fetchLRCLIBLyrics(trackInfo), FALLBACK_PROVIDER_TIMEOUT_MS);
-      case "netease": return withProviderTimeout(fetchNeteaseLyrics(trackInfo), FALLBACK_PROVIDER_TIMEOUT_MS);
+      case "spotify": return fetchSpotifyLyrics(trackInfo, options.signal);
+      case "lrclib": return withProviderTimeout(fetchLRCLIBLyrics(trackInfo, options.signal), FALLBACK_PROVIDER_TIMEOUT_MS);
+      case "netease": return withProviderTimeout(fetchNeteaseLyrics(trackInfo, options.signal), FALLBACK_PROVIDER_TIMEOUT_MS);
       default: return Promise.resolve(null);
     }
   }
@@ -128,11 +138,11 @@ export async function fetchLyricsFromProviders(
   >();
   let firstLyricsDelivered = false;
   for (const provider of order) {
-    const request = startProviderRequest(provider);
+    const request = abortable(startProviderRequest(provider), options.signal);
     providerRequests.set(provider, request);
     void request
       .then((result) => {
-        if (firstLyricsDelivered || !result?.lyrics) return;
+        if (options.signal?.aborted || firstLyricsDelivered || !result?.lyrics) return;
         firstLyricsDelivered = true;
         options.onFirstLyrics?.(result.lyrics);
       })
@@ -155,6 +165,7 @@ export async function fetchLyricsFromProviders(
     }
 
     const result = await (providerRequests.get(provider) ?? Promise.resolve(null));
+    checkRequest(options.signal);
 
     if (provider === "apple") {
       appleTried = true;
@@ -203,4 +214,5 @@ export async function fetchLyricsFromProviders(
 
   // A queue only blocks presentation when no enabled provider has usable lyrics.
   return bestResult ?? queuedResult;
+  } finally { parentSignal?.removeEventListener("abort", cancel); controller.abort(); }
 }

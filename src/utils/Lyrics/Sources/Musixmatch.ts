@@ -1,3 +1,4 @@
+import { checkRequest, abortable } from "../RequestAbort.ts";
 import Defaults from "../../../components/Global/Defaults.ts";
 import storage from "../../storage.ts";
 import {
@@ -50,16 +51,16 @@ function getMusixmatchUserToken(response: any): string | null {
 }
 
 export async function refreshMusixmatchToken(
-  persist: boolean = true
+  persist: boolean = true, signal?: AbortSignal
 ): Promise<string | null> {
   try {
-    const response = await Spicetify.CosmosAsync.get(
+    const response = await abortable(Spicetify.CosmosAsync.get(
       "https://apic-desktop.musixmatch.com/ws/1.1/token.get?app_id=web-desktop-app-v1.0",
       null,
       {
         authority: "apic-desktop.musixmatch.com",
       }
-    );
+    ), signal);
     const token = getMusixmatchUserToken(response);
     if (token) {
       if (persist) {
@@ -68,6 +69,7 @@ export async function refreshMusixmatchToken(
       return token;
     }
   } catch (error) {
+    checkRequest(signal);
     console.error("Failed to refresh Musixmatch token:", error);
   }
 
@@ -76,30 +78,31 @@ export async function refreshMusixmatchToken(
 
 async function requestMusixmatch(
   buildUrl: (token: string) => string,
-  retry: boolean = true
+  retry: boolean = true, signal?: AbortSignal
 ) {
   const currentToken = getConfiguredMusixmatchToken();
 
   try {
-    const response = await Spicetify.CosmosAsync.get(
+    const response = await abortable(Spicetify.CosmosAsync.get(
       buildUrl(currentToken),
       null,
       MUSIXMATCH_HEADERS
-    );
+    ), signal);
 
     if (response?.message?.header?.status_code === 401 && retry) {
-      const refreshedToken = await refreshMusixmatchToken();
+      const refreshedToken = await refreshMusixmatchToken(true, signal);
       if (refreshedToken && refreshedToken !== currentToken) {
-        return requestMusixmatch(buildUrl, false);
+        return requestMusixmatch(buildUrl, false, signal);
       }
     }
 
     return response;
   } catch (error) {
+    checkRequest(signal);
     if (retry) {
-      const refreshedToken = await refreshMusixmatchToken();
+      const refreshedToken = await refreshMusixmatchToken(true, signal);
       if (refreshedToken && refreshedToken !== currentToken) {
-        return requestMusixmatch(buildUrl, false);
+        return requestMusixmatch(buildUrl, false, signal);
       }
     }
 
@@ -294,7 +297,7 @@ function filterMusixmatchPlainLines(lines: string[]): string[] {
 
 async function fetchMusixmatchMacro(
   trackInfo: TrackLyricsInfo,
-  retry: boolean = true
+  retry: boolean = true, signal?: AbortSignal
 ) {
   const buildUrl = (token: string) =>
     "https://apic-desktop.musixmatch.com/ws/1.1/macro.subtitles.get?format=json&namespace=lyrics_richsynched&subtitle_format=mxm&app_id=web-desktop-app-v1.0&" +
@@ -312,7 +315,7 @@ async function fetchMusixmatchMacro(
       .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
       .join("&");
 
-  const body = await requestMusixmatch(buildUrl, retry);
+  const body = await requestMusixmatch(buildUrl, retry, signal);
   const macroCalls = body?.message?.body?.macro_calls;
 
   if (!macroCalls) {
@@ -323,9 +326,9 @@ async function fetchMusixmatchMacro(
     macroCalls?.["matcher.track.get"]?.message?.header?.status_code;
 
   if (matcherStatus === 401 && retry) {
-    const refreshedToken = await refreshMusixmatchToken();
+    const refreshedToken = await refreshMusixmatchToken(true, signal);
     if (refreshedToken) {
-      return fetchMusixmatchMacro(trackInfo, false);
+      return fetchMusixmatchMacro(trackInfo, false, signal);
     }
   }
 
@@ -342,7 +345,7 @@ async function fetchMusixmatchMacro(
 
 async function fetchMusixmatchRichsync(
   macroCalls: any,
-  retry: boolean = true
+  retry: boolean = true, signal?: AbortSignal
 ) {
   const meta = macroCalls?.["matcher.track.get"]?.message?.body?.track;
   if (!meta?.has_richsync || isMusixmatchInstrumental(meta) || !meta?.commontrack_id) {
@@ -360,7 +363,7 @@ async function fetchMusixmatchRichsync(
       .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
       .join("&");
 
-  const response = await requestMusixmatch(buildUrl, retry);
+  const response = await requestMusixmatch(buildUrl, retry, signal);
   if (response?.message?.header?.status_code !== 200) {
     return null;
   }
@@ -373,6 +376,7 @@ async function fetchMusixmatchRichsync(
   try {
     return JSON.parse(richsyncBody);
   } catch (error) {
+    checkRequest(signal);
     console.error("Failed to parse Musixmatch richsync body:", error);
     return null;
   }
@@ -535,10 +539,10 @@ function getMusixmatchKaraokeLines(richsync: any): TimedWordLine[] | null {
 
 export async function fetchMusixmatchLyrics(
   trackInfo: TrackLyricsInfo,
-  getSpicyRaw: () => Promise<ExternalLyricsResult | null>
+  getSpicyRaw: () => Promise<ExternalLyricsResult | null>, signal?: AbortSignal
 ): Promise<ExternalLyricsResult | null> {
   try {
-    const macroCalls = await fetchMusixmatchMacro(trackInfo);
+    const macroCalls = await fetchMusixmatchMacro(trackInfo, true, signal);
     if (!macroCalls) {
       return null;
     }
@@ -550,7 +554,7 @@ export async function fetchMusixmatchLyrics(
 
     const richsync = Defaults.IgnoreMusixmatchWordSync
       ? null
-      : await fetchMusixmatchRichsync(macroCalls);
+      : await fetchMusixmatchRichsync(macroCalls, true, signal);
     const karaokeLines = Defaults.IgnoreMusixmatchWordSync
       ? null
       : getMusixmatchKaraokeLines(richsync);
@@ -603,6 +607,7 @@ export async function fetchMusixmatchLyrics(
 
     return null;
   } catch (error) {
+    checkRequest(signal);
     console.error("Failed to fetch lyrics from Musixmatch provider:", error);
     return null;
   }

@@ -1,3 +1,4 @@
+import { waitForWindowVisible } from "../../utils/WindowActivity.ts";
 import { mountScenePresentation, unmountScenePresentation } from "../Utils/ScenePresentation.ts";
 import { RegisterFontFile, FONT_FILE_FAMILY } from "../../utils/fonts/FontFile.ts";
 import { BuildControlsMenu } from "../Utils/ControlsMenu.ts";
@@ -220,6 +221,10 @@ async function OpenPage(
   AppendTo: HTMLElement | undefined = undefined,
   options?: { cardMode?: boolean }
 ) {
+
+  const targetWindow = AppendTo?.ownerDocument.defaultView ?? window;
+  await waitForWindowVisible(targetWindow);
+  if (targetWindow.closed || (AppendTo && !AppendTo.isConnected)) return;
 
   // A request for the main lyrics page takes ownership from the detached Cinema
   // window. Opening Cinema passes an element from its own document, so it does

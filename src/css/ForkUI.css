@@ -336,3 +336,121 @@
   #SpicyLyricsPage:not(.CardMode) .NowBar .MediaBox .MediaImageContainer,
   #SpicyLyricsPage:not(.CardMode) .LyricsContainer { transition:none; }
 }
+
+/* Compact Spicy Lyrics stage, animated by the production lyric renderer. */
+#sl-subtitle-bar { position:fixed; z-index:90; left:50%; translate:-50% 0; bottom:100px; display:grid; grid-template-columns:52px minmax(0,1fr) 30px; align-items:center; gap:18px; width:min(780px,calc(100vw - 32px)); padding:18px; box-sizing:border-box; border:1px solid #ffffff26; border-radius:22px; color:#fff; background:linear-gradient(125deg,#31283cbd,#18151de8 65%); backdrop-filter:blur(32px) saturate(1.4); box-shadow:0 12px 40px #0005,inset 0 1px #ffffff0c; font-family:var(--SpicyLyrics-Font,SpicyLyrics),sans-serif; isolation:isolate; overflow:hidden; }
+#sl-subtitle-bar[hidden], #sl-subtitle-bar [hidden] { display:none!important; }
+#sl-subtitle-bar .sl-subtitle-artwork { width:52px; height:52px; display:grid; place-items:center; overflow:hidden; border-radius:12px; background:#ffffff0d; color:#d7c4ef; }
+#sl-subtitle-bar .sl-subtitle-artwork img { width:100%; height:100%; object-fit:cover; }
+#sl-subtitle-bar .sl-subtitle-artwork svg { width:24px; height:24px; }
+#sl-subtitle-bar .sl-subtitle-watermark { position:absolute; z-index:-1; pointer-events:none; width:210px; height:210px; right:38px; top:50%; transform:translateY(-50%) rotate(-18deg); color:#dac5ff; opacity:.055; }
+#sl-subtitle-bar .sl-subtitle-watermark svg { width:100%; height:100%; fill:currentColor; }
+#sl-subtitle-bar .sl-subtitle-stage { position:relative; min-width:0; }
+#sl-subtitle-bar .sl-subtitle-lyrics { position:relative; overflow:hidden; padding:0; mask-image:linear-gradient(transparent,#000 7px,#000 calc(100% - 7px),transparent); }
+#sl-subtitle-bar .sl-subtitle-tape { position:relative; will-change:transform; }
+#sl-subtitle-bar .sl-subtitle-block { position:relative; padding:4px 10px; }
+#sl-subtitle-bar .sl-subtitle-lead { position:relative; padding-block:1px; }
+#sl-subtitle-bar .sl-subtitle-block:not(.sl-subtitle-current) .sl-subtitle-lead { opacity:.55; transition:opacity .3s; }
+#sl-subtitle-bar .sl-subtitle-current .sl-subtitle-lead { opacity:1; transition:opacity .3s; }
+#sl-subtitle-bar .SpicyLyricsScrollContainer { display:flex; flex-direction:column; gap:0; }
+#sl-subtitle-bar .line { --DefaultLyricsSize:24px; --SL-LineLyricsSize:var(--DefaultLyricsSize); margin:0; padding:0; position:relative; font-size:var(--DefaultLyricsSize); font-weight:700; line-height:1.35; cursor:pointer; white-space:pre-wrap; overflow-wrap:anywhere; text-align:start; }
+#sl-subtitle-bar .sl-subtitle-backing { position:relative; margin:0; padding:0; }
+#sl-subtitle-bar .sl-subtitle-background-slot { padding:3px 0; }
+/* Match normal Spicy Lyrics background vocals: 75% size, weight 600,
+   neutral white and the same .6/.3 sung/unsung gradient. */
+#sl-subtitle-bar .sl-subtitle-backing .line.bg-line { --DefaultLyricsSize:24px; font-size:calc(var(--DefaultLyricsSize) * .75); font-weight:600; }
+#sl-subtitle-bar .sl-subtitle-backing .OppositeAligned { text-align:end; }
+#sl-subtitle-bar .line.rtl { direction:rtl; }
+#sl-subtitle-bar :is(.line,.word,.letter) { --gradient-position:-20%; --gradient-rgb:255,255,255; --gradient-alpha:.95; --gradient-alpha-end:.4; --gradient-degrees:90deg; --gradient-offset:0%; background-image:linear-gradient(var(--gradient-degrees),rgba(var(--gradient-rgb),var(--gradient-alpha)) var(--gradient-position),rgba(var(--gradient-rgb),var(--gradient-alpha-end)) calc(var(--gradient-position) + 20% + var(--gradient-offset))); background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+#sl-subtitle-bar .line:has(.word,.letter) { background-image:none; }
+#sl-subtitle-bar :is(.word,.letter,.letterGroup) { display:inline-block; position:relative; transform-origin:center; padding:.15em .3em; margin:-.15em -.3em; }
+/* The growth solver measures unscaled border boxes and assumes centred scale.
+   Do not include decorative padding/negative margins in split-part geometry. */
+#sl-subtitle-bar .word-group { max-width:100%; display:inline-flex; position:relative; white-space:nowrap; flex-wrap:wrap; }
+#sl-subtitle-bar .letterGroup { max-width:100%; display:inline-flex; flex-wrap:wrap; }
+#sl-subtitle-bar .word { max-width:100%; }
+#sl-subtitle-bar .word-group > :is(.word,.letterGroup) { transform-origin:center center!important; padding-inline:0; margin-inline:0; flex-shrink:0; }
+#sl-subtitle-bar .letter.SpaceLetter { white-space:pre; min-width:.3ch; }
+#sl-subtitle-bar .line.Active :is(.word,.letter,.letterGroup) { text-shadow:0 0 var(--text-shadow-blur-radius,0px) rgba(255,255,255,var(--text-shadow-opacity,0)); }
+#sl-subtitle-bar .SimpleLyricsMode :is(.word:not(.dot),.letter) { --gradient-position:var(--SLM_GradientPosition,-50%)!important; --gradient-offset:30%!important; --gradient-alpha:1; --gradient-alpha-end:.3; }
+#sl-subtitle-bar .sl-subtitle-backing :is(.line,.word,.letter) { --gradient-rgb:255,255,255; --gradient-alpha:.6; --gradient-alpha-end:.3; }
+#sl-subtitle-bar .sl-subtitle-close { display:grid; place-items:center; align-self:start; width:30px; height:30px; margin:0; padding:7px; border:1px solid #ffffff16; border-radius:50%; background:#ffffff08; color:#fff9; cursor:pointer; transition:background .2s,color .2s; }
+#sl-subtitle-bar .sl-subtitle-close svg { width:16px; height:16px; }
+#sl-subtitle-bar .sl-subtitle-close:hover { background:#ffffff1a; color:#fff; }
+#sl-subtitle-bar :is(button,.line):focus-visible { outline:2px solid #d0bcf2; outline-offset:5px; border-radius:5px; }
+@media(max-width:600px) {
+  #sl-subtitle-bar { grid-template-columns:38px minmax(0,1fr) 26px; gap:12px; padding:14px; border-radius:18px; }
+  #sl-subtitle-bar .sl-subtitle-artwork { width:38px; height:38px; border-radius:9px; }
+  #sl-subtitle-bar .line { --DefaultLyricsSize:20px; }
+  #sl-subtitle-bar .sl-subtitle-backing .line.bg-line { --DefaultLyricsSize:20px; }
+  #sl-subtitle-bar .sl-subtitle-close { width:26px; height:26px; padding:5px; }
+}
+
+/* TTML inspection keeps findings separate from the production preview. */
+.vv-ttml-check { width:min(1120px,94vw); max-height:90vh; padding:22px; box-sizing:border-box; color:var(--ry-text,#eee2ff); background:#171421; border:1px solid #d0bcf240; border-radius:20px; font:14px/1.5 var(--ry-font,sans-serif); }
+.vv-ttml-check::backdrop { background:#0009; backdrop-filter:blur(8px); }
+.vv-ttml-check header { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.vv-ttml-check h2 { margin:0 auto 0 0; font-size:22px; }
+.vv-ttml-check button { border:1px solid #d0bcf240; border-radius:9px; background:#d0bcf215; color:inherit; padding:8px 12px; cursor:pointer; font:inherit; }
+.vv-ttml-check button:focus-visible { outline:2px solid #d0bcf2; outline-offset:2px; }
+.vv-ttml-check button:disabled { opacity:.4; cursor:default; }
+.vv-ttml-check > p { margin:12px 0; color:#c1add9; }
+.vv-check-file { overflow-wrap:anywhere; }
+.vv-check-body { display:grid; grid-template-columns:minmax(220px,32%) minmax(0,1fr); gap:18px; height:52vh; }
+.vv-check-findings,.vv-check-preview { min-width:0; overflow:auto; border:1px solid #d0bcf220; border-radius:12px; padding:14px; }
+.vv-check-preview { font-family:SpicyLyrics,sans-serif; }
+.vv-check-preview .line { font-size:28px; line-height:1.5; font-weight:700; padding:12px; margin:4px 0; cursor:pointer; overflow-wrap:anywhere; }
+.vv-check-preview .word,.vv-check-preview .letter { display:inline-block; white-space:pre; }
+.vv-check-preview .vv-check-selected { background:#d0bcf21c; border-radius:8px; }
+.vv-check-preview .bg-line { font-size:20px; opacity:.6; }
+.vv-ttml-check .vv-check-issue { display:flex; flex-direction:column; align-items:flex-start; width:100%; gap:3px; margin:8px 0; text-align:left; }
+.vv-check-issue span { font-size:11px; opacity:.65; }
+.vv-ttml-check .vv-check-error { border-color:#f2a5b480; }
+.vv-ttml-check .vv-check-warning { border-color:#e5c28560; }
+.vv-check-excerpt { white-space:pre-wrap; max-height:70px; overflow:auto; }
+.vv-ttml-check footer { display:flex; align-items:center; gap:12px; }
+.vv-ttml-check input[type="range"] { min-width:0; flex:1; accent-color:#d0bcf2; }
+@media(max-width:700px) { .vv-check-body { grid-template-columns:1fr; height:auto; } .vv-check-findings { max-height:24vh; } .vv-check-preview { max-height:40vh; } .vv-ttml-check footer { flex-wrap:wrap; } }
+
+.vv-check-preview { --DefaultLyricsSize:28px; }
+.vv-check-preview .letterGroup { display:inline-block; white-space:nowrap; }
+.vv-check-preview .word-group { display:inline-flex; align-items:baseline; }
+.vv-check-preview :is(.word,.letter) { background-image:linear-gradient(90deg,#fff var(--gradient-position,-20%),#ffffff60 calc(var(--gradient-position,-20%) + 20%)); background-clip:text; -webkit-background-clip:text; color:transparent; }
+.vv-check-preview .OppositeAligned { text-align:right; }
+
+/* Subtitle layout actions do not interrupt clicks on the lyric tape. */
+#sl-subtitle-bar .sl-subtitle-actions { display:flex; flex-direction:column; gap:5px; align-self:start; }
+#sl-subtitle-bar .sl-subtitle-artwork { cursor:grab; user-select:none; }
+#sl-subtitle-bar .sl-subtitle-artwork:active { cursor:grabbing; }
+#sl-subtitle-bar .sl-subtitle-artwork:focus-visible { outline:2px solid #d0bcf2; outline-offset:3px; }
+#sl-subtitle-bar .sl-subtitle-layout { grid-column:1/-1; display:grid; gap:16px; margin-top:2px; padding:18px 2px 0; border-top:1px solid #ffffff1a; font:13px/1.4 var(--SpicyLyrics-Font,SpicyLyrics),sans-serif; }
+#sl-subtitle-bar .sl-subtitle-layout-heading { color:#ffffffe6; font-size:14px; }
+#sl-subtitle-bar .sl-subtitle-presets { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+#sl-subtitle-bar .sl-subtitle-layout button { display:flex; align-items:center; justify-content:center; gap:8px; min-width:0; padding:10px; border:1px solid #ffffff1c; border-radius:12px; color:#ffffffa8; background:#ffffff06; font:inherit; cursor:pointer; transition:background .18s,color .18s,border-color .18s; }
+#sl-subtitle-bar .sl-subtitle-layout button:hover { color:#fff; background:#ffffff12; border-color:#ffffff35; }
+#sl-subtitle-bar .sl-subtitle-layout button[aria-pressed="true"] { background:#ffffff18; border-color:#ffffff60; color:#fff; }
+#sl-subtitle-bar .sl-subtitle-layout svg { width:19px; height:19px; flex:none; }
+#sl-subtitle-bar .sl-subtitle-sizing { display:grid; grid-template-columns:1fr auto; gap:10px; margin:0; color:#ffffffb3; }
+#sl-subtitle-bar .sl-subtitle-sizing output { color:#ffffffe6; font-variant-numeric:tabular-nums; }
+#sl-subtitle-bar .sl-subtitle-sizing input { appearance:none; width:100%; height:5px; margin:6px 0; grid-column:1/-1; border-radius:99px; background:linear-gradient(to right,#e4d7f9 var(--subtitle-range-progress),#ffffff24 var(--subtitle-range-progress)); cursor:pointer; }
+#sl-subtitle-bar .sl-subtitle-sizing input::-webkit-slider-thumb { appearance:none; width:14px; height:14px; border-radius:50%; border:0; background:#f5f0fc; box-shadow:0 1px 5px #0004; }
+#sl-subtitle-bar .sl-subtitle-sizing input:focus-visible { outline:2px solid #d0bcf2; outline-offset:6px; }
+#sl-subtitle-bar .sl-subtitle-layout-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+#sl-subtitle-bar .sl-subtitle-layout-hint { margin:0; color:#ffffff73; font-size:12px; }
+#sl-subtitle-bar .sl-subtitle-layout .sl-subtitle-layout-reset { flex:none; border:0; background:transparent; padding:7px 0 7px 8px; color:#ffffffa3; }
+#sl-subtitle-bar .sl-subtitle-resize { position:absolute; right:8px; bottom:4px; border:0; background:none; color:#ffffff65; font:16px/1 sans-serif; cursor:ew-resize; padding:2px 5px; }
+.sl-quick-controls #subtitles[hidden] { display:none!important; }
+@media(max-width:600px) {
+  #sl-subtitle-bar .sl-subtitle-presets { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  #sl-subtitle-bar .sl-subtitle-layout-footer { align-items:flex-start; flex-direction:column; gap:4px; }
+}
+@media(prefers-reduced-motion:reduce) { #sl-subtitle-bar .sl-subtitle-layout button { transition:none; } }
+
+/* Source diagnostics belong to the same footer flow as writers and community credits. */
+#SpicyLyricsPage .vv-source-info { display:block; text-align:inherit; }
+#SpicyLyricsPage .vv-source-info button { margin-inline-start:10px; padding:0; border:0; color:inherit; background:transparent; cursor:pointer; font:inherit; text-decoration:underline; text-underline-offset:3px; opacity:.8; }
+#SpicyLyricsPage .vv-source-info button:hover { opacity:1; }
+#SpicyLyricsPage .ScrollToActiveLyric .vv-resume-indicator { position:absolute; bottom:calc(100% + 10px); left:50%; translate:-50% 0; padding:0; color:#ffffff8c; font:600 18px/1.2 var(--SpicyLyrics-Font,SpicyLyrics),sans-serif; font-variant-numeric:tabular-nums; white-space:nowrap; text-shadow:0 1px 5px #0005; pointer-events:none; }
+#SpicyLyricsPage .vv-zoom-badge { position:absolute; right:16px; bottom:16px; z-index:25; border:1px solid #ffffff25; border-radius:12px; background:#292330df; backdrop-filter:blur(16px); color:#eee2ff; font:13px/1.5 SpicyLyrics,sans-serif; padding:9px 12px; cursor:pointer; }
+#SpicyLyricsPage :is(.vv-source-info,.vv-resume-indicator,.vv-zoom-badge)[hidden] { display:none!important; }
+#SpicyLyricsPage.VV_Recording :is(.vv-source-info,.vv-resume-indicator,.vv-zoom-badge) { display:none!important; }

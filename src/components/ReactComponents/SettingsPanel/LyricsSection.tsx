@@ -1,3 +1,4 @@
+import { $showScrollResumeIndicator } from "../../../utils/stores.ts";
 import { $duetColorsEnabled,$duetLeadColor,$duetOtherColor } from "../../../utils/stores.ts";
 import { useCurrentUri } from "../LyricsManager/hooks/useCurrentUri.ts";
 import { songOffset } from "../../../utils/Lyrics/PlaybackOffsets.ts";
@@ -33,6 +34,7 @@ interface Props { query: string; sectionFilter: string; showHidden?: boolean; }
 export default function LyricsSection({ query, sectionFilter, showHidden = false }: Props) {
   const duetColors=useStore($duetColorsEnabled);const leadColor=useStore($duetLeadColor);const otherColor=useStore($duetOtherColor);
   const minimalLyricsMode = useStore($minimalLyricsMode);
+  const extraValue = useStore($showScrollResumeIndicator);
   const rightAlignLyrics = useStore($rightAlignLyrics);
   const showScrollToActiveButton = useStore($showScrollToActiveButton);
   const playbackOffset = useStore($playbackOffset);
@@ -60,6 +62,7 @@ export default function LyricsSection({ query, sectionFilter, showHidden = false
   if (sectionFilter !== "All" && sectionFilter !== SECTION_NAME) return null;
 
   const visible = (id: string) => showHidden ? hiddenSettingIds.includes(id) : !allowHidingSettings || !hiddenSettingIds.includes(id) || Boolean(query.trim());
+  const extra = matches(query, "Autoscroll Resume Indicator", "Show the follow cooldown after manual scrolling. Click to return immediately.") && (!showHidden || hiddenSettingIds.includes("lyrics-resume-indicator"));
   const r3 = visible("lyrics-minimal-mode") && matches(query, "Minimal Lyrics Mode", "Hides sung lyrics lines in Fullscreen and Cinema Mode");
   const r4 = visible("lyrics-right-align") && matches(query, "Right Align Lyrics", "Flip duet/opposite lyric alignment.");
   const r5 = visible("lyrics-scroll-active") && matches(query, "Show Scroll to Active Button", "Show an arrow button when the active lyric is outside the viewport.");
@@ -76,9 +79,10 @@ export default function LyricsSection({ query, sectionFilter, showHidden = false
   const splitMotion = visible("lyrics-split-word-motion") && matches(query, "Split Word Motion", "Move neighbouring syllables as the singing part grows, keeping the word centred.");
   const joinSplit = matches(query, "Join Split Words", "Show a word that's sung in syllables as one word, when its parts line up evenly.");
   const colors=matches(query,"Duet Voice Colors","Customize the two duet voices.");
-  if (![trackTiming, colors,r3, r4, r5, r8, r9, r10, seek, early, lead, smooth, skeleton, credits, joinSplit, splitMotion].some(Boolean)) return null;
+  if (![extra, trackTiming, colors,r3, r4, r5, r8, r9, r10, seek, early, lead, smooth, skeleton, credits, joinSplit, splitMotion].some(Boolean)) return null;
 
   return <>
+    {extra && <Row settingId="lyrics-resume-indicator" label="Autoscroll Resume Indicator" description="Show the follow cooldown after manual scrolling. Click to return immediately."><Toggle checked={extraValue} onChange={v => $showScrollResumeIndicator.set(v)} /></Row>}
     <SectionTitle>Lyrics Display</SectionTitle>
     {colors && <Row label="Duet Voice Colors" description="Customize the two duet voices."><Toggle checked={duetColors} onChange={v=>$duetColorsEnabled.set(v)} /></Row>}
     {colors && duetColors && <Row label="First voice"><input type="color" aria-label="First voice" value={leadColor} onChange={e=>$duetLeadColor.set(e.target.value)} /></Row>}

@@ -1,3 +1,4 @@
+import { hasVisibleLyricsWindow, observeLyricsVisibility } from "../WindowActivity.ts";
 // deno-lint-ignore-file no-explicit-any
 import { SpotifyPlayer } from "../../components/Global/SpotifyPlayer.ts";
 import Global from "../../components/Global/Global.ts";
@@ -41,6 +42,12 @@ class LyricsQueueRetryController {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private inTick = false;
 
+  constructor() {
+    observeLyricsVisibility(() => {
+      if (!hasVisibleLyricsWindow()) this.clearTimer();
+      else if (this.activeUri && !this.inTick) this.scheduleNext();
+    });
+  }
   /** True while a 503 retry loop is running for the given uri. */
   IsRetryingFor(uri: string | null | undefined): boolean {
     return uri != null && this.activeUri === uri;
@@ -104,7 +111,7 @@ class LyricsQueueRetryController {
   private scheduleNext(): void {
     this.clearTimer();
     const uri = this.activeUri;
-    if (!uri) return;
+    if (!uri || !hasVisibleLyricsWindow()) return;
     const delay = computeDelay(this.attempt);
     this.attempt += 1;
     queueLogger.debug("Scheduling retry", { uri, attempt: this.attempt, delay });

@@ -12,7 +12,7 @@ import { quoteLineText } from "./QuoteText.ts";
 import { comparisonTiming } from "./ReviewModel.ts";
 
 /** The same DOM vocabulary and animator as the main lyrics, with a private model. */
-export function renderComparisonLyrics(view:HTMLElement, data:any, seek:(index:number,start:number)=>void) {
+export function renderComparisonLyrics(view:HTMLElement, data:any, seek:(index:number,start:number)=>void, options:{backgroundOnly?:boolean}={}) {
   const doc=view.ownerDocument;
   const type=data.Type==='Syllable'?'Syllable':'Line';
   const container=doc.createElement('div');container.className='SpicyLyricsScrollContainer';container.dataset.lyricsType=type;if(data.Content.some((line:any)=>line.OppositeAligned))container.classList.add('HasDuetLines');
@@ -59,10 +59,10 @@ export function renderComparisonLyrics(view:HTMLElement, data:any, seek:(index:n
     if(!parts.length)element.textContent=quoteLineText(source)||'♪';
     if(source.OppositeAligned)element.classList.add('OppositeAligned');
     lines.push(model);container.append(element);
-    if(!background)rows.push({element,...timing,words:[]});
+    if(!background || options.backgroundOnly)rows.push({element,...timing,words:[]});
   };
   data.Content.forEach((source:any,index:number)=>{
-    makeLine(source,index);
+    makeLine(source,index,options.backgroundOnly===true);
     for(const background of source.Background??[])makeLine({...background,OppositeAligned:source.OppositeAligned},index,true);
   });
   view.replaceChildren(container);

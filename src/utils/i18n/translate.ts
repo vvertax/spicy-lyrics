@@ -24,6 +24,8 @@ export function translateUi(text: string, language: Language): string {
   if(version)return `${({"Updated to":"Обновлено до","Changed to":"Версия изменена на","Loaded":"Загружено","Showing":"Показано"} as Record<string,string>)[version[1]]} ${version[2]}`;
   const moved=core.match(/^Move (.+) (up|down)$/);
   if(moved)return `Переместить ${moved[1]} ${moved[2]==="up"?"выше":"ниже"}`;
+  const favorite=core.match(/^(Add to favorites|Remove from favorites): (.+)$/);
+  if(favorite)return `${translateUi(favorite[1],language)}: ${translateUi(favorite[2],language)}`;
   const visibility=core.match(/^(Hide|Restore) (.+?)( setting)?$/);
   if(visibility)return `${visibility[1]==="Hide"?"Скрыть":"Показать"} ${translateUi(visibility[2],language)}`;
   const imported=core.match(/^Imported (.+)\.$/);

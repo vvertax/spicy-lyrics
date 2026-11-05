@@ -397,3 +397,6 @@ export const BreakerDebug = {
     breakerLogger.info("Breaker manually reset");
   },
 };
+
+/** Release an aborted probe without altering health/backoff state. */
+export function SettleCancelled(lease: BreakerLease): void { claimSettle(lease); }

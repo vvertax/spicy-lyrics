@@ -1234,7 +1234,7 @@ export function Animate(position: number, target?: { type: "Syllable" | "Line"; 
     (position < lastPlaybackPosition - 80 || position - lastPlaybackPosition > Math.max(250, now - lastFrameTime + 120));
   lastPlaybackPosition = position;
 
-  const deltaTime = (now - lastFrameTime) / 1000;
+  const deltaTime = Math.min((now - lastFrameTime) / 1000, 1 / 30);
   lastFrameTime = now;
   lastAnimateFrameTime = now;
 

@@ -1,3 +1,5 @@
+import { waitForVisibleLyrics } from "./utils/WindowActivity.ts";
+import { initSubtitleBar } from "./components/Utils/SubtitleBar.ts";
 import { beginSceneTrackChange } from "./components/Utils/ScenePresentation.ts";
 import { localizeDocument } from "./utils/i18n/runtime.ts";
 // CSS Imports
@@ -1079,6 +1081,9 @@ async function main() {
     let songChangeSeen = false;
     async function onSongChange(event: any) {
       songChangeSeen = true;
+      const expectedUri = event?.data?.item?.uri ?? SpotifyPlayer.GetUri();
+      await waitForVisibleLyrics();
+      if (expectedUri !== SpotifyPlayer.GetUri()) return;
       beginSceneTrackChange(PageContainer, SpotifyPlayer.GetUri());
       playbackLogger.debug("Song change pipeline");
       const contentType = SpotifyPlayer.GetContentType();
@@ -1450,6 +1455,7 @@ async function main() {
   );
 
   initNPVLyrics();
+  initSubtitleBar();
 
   Hometinue();
 

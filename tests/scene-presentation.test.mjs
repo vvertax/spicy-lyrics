@@ -12,8 +12,9 @@ const fixture = {
 globalThis.__sceneFixture = fixture;
 globalThis.window = { setInterval, clearInterval, setTimeout };
 const { outputFiles } = await build({ entryPoints: ["src/components/Utils/ScenePresentation.ts"], bundle: true, write: false, format: "esm", platform: "node", plugins: [{ name: "scene-fixtures", setup(b) {
-  b.onResolve({ filter: /(stores|experiments|DisplayedLyrics|lyrics|GetProgress|SpotifyPlayer|AnimationFrameLoop)\.ts$/ }, args => ({ path: args.path, namespace: "fixture" }));
+  b.onResolve({ filter: /(stores|experiments|DisplayedLyrics|lyrics|GetProgress|SpotifyPlayer|AnimationFrameLoop|WindowActivity)\.ts$/ }, args => ({ path: args.path, namespace: "fixture" }));
   b.onLoad({ filter: /.*/, namespace: "fixture" }, args => {
+    if (args.path.endsWith("WindowActivity.ts")) return { contents: "export const visibleInterval=(_win,cb,ms)=>{const id=setInterval(cb,ms);return()=>clearInterval(id)};" };
     if (args.path.endsWith("AnimationFrameLoop.ts")) return { contents: "export const onAnimationFrame=()=>()=>{};" };
     if (args.path.endsWith("stores.ts")) return { contents: "export const $smoothSceneTransitions=globalThis.__sceneFixture.store;export const $lyricsRendererPaused={get:()=>false};" };
     if (args.path.endsWith("SpotifyPlayer.ts")) return { contents: "export const SpotifyPlayer={GetUri:globalThis.__sceneFixture.uri};" };

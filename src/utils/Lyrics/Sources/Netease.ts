@@ -1,3 +1,4 @@
+import { checkRequest, abortable } from "../RequestAbort.ts";
 import { createProviderResult, buildLineLyrics, buildStaticLyrics, capitalize, normalizeText, parseTimestampToMilliseconds, removeExtraInfo, removeSongFeat } from "./Shared.ts";
 import type { TrackLyricsInfo, ExternalLyricsResult } from "./Types.ts";
 
@@ -52,19 +53,21 @@ function parseNeteaseTimestampedLine(row: string): {
 }
 
 export async function fetchNeteaseLyrics(
-  trackInfo: TrackLyricsInfo
+  trackInfo: TrackLyricsInfo, signal?: AbortSignal
 ): Promise<ExternalLyricsResult | null> {
+  checkRequest(signal);
   try {
     const searchQuery = `${removeExtraInfo(removeSongFeat(normalizeText(trackInfo.title)))} ${
       trackInfo.artist
     }`.trim();
-    const searchResponse = await Spicetify.CosmosAsync.get(
+    const searchResponse = await abortable(Spicetify.CosmosAsync.get(
       `https://music.xianqiao.wang/neteaseapiv2/search?limit=10&type=1&keywords=${encodeURIComponent(
         searchQuery
       )}`,
       null,
       NETEASE_REQUEST_HEADERS
-    );
+    ), signal);
+    checkRequest(signal);
     const songs = searchResponse?.result?.songs;
 
     if (!Array.isArray(songs) || songs.length === 0) {
@@ -83,12 +86,13 @@ export async function fetchNeteaseLyrics(
       return null;
     }
 
-    const lyricsBody = await Spicetify.CosmosAsync.get(
+    const lyricsBody = await abortable(Spicetify.CosmosAsync.get(
       `https://music.xianqiao.wang/neteaseapiv2/lyric?id=${matchedSong.id}`,
       null,
       NETEASE_REQUEST_HEADERS
-    );
+    ), signal);
 
+    checkRequest(signal);
     const syncedText = lyricsBody?.lrc?.lyric;
     if (typeof syncedText === "string") {
       const timedLines = syncedText
@@ -136,6 +140,7 @@ export async function fetchNeteaseLyrics(
 
     return null;
   } catch (error) {
+    checkRequest(signal);
     console.error("Failed to fetch lyrics from Netease provider:", error);
     return null;
   }

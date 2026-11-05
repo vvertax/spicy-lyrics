@@ -1,3 +1,4 @@
+import { observeWindowVisibility, isWindowVisible, waitForWindowVisible, waitForVisibleLyrics } from "../../utils/WindowActivity.ts";
 import {
   $backgroundBlur,
   $backgroundStyle,
@@ -74,14 +75,19 @@ function startKawarp(kawarp: Kawarp, canvas: HTMLElement, key: HTMLElement | str
     if (KawarpMap.get(key) === kawarp) kawarp.stop();
   }
   const targetWindow = canvas.ownerDocument.defaultView ?? window;
+  const stopVisibility = observeWindowVisibility(targetWindow, () => {
+    if (!isWindowVisible(targetWindow)) kawarp.stop();
+    else if (!suspendedKawarpKeys.has(key)) playKawarp(kawarp);
+  });
+  if (!isWindowVisible(targetWindow)) kawarp.stop();
   const unsubscribe = onAnimationFrame(() => {
     if (KawarpMap.get(key) !== kawarp || !canvas.isConnected) {
-      unsubscribe();
+      unsubscribe(); stopVisibility();
       runningKawarps.delete(kawarp);
       return;
     }
     if ((canvas.ownerDocument.defaultView ?? window) !== targetWindow) {
-      unsubscribe();
+      unsubscribe(); stopVisibility();
       runningKawarps.delete(kawarp);
       startKawarp(kawarp, canvas, key);
       return;
@@ -414,6 +420,9 @@ function queueKawarpLoad(
  * other host (the NPV) always animates.
  */
 export default async function ApplyDynamicBackground(host: HTMLElement, key: string) {
+  const expected = SpotifyPlayer.GetUri();
+  await waitForWindowVisible(host.ownerDocument.defaultView!);
+  if (!host.isConnected || expected !== SpotifyPlayer.GetUri()) return;
   if (!host) return;
   // The NPV lyrics card must stay transparent: the NPV's own background shows through.
   if (host.closest("#SpicyLyricsPage.CardMode")) return;
@@ -547,6 +556,9 @@ async function resolveBackgroundImage(track: TrackSnapshot, style: "artist" | "c
 
 /** Fetch the playing artist's image ahead of time, so the Artist Image style paints without waiting on it. */
 export async function PrefetchArtistImage(): Promise<void> {
+  const expected = SpotifyPlayer.GetUri();
+  await waitForVisibleLyrics();
+  if (expected !== SpotifyPlayer.GetUri()) return;
   if (getBackgroundStyle() !== "artist" || SpotifyPlayer.IsDJ()) return;
   const artistId = SpotifyPlayer.GetArtists()?.[0]?.uri?.replace("spotify:artist:", "");
   const trackId = SpotifyPlayer.GetId();

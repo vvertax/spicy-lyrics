@@ -1,3 +1,4 @@
+import { waitForWindowVisible } from "../../WindowActivity.ts";
 import { revealSceneLyrics } from "../../../components/Utils/ScenePresentation.ts";
 import { setDisplayedLyrics } from "../DisplayedLyrics.ts";
 // deno-lint-ignore-file no-explicit-any
@@ -198,6 +199,8 @@ export default async function ApplyLyrics(lyricsContent: [object | string, numbe
   const generation = ++applyGeneration;
   const page = PageContainer;
   const uri = SpotifyPlayer.GetUri();
+  await waitForWindowVisible(page.ownerDocument.defaultView!);
+  if (generation !== applyGeneration || SpotifyPlayer.GetUri() !== uri || page !== PageContainer) return;
   setBlurringLastLine(null);
   const [descriptor, _status] = lyricsContent;
   if (descriptor === "lyrics-queued") {
@@ -232,6 +235,7 @@ export default async function ApplyLyrics(lyricsContent: [object | string, numbe
         ? await getDynamicAudioAnalysis(analysisTrackId)
         : null;
 
+      await waitForWindowVisible(page.ownerDocument.defaultView!);
       // Keep current lyrics mounted while analysis loads. A newer apply owns the
       // page, and a Gravity toggle may have removed its temporary requirement.
       if (generation !== applyGeneration || PageContainer !== page || SpotifyPlayer.GetUri() !== uri) return;
@@ -279,6 +283,7 @@ export default async function ApplyLyrics(lyricsContent: [object | string, numbe
   if (generation !== applyGeneration || PageContainer !== page || SpotifyPlayer.GetUri() !== uri) return;
   if (lyrics && !viewportAnchor && uri) {
     await PaintLyricsLoader(uri);
+    await waitForWindowVisible(page.ownerDocument.defaultView!);
     if (generation !== applyGeneration || PageContainer !== page || SpotifyPlayer.GetUri() !== uri) return;
   }
 

@@ -1,3 +1,4 @@
+import { waitForWindowVisible } from "../../utils/WindowActivity.ts";
 import { createTooltip } from "../../utils/tooltip.ts";
 // Compact lyrics card injected into Spotify's right-sidebar Now Playing View.
 // Reuses the full synced lyrics pipeline by opening the page (PageView.Open)
@@ -605,6 +606,7 @@ async function evaluate(): Promise<void> {
   }
   evaluating = true;
   try {
+    await waitForWindowVisible(window);
     do {
       evaluateAgain = false;
       await reconcile();

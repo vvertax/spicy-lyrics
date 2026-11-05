@@ -1,3 +1,4 @@
+import { waitForWindowVisible } from "../../utils/WindowActivity.ts";
 import "../../css/CanvasImmersive.css";
 import { $backgroundStyle } from "../../utils/stores.ts";
 import { isExperimentEnabled, onExperimentChange } from "../../utils/experiments.ts";
@@ -461,6 +462,9 @@ function waitForFrame(video: HTMLVideoElement): Promise<void> {
 }
 
 async function Refresh(isRetry = false) {
+  const expected = SpotifyPlayer.GetUri();
+  await waitForWindowVisible((mount?.page ?? PageContainer)?.ownerDocument.defaultView ?? window);
+  if (expected !== SpotifyPlayer.GetUri()) return;
   const gen = ++generation;
   clearRetryTimer();
   // Anything but a scheduled retry (a new song, reopening the page) earns a fresh set of retries.

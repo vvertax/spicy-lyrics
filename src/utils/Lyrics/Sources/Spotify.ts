@@ -1,14 +1,17 @@
+import { checkRequest, abortable } from "../RequestAbort.ts";
 import { createProviderResult, buildLineLyrics, buildStaticLyrics } from "./Shared.ts";
 import type { TrackLyricsInfo, ExternalLyricsResult, TimedLine } from "./Types.ts";
 
 export async function fetchSpotifyLyrics(
-  trackInfo: TrackLyricsInfo
+  trackInfo: TrackLyricsInfo, signal?: AbortSignal
 ): Promise<ExternalLyricsResult | null> {
+  checkRequest(signal);
   try {
-    const body = await Spicetify.CosmosAsync.get(
+    const body = await abortable(Spicetify.CosmosAsync.get(
       `https://spclient.wg.spotify.com/color-lyrics/v2/track/${trackInfo.id}?format=json&vocalRemoval=false&market=from_token`
-    );
+    ), signal);
     const lyrics = body?.lyrics;
+    checkRequest(signal);
     const lines = Array.isArray(lyrics?.lines) ? lyrics.lines : [];
 
     if (!lyrics || !lines.length) {
@@ -60,6 +63,7 @@ export async function fetchSpotifyLyrics(
 
     return createProviderResult(staticLyrics, "spotify");
   } catch (error) {
+    checkRequest(signal);
     console.error("Failed to fetch lyrics from Spotify provider:", error);
     return null;
   }

@@ -1,3 +1,5 @@
+import { hasVisibleLyricsWindow, observeLyricsVisibility } from "../WindowActivity.ts";
+import { checkRequest } from "./RequestAbort.ts";
 import { beginSceneTrackChange } from "../../components/Utils/ScenePresentation.ts";
 import Defaults, { isDev } from "../../components/Global/Defaults.ts";
 import { $currentLyricsData, $currentLyricsType, $currentlyFetching } from "../stores.ts";
@@ -32,6 +34,22 @@ export const LyricsStore = GetExpireStore<any>("SpicyLyrics_LyricsStore_g2", 6, 
 
 export const SessionTTMLStore = new Map<string, any>();
 const LYRICS_SOURCE_CACHE_VERSION = 4;
+const controllers = new Set<AbortController>();
+let pendingVisibility: { uri: string; resolve: (value: boolean) => void; promise: Promise<boolean> } | undefined;
+function waitForLyricsActivity(uri: string): Promise<boolean> {
+  if (!isCurrentTrack(uri)) return Promise.resolve(false);
+  if (hasVisibleLyricsWindow()) return Promise.resolve(isCurrentTrack(uri));
+  if (pendingVisibility?.uri === uri) return pendingVisibility.promise;
+  pendingVisibility?.resolve(false);
+  let resolve!: (value: boolean) => void;
+  const promise = new Promise<boolean>(done => { resolve = done; });
+  pendingVisibility = { uri, resolve, promise }; return promise;
+}
+observeLyricsVisibility(() => {
+  if (!hasVisibleLyricsWindow()) { controllers.forEach(controller => controller.abort()); cancelPendingBackoff?.(); return; }
+  const pending = pendingVisibility; pendingVisibility = undefined;
+  pending?.resolve(isCurrentTrack(pending.uri));
+});
 const inFlightLyricsFetches = new Map<string, Promise<[object | string, number] | null>>();
 export type FetchLyricsResult = [object | string, number] | null;
 export type LyricsFetchFailure = { uri: string; source: string; detail?: string };
@@ -60,12 +78,14 @@ function finishFetching(uri: string): void {
   if (isCurrentTrack(uri)) $currentlyFetching.set(false);
 }
 
-async function prepareLyricsForPresentation<T extends Record<string, any>>(lyrics: T): Promise<T> {
+async function prepareLyricsForPresentation<T extends Record<string, any>>(lyrics: T, signal?: AbortSignal): Promise<T> {
+  checkRequest(signal);
   const prepared =
     typeof structuredClone === "function"
       ? structuredClone(lyrics)
       : JSON.parse(JSON.stringify(lyrics));
   await ProcessLyrics(prepared);
+  checkRequest(signal);
   return prepared;
 }
 
@@ -133,13 +153,14 @@ async function presentLyrics(uri: string, lyricsData: any): Promise<void> {
 
 type FetchLyricsOptions = {
   keepCurrentLyricsVisible?: boolean;
+  signal?: AbortSignal;
 };
 
 async function presentStoredLyrics(
   uri: string,
-  lyricsData: Record<string, any>
+  lyricsData: Record<string, any>, signal?: AbortSignal
 ): Promise<[object, number]> {
-  const preparedLyrics = await prepareLyricsForPresentation(lyricsData);
+  const preparedLyrics = await prepareLyricsForPresentation(lyricsData, signal);
   if (isCurrentTrack(uri)) $currentLyricsData.set(JSON.stringify(preparedLyrics));
   await presentLyrics(uri, preparedLyrics);
   return [preparedLyrics, 200];
@@ -149,20 +170,34 @@ export default async function fetchLyrics(
   uri: string,
   options: FetchLyricsOptions = {}
 ): Promise<[object | string, number] | null> {
+  if (!(await waitForLyricsActivity(uri))) return null;
   const fetchKey = getSongKey(uri) || uri;
   const existingFetch = inFlightLyricsFetches.get(fetchKey);
   if (existingFetch) {
     if (isCurrentTrack(uri) && !options.keepCurrentLyricsVisible) ShowLoaderContainer(uri);
-    const result = await existingFetch;
+    let result;
+    try { result = await existingFetch; } catch (error) {
+      if ((error as Error)?.name !== "AbortError") throw error;
+      return fetchLyrics(uri, options);
+    }
     return isCurrentTrack(uri) ? result : null;
   }
 
-  const promise = fetchLyricsInternal(uri, options);
+  const controller = new AbortController(); controllers.add(controller);
+  const promise = fetchLyricsInternal(uri, { ...options, signal: controller.signal });
   inFlightLyricsFetches.set(fetchKey, promise);
   try {
     const result = await promise;
+    checkRequest(controller.signal);
     return isCurrentTrack(uri) ? result : null;
+  } catch (error) {
+    if (!controller.signal.aborted) throw error;
+    if (inFlightLyricsFetches.get(fetchKey) === promise) inFlightLyricsFetches.delete(fetchKey);
+    controllers.delete(controller);
+    if (!(await waitForLyricsActivity(uri))) return null;
+    return fetchLyrics(uri, options);
   } finally {
+    controllers.delete(controller);
     if (inFlightLyricsFetches.get(fetchKey) === promise) {
       inFlightLyricsFetches.delete(fetchKey);
     }
@@ -173,6 +208,7 @@ async function fetchLyricsInternal(
   uri: string,
   options: FetchLyricsOptions
 ): Promise<[object | string, number] | null> {
+  checkRequest(options.signal);
   lyricsLogger.debug("Fetch requested", uri);
   cancelPendingBackoff?.();
   if (lastFailure?.uri === uri) lastFailure = null;
@@ -230,12 +266,13 @@ async function fetchLyricsInternal(
         const lyricsData = JSON.parse(savedLyricsData);
         // Return the stored lyrics if the ID matches the track ID
         if ((lyricsData?.id === trackId || lyricsData?.uri === uri) && isLyricsCacheCompatible(lyricsData)) {
-          const preparedLyrics = await prepareLyricsForPresentation(lyricsData);
+          const preparedLyrics = await prepareLyricsForPresentation(lyricsData, options.signal);
           await presentLyrics(uri, preparedLyrics);
           return [preparedLyrics, 200];
         }
       }
     } catch (error) {
+      checkRequest(options.signal);
       lyricsCacheLogger.error("Error parsing saved lyrics data", error);
       finishFetching(uri);
       HideLoaderContainer(uri);
@@ -244,12 +281,13 @@ async function fetchLyricsInternal(
 
   const sessionLyric = songKey ? SessionTTMLStore.get(songKey) : undefined;
   if (sessionLyric) {
-    return presentStoredLyrics(uri, { ...sessionLyric, id: trackId, fromCache: true });
+    return presentStoredLyrics(uri, { ...sessionLyric, id: trackId, fromCache: true, fromLocal: true }, options.signal);
   }
 
   const localLyric = await LocalLyricsManager.get(uri);
+  checkRequest(options.signal);
   if (localLyric) {
-    return presentStoredLyrics(uri, { ...localLyric, id: trackId });
+    return presentStoredLyrics(uri, { ...localLyric, id: trackId, fromLocal: true }, options.signal);
   }
 
   // Local files have no real track id (uri.split(":")[2] is the URL-encoded
@@ -265,6 +303,7 @@ async function fetchLyricsInternal(
   if (LyricsStore) {
     try {
       const lyricsFromCache = await LyricsStore.GetItem(trackId);
+      checkRequest(options.signal);
       if (lyricsFromCache) {
         if (lyricsFromCache.Value === "NO_LYRICS") {
           finishFetching(uri);
@@ -273,11 +312,12 @@ async function fetchLyricsInternal(
           return ["lyrics-not-found", 404];
         }
         if (isLyricsCacheCompatible(lyricsFromCache)) {
-          return await presentStoredLyrics(uri, { ...lyricsFromCache, fromCache: true });
+          return await presentStoredLyrics(uri, { ...lyricsFromCache, fromCache: true }, options.signal);
         }
         void LyricsStore.RemoveItem(trackId).catch(() => {});
       }
     } catch (error) {
+      checkRequest(options.signal);
       lyricsCacheLogger.error("Error parsing cache entry", error);
       await LyricsStore.RemoveItem(trackId).catch(() => {});
       noteFailure(uri, "lyrics cache", error);
@@ -299,7 +339,9 @@ async function fetchLyricsInternal(
     const providerResult = await fetchLyricsFromProviders(
       uri,
       getActiveLyricsSourceOrder(),
+      { signal: options.signal },
     );
+    checkRequest(options.signal);
     if (!isCurrentTrack(uri)) return null;
     if (providerResult?.status === 503) {
       finishFetching(uri);
@@ -316,6 +358,7 @@ async function fetchLyricsInternal(
     }
 
     await ProcessLyrics(lyrics);
+    checkRequest(options.signal);
 
     if (IsEmptyLyrics(lyrics)) {
       lyricsLogger.warn("Lyrics payload had no renderable lines after pruning");
@@ -325,7 +368,7 @@ async function fetchLyricsInternal(
       return ["lyrics-not-found", 404];
     }
 
-    const lyricsWithId = attachLyricsSourceCacheMetadata({ ...lyrics, id: trackId });
+    const lyricsWithId = attachLyricsSourceCacheMetadata({ ...lyrics, id: trackId }, options.signal);
     if (isCurrentTrack(uri)) $currentLyricsData.set(JSON.stringify(lyricsWithId));
 
     if (LyricsStore) {
@@ -339,6 +382,7 @@ async function fetchLyricsInternal(
     await presentLyrics(uri, lyricsWithId);
     return [{ ...lyricsWithId, fromCache: false }, 200];
   } catch (error) {
+    checkRequest(options.signal);
     lyricsLogger.error("Error fetching lyrics", error);
     noteFailure(uri, "API", error);
     finishFetching(uri);

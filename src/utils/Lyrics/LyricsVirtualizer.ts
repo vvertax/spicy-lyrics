@@ -1,3 +1,4 @@
+import { visibleInterval } from "../WindowActivity.ts";
 import {
   Virtualizer,
   elementScroll,
@@ -1195,8 +1196,8 @@ class LyricsVirtualizer {
 
     // Watchdog catching drift within ~250ms when an observer notification above is
     // coalesced/dropped/zero-sized. Registered on the Maid so destroy() tears it down.
-    const healInterval = this._window().setInterval(this._selfHealCheck, 250);
-    this._maid!.Give(() => this._window().clearInterval(healInterval));
+    const stopHealing = visibleInterval(this._window(), this._selfHealCheck, 250);
+    this._maid!.Give(() => stopHealing());
 
     // After a minimize/restore cycle _mountedIndices is empty, so the observers'
     // re-triggered _remeasureVisible is a no-op. Force a full remeasure once the page

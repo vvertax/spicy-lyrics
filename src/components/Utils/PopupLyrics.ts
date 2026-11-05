@@ -1,3 +1,4 @@
+import { registerActivityWindow } from "../../utils/WindowActivity.ts";
 // deno-lint-ignore-file no-explicit-any
 import Session from "../Global/Session.ts";
 import PageView, { PageContainer } from "../Pages/PageView.ts";
@@ -244,6 +245,7 @@ const OpenPopupLyricsFlow = async () => {
     docPiP.removeEventListener("enter", startGuardOnEnter);
   }
   if (!pipGrowthGuard) StartPipGrowthGuard(currentPipWindow);
+  registerActivityWindow(currentPipWindow);
 
   // Copy style sheets over from the initial document
   // so that the player looks the same.

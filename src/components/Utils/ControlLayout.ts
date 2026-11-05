@@ -4,8 +4,8 @@ export const QUICK_CONTROLS = [
   ["NowBarSideToggle", "Swap NowBar Side"], ["FullscreenToggle", "Fullscreen"],
   ["load-ttml", "Load TTML File"], ["LyricsManager", "Lyrics Manager"],
   ["CacheAction", "Clear Cached Lyrics"], ["karaoke", "Karaoke"], ["recording", "Recording Mode"],
-  ["quote", "Create Quote Card"], ["authors", "Find Author Works"],
-  ["review", "Review Lyrics"], ["compare", "Compare TTML A/B"],
+  ["subtitles", "Subtitles"], ["quote", "Create Quote Card"], ["authors", "Find Author Works"],
+  ["review", "Review Lyrics"], ["check-ttml", "Check TTML"], ["compare", "Compare TTML A/B"],
   ["SettingsToggle", "Settings"], ["Close", "Close Page"],
 ] as const;
 export function controlId(id: string, label: string): string {

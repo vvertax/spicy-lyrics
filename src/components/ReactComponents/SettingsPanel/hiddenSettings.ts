@@ -1,4 +1,6 @@
 export const SETTING_CATALOG = [
+  ["sources-info", "Lyrics Source Info", "Show the displayed lyrics source, sync type and cache status, with a reload action.", "Sources"],
+  ["lyrics-resume-indicator", "Autoscroll Resume Indicator", "Show the follow cooldown after manual scrolling. Click to return immediately.", "Lyrics Display"],
   ["appearance-scene-transitions", "Smooth Track Transitions", "Fade lyrics and song information when tracks change, alongside the background transition.", "Appearance"],
   ["lyrics-song-offset", "Timing for This Song", "Save a timing offset for the current song instead of the global value.", "Lyrics Display"],
   ["lyrics-split-word-motion", "Split Word Motion", "Move neighbouring syllables as the singing part grows, keeping the word centred.", "Lyrics Display"],

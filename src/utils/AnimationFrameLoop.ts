@@ -1,3 +1,4 @@
+import { isWindowVisible, observeWindowVisibility } from "./WindowActivity.ts";
 import { $animationFpsCap, $animationFpsCapEnabled } from "./stores.ts";
 
 type FrameCallback = (timestamp: number) => void;
@@ -64,7 +65,7 @@ function run(callback: FrameCallback, timestamp: number): void {
 }
 
 function schedule(state: FrameLoop): void {
-  if (state.frameId === null && !state.targetWindow.closed &&
+  if (state.frameId === null && isWindowVisible(state.targetWindow) &&
     (state.callbacks.size > 0 || state.pending.size > 0)) {
     state.frameId = state.targetWindow.requestAnimationFrame(state.loop);
   }
@@ -89,7 +90,7 @@ function getLoop(targetWindow: Window): FrameLoop {
     lastRender: -Infinity,
     loop: (timestamp) => {
       state.frameId = null;
-      if (shouldRender(state, timestamp)) {
+      if (isWindowVisible(targetWindow) && shouldRender(state, timestamp)) {
         // Restarts and new requests wait until the next frame; cancellation
         // still takes effect for callbacks already in this frame's snapshot.
         const callbacks = [...state.callbacks];
@@ -107,13 +108,18 @@ function getLoop(targetWindow: Window): FrameLoop {
     },
   };
   loops.set(targetWindow, state);
+  const stopVisibility = observeWindowVisibility(targetWindow, () => {
+    if (state.frameId !== null) targetWindow.cancelAnimationFrame(state.frameId);
+    state.frameId = null; state.lastRender = -Infinity;
+    if (isWindowVisible(targetWindow)) schedule(state);
+  });
   targetWindow.addEventListener("pagehide", () => {
     if (state.frameId !== null) targetWindow.cancelAnimationFrame(state.frameId);
     state.frameId = null;
     state.callbacks.clear();
     for (const id of state.pending.keys()) pendingOwners.delete(id);
     state.pending.clear();
-    loops.delete(targetWindow);
+    stopVisibility(); loops.delete(targetWindow);
   }, { once: true });
   return state;
 }

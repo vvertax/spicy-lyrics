@@ -1,3 +1,4 @@
+import { visibleInterval } from "../../utils/WindowActivity.ts";
 import Global from "../Global/Global.ts";
 import { Icons } from "../Styling/Icons.ts";
 import { SetControlsDragLock } from "./Fullscreen.ts";
@@ -242,11 +243,11 @@ export function SetupVolumeSlider(container: HTMLElement, horizontal?: boolean) 
     renderVolume(volume);
   });
 
-  const pollInterval = targetWindow.setInterval(updateFromVolume, 250);
+  const pollInterval = visibleInterval(targetWindow, updateFromVolume, 250);
 
   cleanupFn = () => {
     releaseDrag();
-    targetWindow.clearInterval(pollInterval);
+    pollInterval();
     if (muteResync !== null) targetWindow.clearTimeout(muteResync);
     sliderBar.removeEventListener("mousedown", handleDragStart);
     sliderBar.removeEventListener("touchstart", handleDragStart);

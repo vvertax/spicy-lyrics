@@ -1,3 +1,5 @@
+import { useContext } from "react";
+import { FavoriteSettingsContext } from "./components.tsx";
 import { QUICK_CONTROLS, normalizeQuickControls } from "../../Utils/ControlLayout.ts";
 import { $quickControlIds } from "../../../utils/stores.ts";
 import { useStore } from "@nanostores/react";
@@ -31,6 +33,7 @@ const escapeOptions = ["Default", "Exit Fullscreen", "Exit Fully"];
 interface Props { query: string; sectionFilter: string; showHidden?: boolean; }
 
 export default function InterfaceSection({ query, sectionFilter, showHidden = false }: Props) {
+  const favoritesOnly = useContext(FavoriteSettingsContext);
   const quickIds = normalizeQuickControls(useStore($quickControlIds));
   const lockedMediaBox = useStore($lockedMediaBox);
   const allowHidingSettings = useStore($allowHidingSettings);
@@ -62,7 +65,7 @@ export default function InterfaceSection({ query, sectionFilter, showHidden = fa
 
   return <>
     <SectionTitle>Interface</SectionTitle>
-    {quick && <details className="vv-quick-settings" open={query.trim() ? true : undefined}>
+    {quick && <details className="vv-quick-settings" open={query.trim() || favoritesOnly ? true : undefined}>
       <summary><span className="vv-quick-summary-text"><span>Quick Controls</span><span className="vv-quick-hint vv-quick-hint--closed">Click to configure</span><span className="vv-quick-hint vv-quick-hint--open">Click to collapse</span></span></summary><p>Enabled actions appear beside the menu button. Disabled actions stay inside the menu. Availability depends on the current view.</p>
       {QUICK_CONTROLS.map(([id, label]) => <Row key={id} label={label}><Toggle checked={quickIds.includes(id)} onChange={enabled => $quickControlIds.set(enabled ? [...quickIds,id] : quickIds.filter(value=>value!==id))} /></Row>)}
       <button type="button" className="sl-sp-btn" onClick={()=>$quickControlIds.set([])}>Move all to menu</button>

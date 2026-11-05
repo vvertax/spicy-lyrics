@@ -1,3 +1,5 @@
+import { visibleInterval } from "../../utils/WindowActivity.ts";
+import { registerActivityWindow } from "../../utils/WindowActivity.ts";
 // deno-lint-ignore-file no-explicit-any
 import PageView, { PageContainer } from "../Pages/PageView.ts";
 import Fullscreen from "./Fullscreen.ts";
@@ -16,7 +18,7 @@ export let IsExternalCinemaOpening = false;
 type CinemaSession = {
   window: Window;
   cancelled: boolean;
-  playbackPump: number | null;
+  playbackPump: (() => void) | null;
   lastUri: string | null;
   lastCover: string | null;
   externalPageHideHandler: (event: Event) => void;
@@ -32,7 +34,7 @@ const isCurrent = (session: CinemaSession) =>
 
 function stopSessionLoops(session: CinemaSession): void {
   if (session.playbackPump !== null) {
-    try { session.window.clearInterval(session.playbackPump); } catch { /* closed window */ }
+    try { session.playbackPump(); } catch { /* closed window */ }
     session.playbackPump = null;
   }
 }
@@ -40,7 +42,7 @@ function stopSessionLoops(session: CinemaSession): void {
 function startSessionLoops(session: CinemaSession): void {
   session.lastUri = SpotifyPlayer.GetUri() ?? null;
   session.lastCover = null;
-  session.playbackPump = session.window.setInterval(() => {
+  session.playbackPump = visibleInterval(session.window, () => {
     if (!isCurrent(session)) return;
     try {
       if (ScrollSimplebar) ScrollToActiveLine(ScrollSimplebar);
@@ -172,6 +174,7 @@ async function openExternalCinemaLyrics(): Promise<void> {
   targetWindow.document.open();
   targetWindow.document.write(`<!doctype html><html><head></head><body><div class="spicy-external-cinema-wrapper"></div></body></html>`);
   targetWindow.document.close();
+  registerActivityWindow(targetWindow);
   await copyLyricsWindowStyles(targetWindow, "spicy-external-cinema-wrapper");
   if (!isCurrent(session)) return;
   const wrapper = targetWindow.document.body.querySelector<HTMLElement>(".spicy-external-cinema-wrapper");

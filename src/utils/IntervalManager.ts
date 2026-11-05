@@ -1,3 +1,4 @@
+import { visibleInterval } from "./WindowActivity.ts";
 import Logger from "./Logger";
 import { onAnimationFrame } from "./AnimationFrameLoop.ts";
 
@@ -8,7 +9,7 @@ class IntervalManager {
   private callback: () => void;
   private duration: number; // Duration in milliseconds
   private unsubscribeFrame: (() => void) | null;
-  private intervalId: ReturnType<typeof setInterval> | null;
+  private intervalId: (() => void) | null;
   private targetWindowProvider: () => Window;
   private activeWindow: Window | null;
   public Running: boolean;
@@ -46,7 +47,7 @@ class IntervalManager {
 
     if (this.duration > 0 && Number.isFinite(this.duration)) {
       this.activeWindow = this.targetWindowProvider();
-      this.intervalId = this.activeWindow.setInterval(() => {
+      this.intervalId = visibleInterval(this.activeWindow, () => {
         if (!this.Running || this.Destroyed || generation !== this.generation) return;
         this.callback();
       }, this.duration);
@@ -78,7 +79,7 @@ class IntervalManager {
   public Stop() {
     this.generation++;
     if (this.intervalId !== null) {
-      (this.activeWindow ?? window).clearInterval(this.intervalId);
+      this.intervalId();
       this.intervalId = null;
     }
     if (this.unsubscribeFrame !== null) {

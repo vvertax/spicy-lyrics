@@ -1,3 +1,4 @@
+import { visibleInterval } from "../../utils/WindowActivity.ts";
 import BlobURLMaker from "../../utils/BlobURLMaker.ts";
 import { GetCurrentLyricsContainerInstance } from "../../utils/Lyrics/Applyer/CreateLyricsContainer.ts";
 import { FormatPlaybackTime, SongProgressBar } from "./../../utils/Lyrics/SongProgressBar.ts";
@@ -890,13 +891,13 @@ function OpenNowBar(skipSaving: boolean = false) {
 
         // Run initial update
         updateTimelineState();
-        const timelineUpdateInterval = timelineWindow.setInterval(() => {
+        const timelineUpdateInterval = visibleInterval(timelineWindow, () => {
           if (!isDragging) updateTimelineState(getNowBarPlayerPosition());
         }, 250);
         ActiveSongProgressBarInstance_Map.set("updateTimelineState_Function", updateTimelineState);
 
         const cleanup = () => {
-          timelineWindow.clearInterval(timelineUpdateInterval);
+          timelineUpdateInterval();
           timelineMaid.Destroy();
           const progressBar = ActiveSongProgressBarInstance_Map.get("SongProgressBar_ClassInstance");
           if (progressBar) progressBar.Destroy();

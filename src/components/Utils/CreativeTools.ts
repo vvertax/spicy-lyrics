@@ -1,3 +1,4 @@
+import { visibleInterval } from "../../utils/WindowActivity.ts";
 import { getDisplayedLyrics } from "../../utils/Lyrics/DisplayedLyrics.ts";
 import { SpotifyPlayer } from "../Global/SpotifyPlayer.ts";
 import { coverGradient } from "./QuotePalette.ts";
@@ -24,8 +25,8 @@ function state(page: HTMLElement): Modes {
     }
   };
   doc.addEventListener("keydown", stopRecording, true);
-  const timer = win.setInterval(() => {
-    if (!page.isConnected) { win.clearInterval(timer); doc.removeEventListener("keydown", stopRecording, true); modes.delete(page); return; }
+  const timer = visibleInterval(win,() => {
+    if (!page.isConnected) { timer(); doc.removeEventListener("keydown", stopRecording, true); modes.delete(page); return; }
     if (!value.karaoke) return;
     const position = GetProgress();
     for (const line of [...LyricsObject.Types.Line.Lines, ...LyricsObject.Types.Syllable.Lines]) {

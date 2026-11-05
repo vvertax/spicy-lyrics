@@ -1,3 +1,5 @@
+import { $favoriteSettings } from "../../../utils/stores.ts";
+import { ExperimentSettings } from "./ExperimentsPanel.tsx";
 import { $uiLanguage } from "../../../utils/stores.ts";
 import { PopupModal } from "../../Modal.ts";
 import { useEffect, useRef, useState } from "react";
@@ -10,10 +12,11 @@ import InterfaceSection from "./InterfaceSection.tsx";
 import LyricsSection from "./LyricsSection.tsx";
 import SourcesSection from "./SourcesSection.tsx";
 import Footer from "./Footer.tsx";
-import { SearchBar, ShowHiddenSettingsInSearchContext } from "./components.tsx";
-import { AdvancedIcon, AppearanceIcon, ExperimentsIcon, InterfaceIcon, LyricsIcon, SourcesIcon } from "./icons.tsx";
+import { SearchBar, ShowHiddenSettingsInSearchContext, FavoriteSettingsContext, EditFavoritesContext } from "./components.tsx";
+import { AdvancedIcon, FavoritesIcon, AppearanceIcon, ExperimentsIcon, InterfaceIcon, LyricsIcon, SourcesIcon } from "./icons.tsx";
 
 const TABS = [
+  ["Favorites", "Favorites", FavoritesIcon],
   ["Appearance", "Appearance", AppearanceIcon],
   ["Lyrics", "Lyrics Display", LyricsIcon],
   ["Effects", "Effects", ExperimentsIcon],
@@ -26,13 +29,20 @@ const TABS = [
 export type SettingsPanelState = { query: string; sectionFilter: string; scrollTop: number };
 export default function SettingsPanel({ onOpenHiddenSettings, onManageAnimator, initialState, onStateChange }: { onOpenHiddenSettings?: () => void; onManageAnimator?: (state: SettingsPanelState) => void; initialState?: SettingsPanelState; onStateChange?: (state: SettingsPanelState) => void }) {
   const language = useStore($uiLanguage);
+  const favorites = useStore($favoriteSettings);
+  const hasFavorites = Array.isArray(favorites) && favorites.some(id => typeof id === "string");
   const [query, setQuery] = useState(initialState?.query ?? "");
-  const [sectionFilter, setSectionFilter] = useState<string>(initialState?.sectionFilter ?? "Appearance");
+  const [selectedSection, setSectionFilter] = useState<string>(initialState?.sectionFilter === "Favorites" && !$favoriteSettings.get()?.length ? "Appearance" : initialState?.sectionFilter ?? "Appearance");
+  const sectionFilter = selectedSection === "Favorites" && !hasFavorites ? "Appearance" : selectedSection;
   const allowHidingSettings = useStore($allowHidingSettings);
   const hideHidingIcon = useStore($hideHidingIcon);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const searching = Boolean(query.trim());
+  const favoritesOnly = !searching && sectionFilter === "Favorites";
+  const [editFavorites, setEditFavorites] = useState(false);
+  const tabs = TABS.filter(([, tab]) => tab !== "Favorites" || hasFavorites);
+  useEffect(() => { if (!hasFavorites && selectedSection === "Favorites") setSectionFilter("Appearance"); }, [hasFavorites, selectedSection]);
 
   useEffect(() => {
     onStateChange?.({ query, sectionFilter, scrollTop: 0 });
@@ -48,13 +58,14 @@ export default function SettingsPanel({ onOpenHiddenSettings, onManageAnimator, 
     const key = event.key;
     if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(key)) return;
     event.preventDefault();
-    const next = key === 'Home' ? 0 : key === 'End' ? TABS.length - 1 : (index + (key === 'ArrowRight' || key === 'ArrowDown' ? 1 : -1) + TABS.length) % TABS.length;
-    selectTab(TABS[next][1]);
+    const next = key === 'Home' ? 0 : key === 'End' ? tabs.length - 1 : (index + (key === 'ArrowRight' || key === 'ArrowDown' ? 1 : -1) + tabs.length) % tabs.length;
+    selectTab(tabs[next][1]);
     tabRefs.current[next]?.focus();
   };
 
   const title = searching ? "Results" : TABS.find(([, tab]) => tab === sectionFilter)?.[0] ?? "Settings";
   const descriptions: Record<string, string> = {
+    Favorites: "Star settings to keep them here. Availability follows their parent options; hidden settings stay hidden.",
     Appearance: "Fonts, backgrounds and performance options.",
     "Lyrics Display": "How the lyrics are drawn, styled and scrolled.",
     Effects: "Animation presets and effects, tuned to your preference.",
@@ -63,9 +74,9 @@ export default function SettingsPanel({ onOpenHiddenSettings, onManageAnimator, 
     Advanced: "Build channels, storage and advanced options.",
     About: "Spicy Lyrics, based on Spikerko, iPixelGalaxy and Ruytha.",
   };
-  const filter = searching ? "All" : sectionFilter;
+  const filter = searching || favoritesOnly ? "All" : sectionFilter;
   return (
-    <div className="slm sl-sp sl-sp-panel sl-sp-panel--settings">
+    <div className={`slm sl-sp sl-sp-panel sl-sp-panel--settings${favoritesOnly ? " sl-sp-favorites-only" : ""}`}>
       <nav className="sl-sp-sidebar" aria-label="Settings sections">
         <div className="sl-sp-brand">
           <span className="sl-sp-brand-line">Spicy Lyrics</span>
@@ -76,7 +87,7 @@ export default function SettingsPanel({ onOpenHiddenSettings, onManageAnimator, 
           setQuery(value); if (scrollRef.current) scrollRef.current.scrollTop = 0;
         }} />
         <div className="sl-sp-tabs" role="tablist" aria-label="Settings categories" aria-orientation="vertical">
-          {TABS.map(([label, tab, icon], index) => <button key={tab}
+          {tabs.map(([label, tab, icon], index) => <button key={tab}
             ref={(element) => { tabRefs.current[index] = element; }}
             className="sl-sp-tab" role="tab" type="button" id={`sl-settings-tab-${index}`}
             aria-controls="sl-settings-content" tabIndex={sectionFilter === tab ? 0 : -1}
@@ -88,6 +99,7 @@ export default function SettingsPanel({ onOpenHiddenSettings, onManageAnimator, 
           </button>)}
         </div>
         {allowHidingSettings && <button className={`sl-sp-tab sl-sp-tab--action sl-sp-hide-action${hideHidingIcon ? "" : " sl-sp-tab--active"}`} type="button" aria-pressed={!hideHidingIcon} onClick={() => $hideHidingIcon.set(!hideHidingIcon)}><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1.5 8s2.3-4 6.5-4 6.5 4 6.5 4-2.3 4-6.5 4-6.5-4-6.5-4Z" stroke="currentColor" strokeWidth="1.4"/><circle cx="8" cy="8" r="1.8" stroke="currentColor" strokeWidth="1.4"/><path d="M2 2l12 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>Hide Settings</button>}
+        <button className={`sl-sp-tab sl-sp-tab--action sl-sp-hide-action${editFavorites ? " sl-sp-tab--active" : ""}`} type="button" aria-pressed={editFavorites} onClick={() => setEditFavorites(!editFavorites)}><span aria-hidden="true">☆</span>Add to favorites</button>
       </nav>
       <section className="sl-sp-pane">
         <div className="sl-sp-pane-header">
@@ -97,17 +109,21 @@ export default function SettingsPanel({ onOpenHiddenSettings, onManageAnimator, 
         <div className="sl-sp-pane-scroll sl-sp-settings-scroll" ref={scrollRef}>
           <div className="sl-sp-pane-body">
             <p className="sl-sp-intro">{searching ? "Matching settings across all sections." : descriptions[sectionFilter]}</p>
+            {favoritesOnly && (!Array.isArray(favorites) || favorites.length === 0) && <p className="sl-sp-empty">No favorite settings yet. Use the stars beside settings.</p>}
+            <EditFavoritesContext.Provider value={editFavorites}><FavoriteSettingsContext.Provider value={favoritesOnly}>
             <ShowHiddenSettingsInSearchContext.Provider value={searching}>
               <div role="tabpanel" id="sl-settings-content" aria-label={title}>
-                {(searching || sectionFilter === "Appearance") && <div className="sl-sp-card"><AppearanceSection query={query} sectionFilter={filter} /></div>}
-                {(searching || sectionFilter === "Lyrics Display") && <div className="sl-sp-card"><LyricsSection query={query} sectionFilter={filter} /></div>}
-                {(searching || sectionFilter === "Effects") && <div className="sl-sp-card"><EffectsSection query={query} sectionFilter={filter} onManageAnimator={() => onManageAnimator?.({ query, sectionFilter, scrollTop: scrollRef.current?.scrollTop ?? 0 })} /></div>}
-                {(searching || sectionFilter === "Interface") && <div className="sl-sp-card"><InterfaceSection query={query} sectionFilter={filter} /></div>}
-                {(searching || sectionFilter === "Sources") && <div className="sl-sp-card"><SourcesSection query={query} sectionFilter={filter} /></div>}
-                {(searching || sectionFilter === "Advanced") && <div className="sl-sp-card"><DeveloperSection query={query} sectionFilter={filter} onOpenHiddenSettings={onOpenHiddenSettings ?? (() => {})} /></div>}
+                {(searching || favoritesOnly || sectionFilter === "Appearance") && <div className="sl-sp-card"><AppearanceSection query={query} sectionFilter={filter} /></div>}
+                {(searching || favoritesOnly || sectionFilter === "Lyrics Display") && <div className="sl-sp-card"><LyricsSection query={query} sectionFilter={filter} /></div>}
+                {(searching || favoritesOnly || sectionFilter === "Effects") && <div className="sl-sp-card"><EffectsSection query={query} sectionFilter={filter} onManageAnimator={() => onManageAnimator?.({ query, sectionFilter, scrollTop: scrollRef.current?.scrollTop ?? 0 })} /></div>}
+                {(searching || favoritesOnly || sectionFilter === "Interface") && <div className="sl-sp-card"><InterfaceSection query={query} sectionFilter={filter} /></div>}
+                {(searching || favoritesOnly || sectionFilter === "Sources") && <div className="sl-sp-card"><SourcesSection query={query} sectionFilter={filter} /></div>}
+                {(searching || favoritesOnly || sectionFilter === "Advanced") && <div className="sl-sp-card"><DeveloperSection query={query} sectionFilter={filter} onOpenHiddenSettings={onOpenHiddenSettings ?? (() => {})} /></div>}
+                {favoritesOnly && <div className="sl-sp-card"><ExperimentSettings advancedOnly showBuiltIn /></div>}
                 {!searching && sectionFilter === "About" && <Footer />}
               </div>
             </ShowHiddenSettingsInSearchContext.Provider>
+            </FavoriteSettingsContext.Provider></EditFavoritesContext.Provider>
           </div>
         </div>
       </section>
