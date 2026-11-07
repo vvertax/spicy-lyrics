@@ -17,8 +17,9 @@ export function renderComparisonLyrics(view:HTMLElement, data:any, seek:(index:n
   const type=data.Type==='Syllable'?'Syllable':'Line';
   const container=doc.createElement('div');container.className='SpicyLyricsScrollContainer';container.dataset.lyricsType=type;if(data.Content.some((line:any)=>line.OppositeAligned))container.classList.add('HasDuetLines');
   const lines:LyricsSyllable[]=[];
-  const rows:{element:HTMLElement;start:number;end:number;words:never[]}[]=[];
-  const makeLine=(source:any,index:number,background=false)=>{
+  type DiffRow={element:HTMLElement;start:number;end:number;words:never[];sourceIndex:number;backgroundIndex?:number;segments:{element:HTMLElement;index:number;text:string}[]};
+  const rows:DiffRow[]=[],diffRows:DiffRow[]=[];
+  const makeLine=(source:any,index:number,background=false,backgroundIndex?:number)=>{
     const timing=comparisonTiming(source);
     const next=data.Content[index+1];const nextStart=Number(next?.Lead?.StartTime??next?.StartTime??0)*1000;
     if(!background&&$minimalLyricsMode.get()&&nextStart>timing.end&&nextStart-timing.end<getLyricsBetweenShow()*1000)timing.end=nextStart;
@@ -30,6 +31,7 @@ export function renderComparisonLyrics(view:HTMLElement, data:any, seek:(index:n
     if(background)element.classList.add('bg-line');
     const model:LyricsSyllable={HTMLElement:element,StartTime:timing.start,EndTime:timing.end,TotalTime:timing.end-timing.start,Syllables:{Lead:[]},BGLine:background};
     const parts=source.Lead?.Syllables??source.Syllables??[];
+    const segments:DiffRow["segments"]=[];
     let group:HTMLElement|null=null;
     parts.forEach((part:any,index:number)=>{
       const text=StripZeroWidth(part.Text??'');const duration=(part.EndTime-part.StartTime)*1000;
@@ -50,6 +52,7 @@ export function renderComparisonLyrics(view:HTMLElement, data:any, seek:(index:n
         const time=comparisonTiming(part);
         model.Syllables!.Lead.push({HTMLElement:word,StartTime:time.start,EndTime:time.end,TotalTime:time.end-time.start,BGWord:background});
       }
+      segments.push({element:word,index,text});
       const last=index===parts.length-1;const join=!last&&part.IsPartOfWord===true;
       if(last)word.classList.add('LastWordInLine');else if(join)word.classList.add('PartOfWord');
       if(isRtl(text))element.classList.add('rtl');
@@ -59,13 +62,14 @@ export function renderComparisonLyrics(view:HTMLElement, data:any, seek:(index:n
     if(!parts.length)element.textContent=quoteLineText(source)||'♪';
     if(source.OppositeAligned)element.classList.add('OppositeAligned');
     lines.push(model);container.append(element);
-    if(!background || options.backgroundOnly)rows.push({element,...timing,words:[]});
+    const row:DiffRow={element,...timing,words:[],sourceIndex:index,backgroundIndex,segments};
+    diffRows.push(row);if(!background || options.backgroundOnly)rows.push(row);
   };
   data.Content.forEach((source:any,index:number)=>{
     makeLine(source,index,options.backgroundOnly===true);
-    for(const background of source.Background??[])makeLine({...background,OppositeAligned:source.OppositeAligned},index,true);
+    (source.Background??[]).forEach((background:any,backgroundIndex:number)=>makeLine({...background,OppositeAligned:source.OppositeAligned},index,true,backgroundIndex));
   });
   view.replaceChildren(container);
   const session=createLyricsAnimationSession(type,lines);
-  return {...session,rows};
+  return {...session,rows,diffRows};
 }

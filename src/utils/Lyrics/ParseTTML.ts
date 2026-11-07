@@ -628,6 +628,8 @@ function buildSyllableLyrics(lines: ParsedLine[], songwriters: string[]) {
         Type: "Vocal",
         OppositeAligned: line.oppositeAligned,
         Lead: {
+          ...(line.leadTranslatedText ? { TranslatedText: line.leadTranslatedText } : {}),
+          ...(line.leadTransliteratedText ? { TransliteratedText: line.leadTransliteratedText } : {}),
           StartTime: line.startTime,
           EndTime: line.endTime,
           Syllables: leadSyllables,

@@ -1,6 +1,7 @@
 // Compatibility exports for existing credit callers. Profiles no longer use iframes.
 import { createAuthorCard, knownAuthor } from "../../Utils/AuthorProfile.ts";
 import { translateUi } from "../../../utils/i18n/translate.ts";
+import { Icons } from "../../Styling/Icons.ts";
 import { $uiLanguage } from "../../../utils/stores.ts";
 export interface ProfileIdentity { username: string; displayName?: string }
 export function resolveProfileIdentity(userId: string): Promise<ProfileIdentity | null> {
@@ -31,6 +32,9 @@ export function showIframeProfileModal(userId: string, doc: Document, options: P
     if (e.key === "Tab") { const buttons = [closeButton, ...Array.from(dialog.querySelectorAll<HTMLAnchorElement>("a"))]; const index = buttons.indexOf(doc.activeElement as HTMLButtonElement); e.preventDefault(); buttons[(index + (e.shiftKey ? -1 : 1) + buttons.length) % buttons.length].focus(); }
   };
   closeButton.onclick = close; overlay.onclick = e => { if (e.target === overlay) close(); };
-  dialog.append(closeButton, createAuthorCard(doc, person)); overlay.append(dialog); doc.body.append(overlay);
+  const watermark = doc.createElement("img"); watermark.className = "vv-author-watermark"; watermark.alt = ""; watermark.setAttribute("aria-hidden", "true");
+  watermark.src = `data:image/svg+xml,${encodeURIComponent(Icons.LyricsPage.replace(/id="[^"]*"/g, ""))}`;
+  const brand = doc.createElement("div"); brand.className = "vv-author-brand"; brand.textContent = "Spicy Lyrics";
+  dialog.append(watermark, brand, closeButton, createAuthorCard(doc, person)); overlay.append(dialog); doc.body.append(overlay);
   active = { userId, close }; win.addEventListener("keydown", keys, true); closeButton.focus(); options.onState("ready");
 }

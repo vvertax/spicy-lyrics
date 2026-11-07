@@ -1,3 +1,7 @@
+import { reviewLines, reviewTime } from "./ReviewLines.ts";
+import { translateUi } from "../../utils/i18n/translate.ts";
+import { $uiLanguage } from "../../utils/stores.ts";
+import { bindComparisonDiff } from "./ComparisonDiffUI.ts";
 import { createAuthorCard, knownAuthor } from "./AuthorProfile.ts";
 import { openTTMLCheck } from "./TTMLCheckPanel.ts";
 import { followComparisonLine } from "./ComparisonFollow.ts";
@@ -5,7 +9,7 @@ import { bindTTMLDrop } from "./TTMLDrop.ts";
 import { renderComparisonLyrics } from "./ComparisonRenderer.ts";
 import GetProgress from "../../utils/Gets/GetProgress.ts";
 import { onAnimationFrame } from "../../utils/AnimationFrameLoop.ts";
-import { authorHandle, changedTTMLLines, comparisonTiming, comparisonDifference } from "./ReviewModel.ts";
+import { authorHandle } from "./ReviewModel.ts";
 import { toast } from "sonner";
 import { getDisplayedLyrics } from "../../utils/Lyrics/DisplayedLyrics.ts";
 import { SpotifyPlayer } from "../Global/SpotifyPlayer.ts";
@@ -13,7 +17,7 @@ import { ParseTTML } from "../../utils/Lyrics/manager/parseTTML.ts";
 import { quoteLineText } from "./QuoteText.ts";
 import { Icons } from "../Styling/Icons.ts";
 
-type Note = { id:string; uri:string; title:string; file:string; line:number; text:string; timeMs:number; kind:string; comment:string; created:string };
+type Note = { id:string; uri:string; title:string; file:string; line:number; text:string; timeMs:number; kind:string; comment:string; created:string; backgroundIndex?:number };
 const NOTES_KEY = "vvertax:lyrics-review-notes:v1";
 function readNotes(): Note[] {
   try { const value = JSON.parse(Spicetify.LocalStorage.get(NOTES_KEY) ?? "[]"); return Array.isArray(value) ? value : []; } catch { return []; }
@@ -69,31 +73,83 @@ function authorSearch(doc:Document) {
   root.append(form,message,results);input.focus();
 }
 export function reviewLyrics(doc:Document, supplied?:any, initialLine=0) {
-  const data=supplied ?? currentLyrics();const uri=SpotifyPlayer.GetUri();if(!uri)throw new Error('No current track');
-  const title=Spicetify.Player.data?.item?.metadata?.title??uri;
-  const file=data.reviewFileName??'Current lyrics';
-  const root=dialog(doc,'Review Lyrics');root.append(element(doc,'p',`${title} · ${file}`));
-  const hint=element(doc,'p','Choose a line, select the problem type and add a note. Notes are stored only on this device.');root.append(hint);
-  const select=element(doc,'select');select.setAttribute('aria-label','Lyric line');
-  const lines=data.Content.map((line:any,index:number)=>({index,text:quoteLineText(line),timeMs:Math.round((line.StartTime??line.Lead?.StartTime??0)*1000)}));
-  for(const line of lines){const option=element(doc,'option',`${line.index+1}. ${line.text||'[instrumental]'}`);option.value=String(line.index);select.append(option);}
-  select.value=String(initialLine);
-  const kind=element(doc,'select');kind.setAttribute('aria-label','Problem type');for(const name of ['Text','Timing','Markup']){const option=element(doc,'option',name);kind.append(option);}
-  const comment=element(doc,'textarea');comment.placeholder='Wrong word, starts too early, missing background vocal…';comment.setAttribute('aria-label','Review comment');comment.maxLength=2000;
-  const list=element(doc,'div');list.className='vv-review-notes';const status=element(doc,'p');status.role='status';
+  const data=supplied??currentLyrics(),uri=SpotifyPlayer.GetUri();if(!uri)throw new Error('No current track');
+  const t=(text:string)=>translateUi(text,$uiLanguage.get());
+  const title=Spicetify.Player.data?.item?.metadata?.title??uri,file=data.reviewFileName??t('Current lyrics');
+  const root=dialog(doc,t('Review Lyrics'));root.classList.add('vv-review-workspace');root.setAttribute('data-i18n-ignore','');
+  root.querySelector('header button')!.setAttribute('aria-label',t('Close'));
+  const track=element(doc,'p',`${title} · ${file}`);track.className='vv-review-track';root.append(track);
+  const lines=reviewLines(data);let selected=lines.find(line=>line.index===initialLine)??lines[0];
+  const layout=element(doc,'div');layout.className='vv-review-layout';
+  const picker=element(doc,'section');picker.className='vv-review-picker';
+  const search=element(doc,'input');search.type='search';search.placeholder=t('Search lyric lines…');search.setAttribute('aria-label',t('Search lyric lines…'));
+  const voices=element(doc,'select');voices.setAttribute('aria-label',t('Vocal part'));
+  for(const [value,label] of [['all','All vocals'],['lead','Lead vocal'],['background','Backing vocals']]){const option=element(doc,'option',t(label));option.value=value;voices.append(option);}
+  const choices=element(doc,'div');choices.className='vv-review-line-list';choices.setAttribute('aria-label',t('Lyric line'));
+  picker.append(search,voices,choices);
+  const editor=element(doc,'section');editor.className='vv-review-editor';
+  const selectedLabel=element(doc,'strong',t('Selected line')),preview=element(doc,'p'),timing=element(doc,'span');preview.className='vv-review-selected-text';timing.className='vv-review-time';
+  const seek=button(doc,t('Listen to selected line'),()=>{if(selected&&SpotifyPlayer.GetUri()===uri)SpotifyPlayer.Seek(selected.timeMs);else toast.error(t('Play this track first'));});
+  let selectedKind='Wrong word';
+  const issueSelection=element(doc,'summary',`${t('Problem type')}: ${t(selectedKind)}`);issueSelection.className='vv-review-issue-selection';issueSelection.role='status';
+  const kind=element(doc,'details');kind.className='vv-review-problems';kind.append(issueSelection);
+  const issueButtons:HTMLButtonElement[]=[];
+  for(const [group,names] of [
+    ['Text',['Wrong word','Missing text','Extra text','Punctuation / spelling']],
+    ['Timing',['Starts too early','Starts too late','Wrong end / duration']],
+    ['Markup',['Wrong syllable splits','Wrong voice / side','Wrong line break']],
+    ['Backing vocals',['Missing backing vocal','Extra backing vocal','Wrong backing text','Backing vocal timing']],
+    ['Other',['Translation / romanization','Other issue']],
+  ] as const){
+    const section=element(doc,'div');section.className='vv-review-problem-group';section.append(element(doc,'span',t(group)));
+    for(const name of names){const choice=button(doc,t(name),()=>{selectedKind=name;kind.open=false;issueSelection.textContent=`${t('Problem type')}: ${t(name)}`;for(const item of issueButtons)item.setAttribute('aria-pressed',String(item===choice));});choice.setAttribute('aria-pressed',String(name===selectedKind));issueButtons.push(choice);section.append(choice);}kind.append(section);
+  }
+  const comment=element(doc,'textarea');comment.placeholder=t('Wrong word, starts too early, missing background vocal…');comment.setAttribute('aria-label',t('Review comment'));comment.maxLength=2000;
+  const status=element(doc,'p');status.role='status';status.className='vv-review-feedback';
+  const partLabel=(line:{backgroundIndex?:number})=>line.backgroundIndex===undefined?t('Lead vocal'):`${t('Backing vocals')} ${line.backgroundIndex+1}`;
+  const updateSelected=()=>{preview.textContent=selected?.text||t('[instrumental]');timing.textContent=selected?`${partLabel(selected)} · ${reviewTime(selected.timeMs)} — ${reviewTime(selected.endMs)}`:'';seek.disabled=!selected;};
+  const renderChoices=()=>{
+    choices.replaceChildren();const query=search.value.trim().toLocaleLowerCase();
+    for(const line of lines){if(voices.value==='lead'&&line.backgroundIndex!==undefined||voices.value==='background'&&line.backgroundIndex===undefined||query&&!line.text.toLocaleLowerCase().includes(query))continue;
+      const row=button(doc,'',()=>{selected=line;updateSelected();renderChoices();});row.className='vv-review-line';row.setAttribute('aria-pressed',String(selected?.key===line.key));if(line.backgroundIndex!==undefined)row.classList.add('is-background');
+      row.append(element(doc,'span',`${line.index+1} · ${partLabel(line)} · ${reviewTime(line.timeMs)}`),element(doc,'strong',line.text||t('[instrumental]')));choices.append(row);
+    }if(!choices.childElementCount)choices.append(element(doc,'p',t('No matching lines.')));
+  };
+  search.oninput=renderChoices;voices.onchange=renderChoices;
+  const list=element(doc,'div');list.className='vv-review-notes';
   const report=()=>readNotes().filter(note=>note.uri===uri);
-  const reportText=()=>`${title}\nhttps://open.spotify.com/track/${uri.split(':').pop()}\n\n`+report().map(note=>`[${(note.timeMs/1000).toFixed(2)}s] ${note.kind} · ${note.file} · line ${note.line+1}\n${note.text}\n${note.comment}`).join('\n\n');
-  const render=()=>{list.replaceChildren();const notes=report();if(!notes.length)list.append(element(doc,'p','No notes for this track yet.'));for(const note of notes){const card=element(doc,'article');card.append(element(doc,'strong',`${note.kind} · ${(note.timeMs/1000).toFixed(2)}s · ${note.file}`),element(doc,'p',note.text),element(doc,'p',note.comment));card.append(button(doc,'Go to line',()=>{if(SpotifyPlayer.GetUri()===uri)SpotifyPlayer.Seek(note.timeMs);else toast.error('Play this track first');}),button(doc,'Delete',()=>{storeNotes(readNotes().filter(item=>item.id!==note.id));render();}));list.append(card);}};
-  const save=button(doc,'Save note',()=>{
-    const line=lines[Number(select.value)];if(!line){status.textContent='Choose a line.';return;}
-    if(!comment.value.trim()){status.textContent='Describe the issue first.';return;}
-    try {storeNotes([...readNotes(),{id:crypto.randomUUID(),uri,title,file,line:line.index,text:line.text,timeMs:line.timeMs,kind:kind.value,comment:comment.value.trim(),created:new Date().toISOString()}]);comment.value='';status.textContent='Note saved';render();}catch{status.textContent='Could not save notes. Export existing notes to free storage.';}
-  });
-  const actions=element(doc,'div');actions.className='vv-review-actions';actions.append(save,button(doc,'Copy report',()=>{void doc.defaultView!.navigator.clipboard.writeText(reportText()).then(()=>{status.textContent='Report copied';}).catch(()=>{status.textContent='Clipboard unavailable. Use Download report.';});}),button(doc,'Download report',()=>download(doc,'lyrics-review.txt',reportText(),'text/plain;charset=utf-8')),button(doc,'Export JSON',()=>download(doc,'lyrics-review.json',JSON.stringify(report(),null,2),'application/json')));
-  root.append(select,kind,comment,actions,status,list);render();
+  const reportText=()=>`${title}\nhttps://open.spotify.com/track/${uri.split(':').pop()}\n\n`+report().map(note=>`[${reviewTime(note.timeMs)}] ${t(note.kind)} · ${note.file} · ${t('Lyric line')} ${note.line+1} · ${partLabel(note)}\n${note.text}\n${note.comment}`).join('\n\n');
+  const renderNotes=()=>{
+    list.replaceChildren();const notes=report();
+    if(!notes.length){const empty=element(doc,'p',t('No notes for this track yet.'));empty.className='vv-review-empty';list.append(empty);}
+    for(const note of notes){
+      const card=element(doc,'article');card.className='vv-review-note';
+      const heading=element(doc,'div');heading.className='vv-review-note-heading';
+      const problem=element(doc,'strong',t(note.kind));problem.className='vv-review-note-kind';
+      const time=button(doc,reviewTime(note.timeMs),()=>{if(SpotifyPlayer.GetUri()===uri)SpotifyPlayer.Seek(note.timeMs);else toast.error(t('Play this track first'));});time.className='vv-review-note-time';time.title=t('Go to line');time.setAttribute('aria-label',`${t('Go to line')} · ${reviewTime(note.timeMs)}`);
+      heading.append(problem,time);
+      const meta=element(doc,'div');meta.className='vv-review-note-meta';meta.append(element(doc,'span',partLabel(note)),element(doc,'span',note.file));
+      const quote=element(doc,'blockquote',note.text);quote.className='vv-review-note-quote';
+      const comment=element(doc,'p',note.comment);comment.className='vv-review-note-comment';
+      const remove=button(doc,t('Delete'),()=>{storeNotes(readNotes().filter(item=>item.id!==note.id));renderNotes();});remove.className='vv-review-note-delete';
+      const footer=element(doc,'div');footer.className='vv-review-note-footer';footer.append(element(doc,'span',t('Review comment')),remove);
+      card.append(heading,meta,quote,comment,footer);list.append(card);
+    }
+  };
+
+  const save=button(doc,t('Save note'),()=>{
+    if(!selected){status.textContent=t('Choose a line.');return;}if(!comment.value.trim()){status.textContent=t('Describe the issue first.');return;}
+    try {storeNotes([...readNotes(),{id:crypto.randomUUID(),uri,title,file,line:selected.index,backgroundIndex:selected.backgroundIndex,text:selected.text,timeMs:selected.timeMs,kind:selectedKind,comment:comment.value.trim(),created:new Date().toISOString()}]);comment.value='';status.textContent=`✓ ${t('Note saved')}`;renderNotes();}catch{status.textContent=t('Could not save notes. Export existing notes to free storage.');}
+  });save.className='vv-review-save';
+  editor.append(selectedLabel,preview,timing,seek,kind,comment,save,status);
+  layout.append(picker,editor);
+  const exports=element(doc,'div');exports.className='vv-review-actions';exports.append(button(doc,t('Copy report'),()=>{void doc.defaultView!.navigator.clipboard.writeText(reportText()).then(()=>{status.textContent=t('Report copied');}).catch(()=>{status.textContent=t('Clipboard unavailable. Use Download report.');});}),button(doc,t('Download report'),()=>download(doc,'lyrics-review.txt',reportText(),'text/plain;charset=utf-8')),button(doc,t('Export JSON'),()=>download(doc,'lyrics-review.json',JSON.stringify(report(),null,2),'application/json')));
+  const body=element(doc,'div');body.className='vv-review-body';body.append(layout,element(doc,'h3',t('Saved notes')),list,exports);root.append(body);updateSelected();renderChoices();renderNotes();
+  choices.querySelector<HTMLElement>('[aria-pressed="true"]')?.scrollIntoView({block:'nearest'});
 }
+
 const comparisons = new WeakMap<Document, () => void>();
-function compareTTML(doc:Document) {
+export function compareTTML(doc:Document) {
   const existing = comparisons.get(doc);
   if (existing) { existing(); return; }
   const uri=SpotifyPlayer.GetUri();if(!uri)throw new Error('Play a track before comparing TTML');
@@ -121,18 +177,8 @@ function compareTTML(doc:Document) {
   type LineView={element:HTMLElement;start:number;end:number;words:WordView[]};
   type Side={data:any;rows:LineView[];view:HTMLElement;name:HTMLElement;selected:number;request:number;manualUntil:number;followed:number;input:HTMLInputElement;renderer?:ReturnType<typeof renderComparisonLyrics>};
   const sides:Record<string,Side>={};let closed=false;const dropCleanup:(()=>void)[]=[];
-  const diffLabel=element(doc,'label');const diff=element(doc,'input');diff.type='checkbox';diff.checked=false;diffLabel.append(diff,' Highlight differences');
-  const summary=element(doc,'span');summary.className='vv-split-summary';summary.hidden=true;
-  const refreshDiff=()=>{
-    summary.hidden=!diff.checked;
-    for(const [label,side] of Object.entries(sides))side.rows.forEach((row,index)=>{
-      const other=sides[label==='A'?'B':'A'];
-      const kind=side.data&&other?.data?comparisonDifference(side.data.Content[index],other.data.Content[index]):'';
-      row.element.dataset.diff=diff.checked?kind:'';
-    });
-    if(sides.A?.data&&sides.B?.data)summary.textContent=`${changedTTMLLines(sides.A.data.Content,sides.B.data.Content)} differing lines · text / timing`;
-  };
-  diff.onchange=refreshDiff;
+  const options=element(doc,'div');options.className='vv-split-toolbar vv-comparison-options';heading.insertBefore(options,exit);
+  const differences=bindComparisonDiff(options,sides);
   const valid=()=>!closed&&root.isConnected&&SpotifyPlayer.GetUri()===uri;
   const seek=(position:number)=>{if(valid())SpotifyPlayer.Seek(Math.max(0,position));};
   for(const label of ['A','B']){
@@ -163,14 +209,12 @@ function compareTTML(doc:Document) {
         side.renderer?.destroy();
         side.renderer=renderComparisonLyrics(view,side.data,(index,start)=>{side.selected=index;side.manualUntil=0;seek(start);});
         side.rows=side.renderer.rows;
-        mark.disabled=false;status.textContent='';refreshDiff();
+        mark.disabled=false;status.textContent='';differences.refresh();
       }catch(error){if(!closed&&request===side.request)status.textContent=(error as Error).message;}
     };
     input.onchange=()=>{if(input.files?.[0])void loadSide(input.files[0]);};
     dropCleanup.push(bindTTMLDrop(panel,file=>{void loadSide(file);}));
   }
-  const options=element(doc,'div');options.className='vv-split-toolbar vv-comparison-options';
-  options.append(diffLabel,summary);heading.insertBefore(options,exit);
   root.append(status);
   const scrollLine=(view:HTMLElement,line:HTMLElement,behavior:ScrollBehavior)=>{
     const offset=line.getBoundingClientRect().top-view.getBoundingClientRect().top;
@@ -207,7 +251,7 @@ function compareTTML(doc:Document) {
   };
   const observer=new MutationObserver(()=>{if(!root.isConnected||!page.isConnected)closeComparison();});
   function closeComparison(){
-    if(closed)return;closed=true;dropCleanup.forEach(dispose=>dispose());stop();observer.disconnect();
+    if(closed)return;closed=true;dropCleanup.forEach(dispose=>dispose());differences.destroy();stop();observer.disconnect();
     doc.removeEventListener('keydown',escape,true);
     for(const side of Object.values(sides)){side.request++;side.renderer?.destroy();}
     comparisons.delete(doc);page!.classList.remove('VV_ComparingTTML');root.remove();

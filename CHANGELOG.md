@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.10.2
+
+- Rebuild lyric review with searchable vocal rows, independent backing-vocal timing and identities, a dedicated note editor and explicit preview seeking. Existing notes and exports remain supported.
+
+- Refresh native author profile cards with the Spicy Lyrics palette, clearer hierarchy and a decorative corner logo.
+
+- Align TTML comparison rows by text and timing instead of index, preserving matches through insertions, deletions and global retiming.
+- Show concurrent text, timing, syllable-boundary, voice and backing-vocal differences, with a 10 ms timing threshold.
+- Highlight changed lyric segments without replacing their animator; add expandable A/B details, category counts and filters, and previous/next navigation without seeking Spotify.
+- Preserve line translations and romanization in parsed word-synced TTML for comparison.
+
 ## 1.10.1
 
 - Match subtitle letter line-box metrics to the main lyrics renderer, removing extra baseline displacement during nested scaling; keep the original shared animation curves.

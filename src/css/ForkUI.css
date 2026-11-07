@@ -473,3 +473,197 @@
 .vv-author-card .vv-author-open { grid-column:1/-1; justify-self:start; display:inline-flex; padding:10px 16px; border-radius:999px; color:#271d38; background:#d0bcf2; text-decoration:none; font-size:13px; font-weight:600; }
 .vv-author-close { position:absolute; right:14px; top:12px; width:30px; height:30px; border:1px solid #ffffff20; border-radius:50%; background:#ffffff08; color:#eee2ff; cursor:pointer; font:20px/1 sans-serif; }
 .vv-author-profile :is(button,a):focus-visible { outline:2px solid #d0bcf2; outline-offset:4px; }
+
+/* TTML differences supplement the production lyric fill and transforms. */
+#SpicyLyricsPage .vv-diff-controls { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px 12px; font:12px/1.5 var(--ry-font,sans-serif); color:#ffffffb3; }
+#SpicyLyricsPage .vv-diff-controls button { border:1px solid #ffffff25; background:#ffffff09; color:inherit; border-radius:999px; padding:6px 10px; cursor:pointer; font:inherit; }
+#SpicyLyricsPage .vv-diff-controls button:disabled { opacity:.35; cursor:default; }
+#SpicyLyricsPage .vv-diff-controls :is(button,summary,input):focus-visible { outline:2px solid #d0bcf2; outline-offset:3px; }
+#SpicyLyricsPage .vv-diff-summary { flex:1 0 100%; text-align:end; color:#e3d7f2b3; }
+#SpicyLyricsPage .vv-diff-position { min-width:42px; text-align:center; font-variant-numeric:tabular-nums; }
+#SpicyLyricsPage .vv-diff-filters > summary { cursor:pointer; color:#d0bcf2; }
+#SpicyLyricsPage .vv-diff-filters[open] { flex:1 0 100%; }
+#SpicyLyricsPage .vv-diff-filters > div { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:10px 16px; padding:10px 0; }
+#SpicyLyricsPage .vv-diff-controls [hidden] { display:none!important; }
+#SpicyLyricsPage .vv-page-comparison [data-comparison-diff] { --vv-diff-color:#d0bcf2; }
+#SpicyLyricsPage .vv-page-comparison [data-comparison-diff~="timing"] { --vv-diff-color:#87c9eb; }
+#SpicyLyricsPage .vv-page-comparison :is([data-comparison-diff~="splits"],[data-comparison-diff~="voice"],[data-comparison-diff~="background"]) { --vv-diff-color:#e4bd80; }
+#SpicyLyricsPage .vv-page-comparison [data-comparison-diff~="added"] { --vv-diff-color:#98dbb3; }
+#SpicyLyricsPage .vv-page-comparison [data-comparison-diff~="removed"] { --vv-diff-color:#eea2bf; }
+#SpicyLyricsPage .vv-page-comparison .line[data-comparison-diff] { border-left-color:var(--vv-diff-color); }
+#SpicyLyricsPage .vv-page-comparison :is(.word,.letterGroup)[data-comparison-diff] { outline:1px solid color-mix(in srgb,var(--vv-diff-color) 65%,transparent); outline-offset:2px; border-radius:3px; box-shadow:inset 0 -2px var(--vv-diff-color); }
+#SpicyLyricsPage .vv-page-comparison [data-diff-current="true"] { outline:2px solid #ffffff95; outline-offset:5px; border-radius:6px; }
+#SpicyLyricsPage .vv-page-comparison .vv-diff-details { margin:4px 0 18px 10px; padding:7px 10px; border:1px solid #ffffff20; border-radius:10px; background:#ffffff06; color:#dfd5e9; font:12px/1.5 var(--ry-font,sans-serif)!important; text-align:start; }
+#SpicyLyricsPage .vv-page-comparison .vv-diff-details * { font-size:inherit!important; font-weight:400!important; }
+#SpicyLyricsPage .vv-diff-details > summary { cursor:pointer; color:#d0bcf2; }
+#SpicyLyricsPage .vv-diff-change { border-top:1px solid #ffffff12; padding:9px 0; }
+#SpicyLyricsPage .vv-diff-change > strong { display:block; color:#ffffffad; margin-bottom:5px; }
+#SpicyLyricsPage .vv-diff-values { white-space:pre-wrap; overflow-wrap:anywhere; font:12px/1.6 monospace; }
+#SpicyLyricsPage .vv-diff-values del { color:#ffc0d4; background:#eea2bf20; text-decoration:none; }
+#SpicyLyricsPage .vv-diff-values ins { color:#b4efcb; background:#98dbb320; text-decoration:none; }
+@media(max-width:750px) { #SpicyLyricsPage .vv-diff-controls { justify-content:flex-start; } #SpicyLyricsPage .vv-diff-summary { text-align:start; font-size:11px; } #SpicyLyricsPage .vv-diff-filters > div { justify-content:flex-start; } }
+
+#SpicyLyricsPage .vv-diff-badge { display:inline-block; padding:1px 6px; margin:2px 6px 2px 0; border:1px solid currentColor; border-radius:999px; color:#d0bcf2; }
+#SpicyLyricsPage .vv-diff-badge[data-category="timing"] { color:#87c9eb; }
+#SpicyLyricsPage .vv-diff-badge:is([data-category="splits"],[data-category="voice"],[data-category="background"]) { color:#e4bd80; }
+#SpicyLyricsPage .vv-diff-badge[data-category="added"] { color:#98dbb3; }
+#SpicyLyricsPage .vv-diff-badge[data-category="removed"] { color:#eea2bf; }
+
+/* Keep the comparison toolbar within the lyric viewport at every width. */
+.vv-comparison-heading { flex-wrap:wrap; }
+.vv-comparison-heading h2 { order:0; min-width:0; }
+.vv-comparison-heading > button { order:1; flex:none; }
+.vv-comparison-heading .vv-comparison-options { order:2; flex:1 0 100%; min-width:0; max-width:100%; }
+#SpicyLyricsPage .vv-diff-controls { width:100%; min-width:0; }
+/* Native profile card shares the Spicy Lyrics settings palette and emblem. */
+.vv-author-profile { isolation:isolate; overflow:hidden auto; padding:30px; border-radius:28px; background:radial-gradient(ellipse at 0 0,#54448766,transparent 70%),linear-gradient(135deg,#211a35,#101020); box-shadow:0 24px 90px #0006; }
+.vv-author-watermark { position:absolute; z-index:-1; width:250px; height:250px; right:0; bottom:0; opacity:.08; filter:brightness(0) invert(1); pointer-events:none; user-select:none; }
+.vv-author-brand { color:#abc5f3; font-size:13px; font-weight:600; letter-spacing:.02em; }
+.vv-author-caption { margin:3px 0 24px; color:#d0bcf2; font-size:18px; font-weight:700; }
+.vv-author-profile .vv-author-card { grid-template-columns:72px minmax(0,1fr); gap:18px; padding:0; }
+.vv-author-profile .vv-author-avatar { width:72px; height:72px; border:1px solid #d0bcf230; border-radius:22px; background:linear-gradient(135deg,#d0bcf22b,#abc5f312); }
+.vv-author-profile .vv-author-identity h3 { font-size:26px; }
+.vv-author-profile .vv-author-card p { margin:6px 0 2px; max-width:360px; line-height:1.65; }
+.vv-author-profile .vv-author-open { padding:11px 18px; transition:background .18s,transform .18s; }
+.vv-author-profile .vv-author-open:hover { background:#e0cef8; transform:translateY(-1px); }
+.vv-author-profile .vv-author-close { display:grid; place-items:center; padding:0; width:32px; height:32px; right:18px; top:18px; }
+@media(prefers-reduced-motion:reduce) { .vv-author-profile .vv-author-open { transition:none; } }
+
+#SpicyLyricsPage .vv-diff-mode { border:1px solid #ffffff25; border-radius:999px; padding:6px 12px; color:#eee2ff; background:#282136; font:inherit; }
+
+/* Compact author identity card, with a quiet emblem in the upper corner. */
+.vv-author-profile { width:min(480px,calc(100vw - 40px)); padding:28px; border-radius:24px; background:radial-gradient(ellipse at top left,#52437645,transparent 75%),linear-gradient(135deg,#221c33,#141120); border-color:#d0bcf22b; }
+.vv-author-profile .vv-author-watermark { width:86px; height:86px; top:16px; right:55px; bottom:auto; opacity:.12; }
+.vv-author-profile .vv-author-brand { margin:0 110px 26px 0; font-size:13px; color:#b8add1; letter-spacing:0; }
+.vv-author-profile .vv-author-card { gap:16px; grid-template-columns:64px minmax(0,1fr); }
+.vv-author-profile .vv-author-avatar { width:64px; height:64px; border-radius:18px; }
+.vv-author-profile .vv-author-identity h3 { margin:0 0 5px; font-size:25px; color:#f1e8ff; }
+.vv-author-profile .vv-author-identity span { color:#ad9dbd; }
+.vv-author-profile .vv-author-card p { margin:6px 0 0; padding-top:18px; border-top:1px solid #ffffff10; max-width:none; color:#bcb0cc; font-size:13px; line-height:1.65; }
+.vv-author-profile .vv-author-open { margin-top:4px; padding:11px 18px; }
+.vv-author-profile .vv-author-close { width:28px; height:28px; right:16px; top:16px; color:#c5b9d8; background:transparent; border-color:#ffffff18; }
+
+/* Use the settings surface and its exact corner artwork for author profiles. */
+.vv-author-profile { width:min(540px,calc(100vw - 40px)); border-radius:20px; padding:28px 30px; background:var(--ry-sky,linear-gradient(130deg,#102445,#0b102b 60%,#37235a)); color:var(--ry-text,#d8cef4); }
+.vv-author-profile .vv-author-watermark { display:none; }
+.vv-author-profile .vv-author-brand { color:#9cc7f2; margin:0 80px 24px 0; font-size:14px; }
+.vv-author-profile .vv-author-card { position:relative; padding:20px; border:1px solid rgba(190,205,255,.22); border-radius:16px; background:rgba(190,180,240,.09); gap:16px; }
+.vv-author-profile .vv-author-identity h3 { color:#d8cef4; }
+.vv-author-profile .vv-author-card p { border-color:rgba(190,205,255,.14); color:#aaa6c9; }
+.vv-author-profile .vv-author-open { border:1px solid rgba(190,205,255,.22); border-radius:8px; background:rgba(190,180,240,.12); color:#d8cef4; padding:9px 14px; }
+.vv-author-profile .vv-author-open:hover { background:rgba(190,180,240,.22); transform:none; }
+.vv-author-profile .vv-author-close { background:rgba(190,180,240,.12); border:0; }
+.vv-author-profile::before {
+  content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='rgb(88,67,131)' fill-opacity='0.4' transform='rotate(-14 12 12)'%3E%3Cpath d='M18.9962 5.00357C18.5208 4.52802 17.9233 4.19298 17.2696 4.03541C16.6159 3.87784 15.9313 3.90387 15.2915 4.11061C14.6516 4.31735 14.0813 4.69678 13.6433 5.20705C13.2054 5.71733 12.9169 6.33862 12.8097 7.00242L16.9973 11.1897C17.6611 11.0825 18.2824 10.794 18.7927 10.3561C19.303 9.91824 19.6825 9.34793 19.8893 8.7081C20.096 8.06827 20.122 7.38377 19.9645 6.73009C19.8069 6.07641 19.4718 5.47894 18.9962 5.00357ZM15.2227 12.153L11.845 8.77431C10.4947 10.3119 9.14443 11.8495 7.79421 13.3871L4.34436 17.3139C4.06732 17.6308 3.92106 18.0412 3.93518 18.4618C3.94929 18.8825 4.12273 19.2821 4.42039 19.5798C4.71804 19.8774 5.11767 20.0508 5.53838 20.0649C5.9591 20.0791 6.36945 19.9328 6.68639 19.6558L10.6328 16.1894L15.224 12.1543L15.2227 12.153ZM10.8636 6.96374C10.9806 5.9186 11.3904 4.92775 12.0457 4.10518C12.701 3.28261 13.5752 2.66176 14.5678 2.31407C15.5604 1.96638 16.631 1.90598 17.6564 2.13981C18.6818 2.37365 19.6203 2.89222 20.364 3.63586C21.1077 4.3795 21.6263 5.31798 21.8602 6.34331C22.094 7.36865 22.0336 8.43917 21.6859 9.43169C21.3382 10.4242 20.7173 11.2984 19.8947 11.9537C19.0721 12.6089 18.0811 13.0187 17.0359 13.1357L11.9108 17.6402L7.96445 21.1079C7.27835 21.7096 6.38902 22.0279 5.47687 21.9981C4.56473 21.9683 3.69808 21.5926 3.05275 20.9473C2.40742 20.302 2.03174 19.4354 2.00192 18.5234C1.97211 17.6113 2.29039 16.722 2.8922 16.0359L6.34334 12.1092L10.8636 6.96374Z'/%3E%3Cpath d='M8.35932 0.380176C8.40765 0.249583 8.59235 0.249583 8.64068 0.380176L9.15129 1.76009C9.16648 1.80114 9.19886 1.83352 9.23991 1.84871L10.6198 2.35932C10.7504 2.40765 10.7504 2.59235 10.6198 2.64068L9.23991 3.15129C9.19886 3.16648 9.16648 3.19886 9.15129 3.23991L8.64068 4.61982C8.59235 4.75042 8.40765 4.75042 8.35932 4.61982L7.84871 3.23991C7.83352 3.19886 7.80114 3.16648 7.76009 3.15129L6.38018 2.64068C6.24958 2.59235 6.24958 2.40765 6.38018 2.35932L7.76009 1.84871C7.80114 1.83352 7.83352 1.80114 7.84871 1.76009L8.35932 0.380176Z'/%3E%3Cpath d='M19.8593 14.3802C19.9076 14.2496 20.0924 14.2496 20.1407 14.3802L21.0564 16.855C21.0716 16.896 21.104 16.9284 21.145 16.9436L23.6198 17.8593C23.7504 17.9076 23.7504 18.0924 23.6198 18.1407L21.145 19.0564C21.104 19.0716 21.0716 19.104 21.0564 19.145L20.1407 21.6198C20.0924 21.7504 19.9076 21.7504 19.8593 21.6198L18.9436 19.145C18.9284 19.104 18.896 19.0716 18.855 19.0564L16.3802 18.1407C16.2496 18.0924 16.2496 17.9076 16.3802 17.8593L18.855 16.9436C18.896 16.9284 18.9284 16.896 18.9436 16.855L19.8593 14.3802Z'/%3E%3Cpath d='M13.3593 18.3802C13.4076 18.2496 13.5924 18.2496 13.6407 18.3802L14.1513 19.7601C14.1665 19.8011 14.1989 19.8335 14.2399 19.8487L15.6198 20.3593C15.7504 20.4076 15.7504 20.5924 15.6198 20.6407L14.2399 21.1513C14.1989 21.1665 14.1665 21.1989 14.1513 21.2399L13.6407 22.6198C13.5924 22.7504 13.4076 22.7504 13.3593 22.6198L12.8487 21.2399C12.8335 21.1989 12.8011 21.1665 12.7601 21.1513L11.3802 20.6407C11.2496 20.5924 11.2496 20.4076 11.3802 20.3593L12.7601 19.8487C12.8011 19.8335 12.8335 19.8011 12.8487 19.7601L13.3593 18.3802Z'/%3E%3Cpath d='M3.85932 3.38018C3.90765 3.24958 4.09235 3.24958 4.14068 3.38018L5.05643 5.85495C5.07162 5.89601 5.10399 5.92838 5.14505 5.94357L7.61982 6.85932C7.75042 6.90765 7.75042 7.09235 7.61982 7.14068L5.14505 8.05643C5.10399 8.07162 5.07162 8.10399 5.05643 8.14505L4.14068 10.6198C4.09235 10.7504 3.90765 10.7504 3.85932 10.6198L2.94357 8.14505C2.92838 8.10399 2.89601 8.07162 2.85495 8.05643L0.380176 7.14068C0.249583 7.09235 0.249583 6.90765 0.380176 6.85932L2.85495 5.94357C2.89601 5.92838 2.92838 5.89601 2.94357 5.85495L3.85932 3.38018Z'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-size:420px auto;
+  background-position:right -130px top -150px;
+}
+
+/* Review workspace: stable line browser, independent note editor and vocal identities. */
+.vv-review-dialog.vv-review-workspace { width:min(1020px,94vw); background:linear-gradient(130deg,#152549,#11132f 60%,#30214d); font-family:var(--ry-font,sans-serif); }
+.vv-review-track { color:#ada8c9; margin:0 0 18px; font-size:13px; }
+.vv-review-layout { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:18px; }
+.vv-review-picker,.vv-review-editor { min-width:0; border:1px solid #becdff30; background:#beb4f017; border-radius:16px; padding:16px; }
+.vv-review-picker > input { width:100%; }
+.vv-review-line-list { height:320px; overflow:auto; scrollbar-width:thin; scrollbar-color:#d0bcf260 transparent; }
+.vv-review-line-list .vv-review-line { display:block; width:100%; text-align:left; margin:0 0 6px; background:transparent; border-color:transparent; padding:10px; }
+.vv-review-line-list .vv-review-line span { display:block; color:#a7a4c4; font-size:11px; margin-bottom:5px; }
+.vv-review-line-list .vv-review-line strong { display:block; font-weight:600; white-space:pre-wrap; overflow-wrap:anywhere; }
+.vv-review-line-list .vv-review-line.is-background { border-left:2px solid #9cc7f270; padding-left:18px; }
+.vv-review-line-list .vv-review-line[aria-pressed=true] { background:#d0bcf221; border-color:#d0bcf260; }
+.vv-review-selected-text { font-size:19px; font-weight:650; margin:12px 0 8px; white-space:pre-wrap; }
+.vv-review-time { display:block; color:#b3b7d8; font-size:12px; margin-bottom:12px; }
+.vv-review-editor textarea { min-height:115px; margin-bottom:12px; }
+.vv-review-editor .vv-review-save { background:#d0bcf2; color:#251b35; border:0; }
+.vv-review-notes article { border:1px solid #becdff25; border-radius:12px; padding:14px; margin-bottom:10px; }
+.vv-review-notes article > button { margin-right:8px; }
+.vv-review-notes p { white-space:pre-wrap; }
+@media(max-width:650px) { .vv-review-layout { grid-template-columns:1fr; } .vv-review-line-list { height:220px; } }
+
+.vv-review-dialog.vv-review-workspace { scrollbar-width:thin; scrollbar-color:#d0bcf260 transparent; }
+
+/* Review uses the settings surface, controls and corner emblem. */
+.vv-review-dialog.vv-review-workspace { position:relative; isolation:isolate; background:var(--ry-sky,linear-gradient(130deg,#102445,#0b102b 60%,#37235a)); color:var(--ry-text,#d8cef4); border-color:rgba(190,205,255,.22); font-family:var(--ry-font,sans-serif); }
+.vv-review-workspace > * { position:relative; }
+.vv-review-workspace header h2 { color:#d8cef4; font-size:24px; letter-spacing:-.025em; }
+.vv-review-workspace header > button { border:0; border-radius:50%; background:#beb4f01a; width:30px; height:30px; padding:0; }
+.vv-review-workspace :is(.vv-review-picker,.vv-review-editor) { background:rgba(190,180,240,.09); border-color:rgba(190,205,255,.22); }
+.vv-review-workspace .vv-review-problems { min-width:0; margin:18px 0 14px; padding:10px; border:1px solid #becdff30; border-radius:12px; max-height:240px; overflow:auto; scrollbar-width:thin; scrollbar-color:#d0bcf260 transparent; }
+.vv-review-problems legend { padding:0 6px; color:#d8cef4; font-size:13px; font-weight:600; }
+.vv-review-problem-group { display:flex; flex-wrap:wrap; gap:6px; padding:8px 0 10px; border-bottom:1px solid #becdff20; }
+.vv-review-problem-group:last-child { border:0; }
+.vv-review-problem-group > span { flex:1 0 100%; color:#aaa6c9; text-transform:uppercase; font-size:11px; font-weight:650; margin-bottom:3px; }
+.vv-review-problem-group > button { font-size:12px; padding:7px 10px; background:#beb4f00c; border-color:#becdff25; border-radius:8px; text-align:left; }
+.vv-review-problem-group > button[aria-pressed=true] { background:#9cc7f224; border-color:#9cc7f280; color:#e5e1ff; box-shadow:inset 0 0 0 1px #9cc7f225; }
+.vv-review-editor .vv-review-save { background:rgba(190,180,240,.18); border:1px solid #becdff40; color:#d8cef4; }
+.vv-review-workspace::before {
+  content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='rgb(88,67,131)' fill-opacity='0.4' transform='rotate(-14 12 12)'%3E%3Cpath d='M18.9962 5.00357C18.5208 4.52802 17.9233 4.19298 17.2696 4.03541C16.6159 3.87784 15.9313 3.90387 15.2915 4.11061C14.6516 4.31735 14.0813 4.69678 13.6433 5.20705C13.2054 5.71733 12.9169 6.33862 12.8097 7.00242L16.9973 11.1897C17.6611 11.0825 18.2824 10.794 18.7927 10.3561C19.303 9.91824 19.6825 9.34793 19.8893 8.7081C20.096 8.06827 20.122 7.38377 19.9645 6.73009C19.8069 6.07641 19.4718 5.47894 18.9962 5.00357ZM15.2227 12.153L11.845 8.77431C10.4947 10.3119 9.14443 11.8495 7.79421 13.3871L4.34436 17.3139C4.06732 17.6308 3.92106 18.0412 3.93518 18.4618C3.94929 18.8825 4.12273 19.2821 4.42039 19.5798C4.71804 19.8774 5.11767 20.0508 5.53838 20.0649C5.9591 20.0791 6.36945 19.9328 6.68639 19.6558L10.6328 16.1894L15.224 12.1543L15.2227 12.153ZM10.8636 6.96374C10.9806 5.9186 11.3904 4.92775 12.0457 4.10518C12.701 3.28261 13.5752 2.66176 14.5678 2.31407C15.5604 1.96638 16.631 1.90598 17.6564 2.13981C18.6818 2.37365 19.6203 2.89222 20.364 3.63586C21.1077 4.3795 21.6263 5.31798 21.8602 6.34331C22.094 7.36865 22.0336 8.43917 21.6859 9.43169C21.3382 10.4242 20.7173 11.2984 19.8947 11.9537C19.0721 12.6089 18.0811 13.0187 17.0359 13.1357L11.9108 17.6402L7.96445 21.1079C7.27835 21.7096 6.38902 22.0279 5.47687 21.9981C4.56473 21.9683 3.69808 21.5926 3.05275 20.9473C2.40742 20.302 2.03174 19.4354 2.00192 18.5234C1.97211 17.6113 2.29039 16.722 2.8922 16.0359L6.34334 12.1092L10.8636 6.96374Z'/%3E%3Cpath d='M8.35932 0.380176C8.40765 0.249583 8.59235 0.249583 8.64068 0.380176L9.15129 1.76009C9.16648 1.80114 9.19886 1.83352 9.23991 1.84871L10.6198 2.35932C10.7504 2.40765 10.7504 2.59235 10.6198 2.64068L9.23991 3.15129C9.19886 3.16648 9.16648 3.19886 9.15129 3.23991L8.64068 4.61982C8.59235 4.75042 8.40765 4.75042 8.35932 4.61982L7.84871 3.23991C7.83352 3.19886 7.80114 3.16648 7.76009 3.15129L6.38018 2.64068C6.24958 2.59235 6.24958 2.40765 6.38018 2.35932L7.76009 1.84871C7.80114 1.83352 7.83352 1.80114 7.84871 1.76009L8.35932 0.380176Z'/%3E%3Cpath d='M19.8593 14.3802C19.9076 14.2496 20.0924 14.2496 20.1407 14.3802L21.0564 16.855C21.0716 16.896 21.104 16.9284 21.145 16.9436L23.6198 17.8593C23.7504 17.9076 23.7504 18.0924 23.6198 18.1407L21.145 19.0564C21.104 19.0716 21.0716 19.104 21.0564 19.145L20.1407 21.6198C20.0924 21.7504 19.9076 21.7504 19.8593 21.6198L18.9436 19.145C18.9284 19.104 18.896 19.0716 18.855 19.0564L16.3802 18.1407C16.2496 18.0924 16.2496 17.9076 16.3802 17.8593L18.855 16.9436C18.896 16.9284 18.9284 16.896 18.9436 16.855L19.8593 14.3802Z'/%3E%3Cpath d='M13.3593 18.3802C13.4076 18.2496 13.5924 18.2496 13.6407 18.3802L14.1513 19.7601C14.1665 19.8011 14.1989 19.8335 14.2399 19.8487L15.6198 20.3593C15.7504 20.4076 15.7504 20.5924 15.6198 20.6407L14.2399 21.1513C14.1989 21.1665 14.1665 21.1989 14.1513 21.2399L13.6407 22.6198C13.5924 22.7504 13.4076 22.7504 13.3593 22.6198L12.8487 21.2399C12.8335 21.1989 12.8011 21.1665 12.7601 21.1513L11.3802 20.6407C11.2496 20.5924 11.2496 20.4076 11.3802 20.3593L12.7601 19.8487C12.8011 19.8335 12.8335 19.8011 12.8487 19.7601L13.3593 18.3802Z'/%3E%3Cpath d='M3.85932 3.38018C3.90765 3.24958 4.09235 3.24958 4.14068 3.38018L5.05643 5.85495C5.07162 5.89601 5.10399 5.92838 5.14505 5.94357L7.61982 6.85932C7.75042 6.90765 7.75042 7.09235 7.61982 7.14068L5.14505 8.05643C5.10399 8.07162 5.07162 8.10399 5.05643 8.14505L4.14068 10.6198C4.09235 10.7504 3.90765 10.7504 3.85932 10.6198L2.94357 8.14505C2.92838 8.10399 2.89601 8.07162 2.85495 8.05643L0.380176 7.14068C0.249583 7.09235 0.249583 6.90765 0.380176 6.85932L2.85495 5.94357C2.89601 5.92838 2.92838 5.89601 2.94357 5.85495L3.85932 3.38018Z'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-size:420px auto;
+  background-position:right -130px top -150px;
+}
+
+.vv-review-workspace::before { display:none; }
+.vv-review-workspace > .vv-review-logo { position:sticky; top:-24px; height:0; z-index:0; pointer-events:none; }
+.vv-review-logo img { position:absolute; right:0; top:-65px; width:290px; height:290px; opacity:.15; filter:brightness(0) saturate(100%) invert(75%) sepia(20%) saturate(750%) hue-rotate(214deg); pointer-events:none; }
+.vv-review-workspace > :not(.vv-review-logo) { z-index:1; }
+
+/* Keep the line browser compact instead of stretching it to the note editor. */
+.vv-review-layout > .vv-review-picker { align-self:start; display:flex; flex-direction:column; gap:12px; padding:16px; }
+.vv-review-picker > input,.vv-review-picker > select { flex:none; margin:0; min-height:42px; }
+.vv-review-picker > .vv-review-line-list { height:clamp(260px,45vh,440px); min-height:0; padding:6px 6px 6px 0; overflow-y:auto; overflow-x:hidden; scrollbar-gutter:stable; scroll-padding:8px; border-top:1px solid #becdff20; }
+.vv-review-line-list .vv-review-line { margin:0 0 4px; padding:12px 10px; border-radius:9px; line-height:1.5; }
+.vv-review-line-list .vv-review-line span { margin-bottom:5px; font-size:11px; line-height:1.4; }
+.vv-review-line-list .vv-review-line strong { font-size:13px; line-height:1.55; }
+.vv-review-line-list::-webkit-scrollbar { width:6px; }
+.vv-review-line-list::-webkit-scrollbar-track { background:transparent; }
+.vv-review-line-list::-webkit-scrollbar-thumb { border-radius:999px; background:#d0bcf255; }
+.vv-review-line-list::-webkit-scrollbar-button { display:none; width:0; height:0; }
+@media(max-width:650px) { .vv-review-picker > .vv-review-line-list { height:260px; } }
+
+/* Match the settings corner exactly; only the workspace body scrolls. */
+.vv-review-dialog.vv-review-workspace { padding:24px; overflow:hidden; display:flex; flex-direction:column; max-height:88vh; width:min(1020px,94vw); }
+.vv-review-workspace > header { flex:none; margin:0 0 12px; padding-right:4px; }
+.vv-review-workspace > .vv-review-track { flex:none; margin:0 0 18px; color:#aaa6c9; }
+.vv-review-workspace > .vv-review-body { min-height:0; overflow:auto; padding:0 8px 0 0; scrollbar-width:thin; scrollbar-color:#d0bcf260 transparent; }
+.vv-review-workspace .vv-review-layout { align-items:start; gap:18px; grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+.vv-review-workspace .vv-review-picker,.vv-review-workspace .vv-review-editor { padding:16px; border-radius:16px; }
+.vv-review-workspace .vv-review-selected-text { font-size:18px; line-height:1.5; margin:10px 0 6px; }
+.vv-review-workspace .vv-review-editor > strong { text-transform:uppercase; font-size:11px; color:#aaa6c9; letter-spacing:.02em; }
+.vv-review-workspace .vv-review-issue-selection { margin:16px 0 6px; font-size:12px; font-weight:600; color:#d8cef4; }
+.vv-review-workspace .vv-review-problems { max-height:180px; margin:0 0 12px; background:#11132b30; border-color:#becdff26; }
+.vv-review-workspace .vv-review-editor textarea { min-height:85px; font-size:13px; }
+.vv-review-workspace .vv-review-save { width:100%; min-height:38px; }
+.vv-review-body > h3 { font-size:15px; margin:22px 0 12px; }
+.vv-review-body > .vv-review-actions { padding-top:14px; border-top:1px solid #becdff20; }
+@media(max-width:650px) { .vv-review-workspace .vv-review-layout { grid-template-columns:1fr; } .vv-review-dialog.vv-review-workspace { padding:18px; } }
+.vv-review-dialog.vv-review-workspace::before {
+  content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='rgb(88,67,131)' fill-opacity='0.4' transform='rotate(-14 12 12)'%3E%3Cpath d='M18.9962 5.00357C18.5208 4.52802 17.9233 4.19298 17.2696 4.03541C16.6159 3.87784 15.9313 3.90387 15.2915 4.11061C14.6516 4.31735 14.0813 4.69678 13.6433 5.20705C13.2054 5.71733 12.9169 6.33862 12.8097 7.00242L16.9973 11.1897C17.6611 11.0825 18.2824 10.794 18.7927 10.3561C19.303 9.91824 19.6825 9.34793 19.8893 8.7081C20.096 8.06827 20.122 7.38377 19.9645 6.73009C19.8069 6.07641 19.4718 5.47894 18.9962 5.00357ZM15.2227 12.153L11.845 8.77431C10.4947 10.3119 9.14443 11.8495 7.79421 13.3871L4.34436 17.3139C4.06732 17.6308 3.92106 18.0412 3.93518 18.4618C3.94929 18.8825 4.12273 19.2821 4.42039 19.5798C4.71804 19.8774 5.11767 20.0508 5.53838 20.0649C5.9591 20.0791 6.36945 19.9328 6.68639 19.6558L10.6328 16.1894L15.224 12.1543L15.2227 12.153ZM10.8636 6.96374C10.9806 5.9186 11.3904 4.92775 12.0457 4.10518C12.701 3.28261 13.5752 2.66176 14.5678 2.31407C15.5604 1.96638 16.631 1.90598 17.6564 2.13981C18.6818 2.37365 19.6203 2.89222 20.364 3.63586C21.1077 4.3795 21.6263 5.31798 21.8602 6.34331C22.094 7.36865 22.0336 8.43917 21.6859 9.43169C21.3382 10.4242 20.7173 11.2984 19.8947 11.9537C19.0721 12.6089 18.0811 13.0187 17.0359 13.1357L11.9108 17.6402L7.96445 21.1079C7.27835 21.7096 6.38902 22.0279 5.47687 21.9981C4.56473 21.9683 3.69808 21.5926 3.05275 20.9473C2.40742 20.302 2.03174 19.4354 2.00192 18.5234C1.97211 17.6113 2.29039 16.722 2.8922 16.0359L6.34334 12.1092L10.8636 6.96374Z'/%3E%3Cpath d='M8.35932 0.380176C8.40765 0.249583 8.59235 0.249583 8.64068 0.380176L9.15129 1.76009C9.16648 1.80114 9.19886 1.83352 9.23991 1.84871L10.6198 2.35932C10.7504 2.40765 10.7504 2.59235 10.6198 2.64068L9.23991 3.15129C9.19886 3.16648 9.16648 3.19886 9.15129 3.23991L8.64068 4.61982C8.59235 4.75042 8.40765 4.75042 8.35932 4.61982L7.84871 3.23991C7.83352 3.19886 7.80114 3.16648 7.76009 3.15129L6.38018 2.64068C6.24958 2.59235 6.24958 2.40765 6.38018 2.35932L7.76009 1.84871C7.80114 1.83352 7.83352 1.80114 7.84871 1.76009L8.35932 0.380176Z'/%3E%3Cpath d='M19.8593 14.3802C19.9076 14.2496 20.0924 14.2496 20.1407 14.3802L21.0564 16.855C21.0716 16.896 21.104 16.9284 21.145 16.9436L23.6198 17.8593C23.7504 17.9076 23.7504 18.0924 23.6198 18.1407L21.145 19.0564C21.104 19.0716 21.0716 19.104 21.0564 19.145L20.1407 21.6198C20.0924 21.7504 19.9076 21.7504 19.8593 21.6198L18.9436 19.145C18.9284 19.104 18.896 19.0716 18.855 19.0564L16.3802 18.1407C16.2496 18.0924 16.2496 17.9076 16.3802 17.8593L18.855 16.9436C18.896 16.9284 18.9284 16.896 18.9436 16.855L19.8593 14.3802Z'/%3E%3Cpath d='M13.3593 18.3802C13.4076 18.2496 13.5924 18.2496 13.6407 18.3802L14.1513 19.7601C14.1665 19.8011 14.1989 19.8335 14.2399 19.8487L15.6198 20.3593C15.7504 20.4076 15.7504 20.5924 15.6198 20.6407L14.2399 21.1513C14.1989 21.1665 14.1665 21.1989 14.1513 21.2399L13.6407 22.6198C13.5924 22.7504 13.4076 22.7504 13.3593 22.6198L12.8487 21.2399C12.8335 21.1989 12.8011 21.1665 12.7601 21.1513L11.3802 20.6407C11.2496 20.5924 11.2496 20.4076 11.3802 20.3593L12.7601 19.8487C12.8011 19.8335 12.8335 19.8011 12.8487 19.7601L13.3593 18.3802Z'/%3E%3Cpath d='M3.85932 3.38018C3.90765 3.24958 4.09235 3.24958 4.14068 3.38018L5.05643 5.85495C5.07162 5.89601 5.10399 5.92838 5.14505 5.94357L7.61982 6.85932C7.75042 6.90765 7.75042 7.09235 7.61982 7.14068L5.14505 8.05643C5.10399 8.07162 5.07162 8.10399 5.05643 8.14505L4.14068 10.6198C4.09235 10.7504 3.90765 10.7504 3.85932 10.6198L2.94357 8.14505C2.92838 8.10399 2.89601 8.07162 2.85495 8.05643L0.380176 7.14068C0.249583 7.09235 0.249583 6.90765 0.380176 6.85932L2.85495 5.94357C2.89601 5.92838 2.92838 5.89601 2.94357 5.85495L3.85932 3.38018Z'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-size:420px auto;
+  background-position:right -130px top -150px;
+}
+.vv-review-dialog.vv-review-workspace::before { display:block; }
+
+.vv-review-workspace details.vv-review-problems { margin:16px 0 12px; padding:0 12px; max-height:240px; }
+.vv-review-workspace .vv-review-problems > .vv-review-issue-selection { cursor:pointer; padding:12px 0; margin:0; line-height:1.5; }
+.vv-review-workspace .vv-review-problems[open] > summary { border-bottom:1px solid #becdff20; }
+
+/* Notes separate the issue, lyric quotation and reviewer comment. */
+.vv-review-notes { display:grid; gap:12px; }
+.vv-review-notes article.vv-review-note { margin:0; padding:18px; background:rgba(190,180,240,.065); border-color:#becdff26; border-radius:14px; }
+.vv-review-note-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.vv-review-note-kind { font-size:14px; line-height:1.5; color:#ded2f6; }
+.vv-review-note-heading .vv-review-note-time { flex:none; padding:4px 9px; border-radius:7px; color:#b6d3f5; background:#9cc7f212; border-color:#9cc7f230; font-size:12px; font-variant-numeric:tabular-nums; }
+.vv-review-note-meta { display:flex; flex-wrap:wrap; gap:6px 14px; color:#a6a3c1; font-size:11px; margin-top:5px; overflow-wrap:anywhere; }
+.vv-review-note-quote { margin:16px 0 12px; padding:2px 0 2px 12px; border-left:2px solid #b8a0de70; font-size:14px; line-height:1.6; color:#e8e1f5; white-space:pre-wrap; overflow-wrap:anywhere; }
+.vv-review-notes .vv-review-note-comment { margin:0; padding:12px; border-radius:9px; background:#080b202a; color:#c2bbd5; font-size:13px; line-height:1.6; }
+.vv-review-note-footer { display:flex; justify-content:space-between; align-items:center; margin-top:8px; gap:12px; }
+.vv-review-note-footer > span { font-size:10px; color:#9692ae; }
+.vv-review-note-footer .vv-review-note-delete { padding:4px 7px; font-size:11px; color:#b1a6c6; background:transparent; border-color:transparent; }
+.vv-review-note-footer .vv-review-note-delete:hover { color:#efb8d1; background:#efb8d110; }
+.vv-review-empty { padding:16px; border:1px dashed #becdff26; border-radius:12px; color:#a6a3c1; font-size:13px; }
+
+.vv-review-editor .vv-review-feedback { margin:12px 0 0; padding:10px 12px; border:1px solid #d0bcf22e; border-radius:9px; background:#d0bcf212; color:#d8cef4; font-size:12px; line-height:1.5; font-weight:500; }
+.vv-review-editor .vv-review-feedback:empty { display:none; }
