@@ -694,8 +694,8 @@ export function ScrollToActiveLine(ScrollSimplebar: any) {
       // user scrolled far away — preserve the original no-scroll behavior.
       const isLineInViewport = hasVirtualizer ? LineElem.isConnected : lastIsLineInViewport;
 
-      manualResumeEligible = isLineInViewport && canAutoScrollToIndex(Lines, currentLine._LineIndex, isPlaybackBacktrack);
       const isSameLine = lastLine === LineElem;
+      manualResumeEligible = !isSameLine && isLineInViewport && canAutoScrollToIndex(Lines, currentLine._LineIndex, isPlaybackBacktrack);
 
       /*
                 for (let i = 0; i < Lines.length; i++) {
@@ -747,7 +747,7 @@ export function ScrollToActiveLine(ScrollSimplebar: any) {
         }
         //}
         // Scroll if the line is different from the last auto-scrolled line
-        if (!isSameLine) {
+        if (manualResumeEligible) {
           if (!canAutoScrollToIndex(Lines, currentLine._LineIndex, isPlaybackBacktrack)) return;
           const Scroll = () => {
             if (!canAutoScrollToIndex(Lines, currentLine._LineIndex, isPlaybackBacktrack)) return;

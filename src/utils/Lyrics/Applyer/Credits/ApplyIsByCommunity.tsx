@@ -1,9 +1,9 @@
+import { rememberAuthor } from "../../../../components/Utils/AuthorProfile.ts";
 import { createTooltip } from "../../../tooltip.ts";
 import { IsPIP } from "../../../../components/Utils/PopupLyrics.ts";
 import {
   closeIframeProfileModal,
   resolveProfileIdentity,
-  resolveProfileUsername,
   showIframeProfileModal,
 } from "../../../../components/ReactComponents/IframeProfile/IframeProfileModal.tsx";
 import { GetLyricsFooterDetails, PinFooterDetailWithoutWriters } from "./CreateLyricsFooter.ts";
@@ -32,11 +32,8 @@ export function CleanUpIsByCommunity(closeProfileModal: boolean = false) {
 function openProfile(userId: string | undefined, profileElement: HTMLElement, signal: AbortSignal) {
   if (!userId || signal.aborted) return;
   if ($openProfilesInBrowser.get()) {
-    void resolveProfileUsername(userId).then((username) => {
-      if (!signal.aborted && username) {
-        window.open(`https://spicylyrics.org/${encodeURIComponent(username)}`, "_blank", "noopener,noreferrer");
-      }
-    });
+    const win = profileElement.ownerDocument.defaultView ?? window;
+    win.open(`https://spicylyrics.org/uid/${encodeURIComponent(userId)}`, "_blank", "noopener,noreferrer");
     return;
   }
   const profileDocument = profileElement.ownerDocument;
@@ -148,6 +145,9 @@ export function ApplyIsByCommunity(data: any, LyricsContainer: HTMLElement): voi
     return cleanUsername ?? cleanDisplayName;
   };
 
+  for (const person of [data.TTMLUploadMetadata?.Maker, data.TTMLUploadMetadata?.Uploader]) {
+    if (person?.id && typeof person.username === "string") rememberAuthor({ id: person.id, username: person.username, avatar: person.avatar, displayName: person.displayName ?? person.display_name ?? person.globalName ?? person.global_name });
+  }
   const makerDisplayName = data.TTMLUploadMetadata?.Maker?.displayName ?? data.TTMLUploadMetadata?.Maker?.display_name ?? data.TTMLUploadMetadata?.Maker?.globalName ?? data.TTMLUploadMetadata?.Maker?.global_name;
   const makerUsername = preferredProfileName(data.TTMLUploadMetadata?.Maker?.username, makerDisplayName);
   const makerAvatar = data.TTMLUploadMetadata?.Maker?.avatar;

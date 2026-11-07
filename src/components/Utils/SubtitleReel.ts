@@ -13,6 +13,7 @@ export function createSubtitleReel(viewport: HTMLElement, seek: (line: SubtitleL
   const backingParents = new Map<any, SubtitleLine>();
   let sizeMotion: Animation | undefined;
   let motion: Animation | undefined, revision = 0, target = 0, height = 0, dirty = true;
+  let lastBackingCount = 0;
   let lastCurrent: SubtitleLine | undefined, lastNext: SubtitleLine | undefined;
   const observer = new ResizeObserver(() => { dirty = true; }); observer.observe(tape);
   const drop = (line: SubtitleLine, entry: Entry) => { entry.session.destroy(); entry.bg.clear(); entry.block.remove(); entries.delete(line); };
@@ -23,6 +24,13 @@ export function createSubtitleReel(viewport: HTMLElement, seek: (line: SubtitleL
   return {
     update(lines: SubtitleLine[], current: SubtitleLine | undefined, next: SubtitleLine | undefined,
       backing: SubtitleLine[], data: any, position: number) {
+      // A held lyric needs only its production animator. Do not flush style/layout
+      // or reconcile the tape on every letter/spring frame.
+      if (!dirty && current === lastCurrent && next === lastNext && !backing.length && !lastBackingCount) {
+        for (const entry of entries.values()) entry.session.animate(position);
+        return;
+      }
+      lastBackingCount = backing.length;
       const previousTop = current && entries.get(current)?.lead.getBoundingClientRect().top;
       const oldY = readY();
       const wanted = new Set<SubtitleLine>();
@@ -113,7 +121,7 @@ export function createSubtitleReel(viewport: HTMLElement, seek: (line: SubtitleL
       lastCurrent = current; lastNext = next;
     },
     clear() { sizeMotion?.cancel(); sizeMotion = undefined; revision++; motion?.cancel(); motion = undefined; for (const [line, entry] of entries) drop(line, entry);
-      backingParents.clear(); target = height = 0; dirty = true; lastCurrent = lastNext = undefined; tape.style.transform = "none"; viewport.style.height = ""; },
+      backingParents.clear(); lastBackingCount = 0; target = height = 0; dirty = true; lastCurrent = lastNext = undefined; tape.style.transform = "none"; viewport.style.height = ""; },
     destroy() { this.clear(); observer.disconnect(); tape.remove(); },
   };
 }

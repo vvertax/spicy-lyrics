@@ -353,7 +353,9 @@
 #sl-subtitle-bar .sl-subtitle-block:not(.sl-subtitle-current) .sl-subtitle-lead { opacity:.55; transition:opacity .3s; }
 #sl-subtitle-bar .sl-subtitle-current .sl-subtitle-lead { opacity:1; transition:opacity .3s; }
 #sl-subtitle-bar .SpicyLyricsScrollContainer { display:flex; flex-direction:column; gap:0; }
-#sl-subtitle-bar .line { --DefaultLyricsSize:24px; --SL-LineLyricsSize:var(--DefaultLyricsSize); margin:0; padding:0; position:relative; font-size:var(--DefaultLyricsSize); font-weight:700; line-height:1.35; cursor:pointer; white-space:pre-wrap; overflow-wrap:anywhere; text-align:start; }
+/* Letter and group scale origins must use the same line box as Mixed.css.
+   Extra leading shifts the glyph baseline as nested scales change. */
+#sl-subtitle-bar .line { --DefaultLyricsSize:24px; --SL-LineLyricsSize:var(--DefaultLyricsSize); margin:0; padding:0; position:relative; font-size:var(--DefaultLyricsSize); font-weight:700; --lyrics-line-height:1.1818181818; line-height:var(--lyrics-line-height); cursor:pointer; white-space:pre-wrap; overflow-wrap:anywhere; text-align:start; }
 #sl-subtitle-bar .sl-subtitle-backing { position:relative; margin:0; padding:0; }
 #sl-subtitle-bar .sl-subtitle-background-slot { padding:3px 0; }
 /* Match normal Spicy Lyrics background vocals: 75% size, weight 600,
@@ -371,6 +373,8 @@
 #sl-subtitle-bar .word { max-width:100%; }
 #sl-subtitle-bar .word-group > :is(.word,.letterGroup) { transform-origin:center center!important; padding-inline:0; margin-inline:0; flex-shrink:0; }
 #sl-subtitle-bar .letter.SpaceLetter { white-space:pre; min-width:.3ch; }
+/* Match the main renderer: active words alone receive compositor layers. */
+#sl-subtitle-bar .line.Active :is(.word,.letter,.letterGroup) { will-change:transform,scale,opacity; }
 #sl-subtitle-bar .line.Active :is(.word,.letter,.letterGroup) { text-shadow:0 0 var(--text-shadow-blur-radius,0px) rgba(255,255,255,var(--text-shadow-opacity,0)); }
 #sl-subtitle-bar .SimpleLyricsMode :is(.word:not(.dot),.letter) { --gradient-position:var(--SLM_GradientPosition,-50%)!important; --gradient-offset:30%!important; --gradient-alpha:1; --gradient-alpha-end:.3; }
 #sl-subtitle-bar .sl-subtitle-backing :is(.line,.word,.letter) { --gradient-rgb:255,255,255; --gradient-alpha:.6; --gradient-alpha-end:.3; }
@@ -454,3 +458,18 @@
 #SpicyLyricsPage .vv-zoom-badge { position:absolute; right:16px; bottom:16px; z-index:25; border:1px solid #ffffff25; border-radius:12px; background:#292330df; backdrop-filter:blur(16px); color:#eee2ff; font:13px/1.5 SpicyLyrics,sans-serif; padding:9px 12px; cursor:pointer; }
 #SpicyLyricsPage :is(.vv-source-info,.vv-resume-indicator,.vv-zoom-badge)[hidden] { display:none!important; }
 #SpicyLyricsPage.VV_Recording :is(.vv-source-info,.vv-resume-indicator,.vv-zoom-badge) { display:none!important; }
+
+/* Native author cards continue to work after the website embed retirement. */
+.vv-author-overlay { position:fixed; inset:0; z-index:9999; display:grid; place-items:center; background:#09061599; backdrop-filter:blur(8px); }
+.vv-author-profile { position:relative; width:min(520px,calc(100vw - 40px)); max-height:85vh; overflow:auto; padding:30px; box-sizing:border-box; border:1px solid #d0bcf238; border-radius:24px; background:linear-gradient(145deg,#30233eea,#171322fa); color:#eee2ff; font:14px/1.5 var(--ry-font,sans-serif); }
+.vv-author-card { display:grid; grid-template-columns:64px minmax(0,1fr); gap:16px; align-items:center; padding:24px; border:1px solid #ffffff1c; border-radius:18px; background:#ffffff05; color:inherit; }
+.vv-author-profile .vv-author-card { border:0; background:none; padding:8px 0 0; }
+.vv-author-avatar { width:64px; height:64px; border-radius:18px; background:#d0bcf21a; color:#d0bcf2; display:grid; place-items:center; position:relative; overflow:hidden; font-size:26px; }
+.vv-author-avatar img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.vv-author-identity { min-width:0; overflow-wrap:anywhere; }
+.vv-author-identity h3 { margin:0 24px 4px 0; font:700 22px/1.2 var(--ry-font,sans-serif); }
+.vv-author-identity span { color:#c6b4d7; font-size:13px; }
+.vv-author-card p { grid-column:1/-1; margin:2px 0; color:#c6b4d7; font-size:13px; }
+.vv-author-card .vv-author-open { grid-column:1/-1; justify-self:start; display:inline-flex; padding:10px 16px; border-radius:999px; color:#271d38; background:#d0bcf2; text-decoration:none; font-size:13px; font-weight:600; }
+.vv-author-close { position:absolute; right:14px; top:12px; width:30px; height:30px; border:1px solid #ffffff20; border-radius:50%; background:#ffffff08; color:#eee2ff; cursor:pointer; font:20px/1 sans-serif; }
+.vv-author-profile :is(button,a):focus-visible { outline:2px solid #d0bcf2; outline-offset:4px; }

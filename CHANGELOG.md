@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.10.1
+
+- Match subtitle letter line-box metrics to the main lyrics renderer, removing extra baseline displacement during nested scaling; keep the original shared animation curves.
+- Avoid repeated tape geometry reads during held subtitle words while retaining the production word and letter animator.
+- Show the resume countdown only when the current target differs from the last automatic scroll target; group its setting under Scrolling.
+- Replace retired author embeds with native metadata cards and explicit links to the full public profile; stop relying on internal profile lookup requests.
+- Remove the Ruytha star texture from modal surfaces while preserving the original Spicy Lyrics watermark.
+
 ## 1.10.0
 
 - Hide the resume countdown when automatic following cannot resume for a distant line; soften its opacity, remove the duplicate Sources heading and avoid repeated unchanged DOM writes in source details and subtitle controls.

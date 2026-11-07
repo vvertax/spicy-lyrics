@@ -82,7 +82,6 @@ export default function LyricsSection({ query, sectionFilter, showHidden = false
   if (![extra, trackTiming, colors,r3, r4, r5, r8, r9, r10, seek, early, lead, smooth, skeleton, credits, joinSplit, splitMotion].some(Boolean)) return null;
 
   return <>
-    {extra && <Row settingId="lyrics-resume-indicator" label="Autoscroll Resume Indicator" description="Show the follow cooldown after manual scrolling. Click to return immediately."><Toggle checked={extraValue} onChange={v => $showScrollResumeIndicator.set(v)} /></Row>}
     <SectionTitle>Lyrics Display</SectionTitle>
     {colors && <Row label="Duet Voice Colors" description="Customize the two duet voices."><Toggle checked={duetColors} onChange={v=>$duetColorsEnabled.set(v)} /></Row>}
     {colors && duetColors && <Row label="First voice"><input type="color" aria-label="First voice" value={leadColor} onChange={e=>$duetLeadColor.set(e.target.value)} /></Row>}
@@ -100,7 +99,8 @@ export default function LyricsSection({ query, sectionFilter, showHidden = false
       {trackOffset !== undefined && <Slider value={trackOffset} min={-5000} max={5000} step={10} defaultValue={0} unit="ms" onChange={value => setTrackOffset(value)} />}
     </Row>}
     {seek && <Row settingId="lyrics-seek-compensation" label="Seek Fade-in Compensation" description="Clicking a lyric seeks 300ms before it, so Spotify's fade-in does not cut off the start."><Toggle checked={seekFadeCompensation} onChange={(v) => $seekFadeCompensation.set(v)} /></Row>}
-    {(early || lead || smooth) && <SectionTitle>Scrolling</SectionTitle>}
+    {(extra || early || lead || smooth) && <SectionTitle>Scrolling</SectionTitle>}
+    {extra && <Row settingId="lyrics-resume-indicator" label="Autoscroll Resume Indicator" description="Show the follow cooldown after manual scrolling. Click to return immediately."><Toggle checked={extraValue} onChange={v => $showScrollResumeIndicator.set(v)} /></Row>}
     {early && <Row settingId="lyrics-early-scroll" label="Early Scroll" description="Start scrolling to the next line before it becomes active."><Toggle checked={scrollLeadEnabled} onChange={(v) => $scrollLeadEnabled.set(v)} /></Row>}
     {lead && <Row settingId="lyrics-early-scroll-time" label="Early Scroll Time" description="How early to move to the next line." disabled={!scrollLeadEnabled} disabledReason="Enable Early Scroll to modify this setting" stacked><Slider value={scrollLeadMs} min={0} max={800} step={10} defaultValue={250} unit="ms" onChange={(v) => $scrollLeadMs.set(Math.max(0, Math.min(800, Math.round(v / 10) * 10)))} disabled={!scrollLeadEnabled} /></Row>}
     {smooth && <Row settingId="lyrics-smooth-scrolling" label="Smooth Scrolling" description="Use spring motion for scrolling and interlude transitions."><Toggle checked={smoothScrolling} onChange={(v) => $smoothScrolling.set(v)} /></Row>}

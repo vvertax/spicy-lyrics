@@ -1,3 +1,4 @@
+import { createAuthorCard, knownAuthor } from "./AuthorProfile.ts";
 import { openTTMLCheck } from "./TTMLCheckPanel.ts";
 import { followComparisonLine } from "./ComparisonFollow.ts";
 import { bindTTMLDrop } from "./TTMLDrop.ts";
@@ -51,40 +52,21 @@ export function AddReviewMenuRows(menu:HTMLElement, add:(button:HTMLButtonElemen
   }
 }
 function authorSearch(doc:Document) {
-  const root=dialog(doc,'Find Author Works');root.classList.add('vv-author-dialog');const win=doc.defaultView!;
+  const root=dialog(doc,'Find Author Works');root.classList.add('vv-author-dialog');
   const emblem=element(doc,'span');emblem.className='vv-author-emblem';emblem.innerHTML=Icons.FindAuthorWorks;root.querySelector('header h2')!.prepend(emblem);
   const form=element(doc,'form');const input=element(doc,'input');input.placeholder='Username, e.g. vvertax. or july';input.setAttribute('aria-label','Author username');input.required=true;input.maxLength=100;
   const submit=element(doc,'button','Search');submit.type='submit';form.append(input,submit);
-  const message=element(doc,'p','Enter a username to view their public works.');message.role='status';
-  const profile=element(doc,'a','Open profile in browser');profile.target='_blank';profile.rel='noopener noreferrer';profile.hidden=true;
+  const message=element(doc,'p','Enter a username to open their public profile.');message.role='status';
   const results=element(doc,'div');results.className='vv-author-results';
-  let frame:HTMLIFrameElement|null=null;let request=0;
-  let timer:ReturnType<typeof setTimeout>|undefined;
+  submit.textContent='Show profile';
   form.onsubmit=event=>{
     event.preventDefault(); const name=authorHandle(input.value);
     if (!name) {message.textContent='Enter a username, not a link.';return;}
-    clearTimeout(timer);const generation=++request;profile.href=`https://spicylyrics.org/${encodeURIComponent(name)}`;profile.hidden=false;
-    message.textContent='Loading author works…';root.classList.add('has-results');
-    // A new browsing context avoids reusing the embed's previous router/session.
-    if(frame){frame.onload=null;frame.remove();}
-    frame=element(doc,'iframe');frame.title='Author works';frame.className='vv-author-frame';
-    frame.setAttribute('sandbox','allow-scripts allow-same-origin');
-    frame.referrerPolicy='strict-origin-when-cross-origin';
-    frame.onload=()=>{if(generation!==request||!root.isConnected)return;clearTimeout(timer);message.textContent='Use Listen to play a track. Open profile in browser only if the list is unavailable.';};
-    frame.src=`https://spicylyrics.org/embed/${encodeURIComponent(name)}`;results.replaceChildren(frame);
-    timer=setTimeout(()=>{if(root.isConnected&&generation===request)message.textContent='If the list is unavailable, open the profile in your browser.';},10000);
+    message.textContent='Profile link ready.';
+    root.classList.add('has-results');
+    results.replaceChildren(createAuthorCard(doc,knownAuthor(name)??{username:name}));
   };
-  const onMessage=(event:MessageEvent)=>{
-    if(event.origin!=='https://spicylyrics.org'||event.source!==frame?.contentWindow||event.data?.type!=='events')return;
-    for(const item of Array.isArray(event.data?.data?.events)?event.data.data.events:[]) {
-      if(item?.action==='PATCH_PLAYBACK') {
-        const uri=item?.patches?.[0]?.playback_uri;
-        if(typeof uri==='string'&&/^spotify:track:[A-Za-z0-9]+$/.test(uri)){Spicetify.Player.playUri(uri);}
-      }
-    }
-  };
-  win.addEventListener('message',onMessage);root.addEventListener('close',()=>{++request;clearTimeout(timer);win.removeEventListener('message',onMessage);if(frame){frame.onload=null;frame.remove();frame=null;}},{once:true});
-  root.append(form,message,profile,results);input.focus();
+  root.append(form,message,results);input.focus();
 }
 export function reviewLyrics(doc:Document, supplied?:any, initialLine=0) {
   const data=supplied ?? currentLyrics();const uri=SpotifyPlayer.GetUri();if(!uri)throw new Error('No current track');

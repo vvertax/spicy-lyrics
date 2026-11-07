@@ -36,22 +36,6 @@
     radial-gradient(32% 26% at 14% 86%, rgba(20, 150, 205, 0.3), transparent 72%),
     radial-gradient(30% 24% at 88% 88%, rgba(190, 80, 200, 0.22), transparent 72%),
     linear-gradient(#020513 0%, #050e30 45%, #0a1746 80%, #110f3e 100%);
-  /* Stars as tiled dots; two tile sizes so the pattern doesn't read as a grid. */
-  --ry-stars:
-    radial-gradient(circle at 23px 41px, rgba(255, 255, 255, 0.95) 0 1.1px, transparent 2px),
-    radial-gradient(circle at 97px 13px, rgba(201, 222, 245, 0.9) 0 0.9px, transparent 1.7px),
-    radial-gradient(circle at 151px 119px, rgba(255, 255, 255, 0.9) 0 1.3px, transparent 2.3px),
-    radial-gradient(circle at 61px 163px, rgba(214, 200, 255, 0.85) 0 0.9px, transparent 1.7px),
-    radial-gradient(circle at 188px 71px, rgba(190, 230, 255, 0.85) 0 1px, transparent 1.8px);
-  --ry-stars-far:
-    radial-gradient(circle at 37px 89px, rgba(255, 255, 255, 0.6) 0 0.7px, transparent 1.4px),
-    radial-gradient(circle at 211px 197px, rgba(201, 222, 245, 0.6) 0 0.7px, transparent 1.4px),
-    radial-gradient(circle at 139px 241px, rgba(255, 230, 170, 0.55) 0 0.8px, transparent 1.5px),
-    radial-gradient(circle at 263px 31px, rgba(255, 255, 255, 0.55) 0 0.6px, transparent 1.3px);
-  /* One size per layer above (5 / 4 / 8): a shorter background-size list is repeated
-     across the layers, which tiles the sky gradients into squares. */
-  --ry-stars-size: 220px 220px, 220px 220px, 220px 220px, 220px 220px, 220px 220px;
-  --ry-stars-far-size: 290px 290px, 290px 290px, 290px 290px, 290px 290px;
   --ry-sky-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
 
   /* Spicy's design tokens, retinted. */
@@ -90,8 +74,8 @@ sl-generic-modal.SpicyLyricsModal .sl-modal-overlay.sl-modal-overlay-animated.Ac
 
 sl-generic-modal.SpicyLyricsModal .sl-modal-overlay-animated.Active .sl-modal::before {
   background-color: rgba(5, 10, 34, 0.86);
-  background-image: var(--ry-stars), var(--ry-stars-far), var(--ry-sky);
-  background-size: var(--ry-stars-size), var(--ry-stars-far-size), var(--ry-sky-size);
+  background-image: var(--ry-sky);
+  background-size: var(--ry-sky-size);
   box-shadow:
     var(--ry-glass-shine),
     inset 0 0 0 1px var(--ry-line),
