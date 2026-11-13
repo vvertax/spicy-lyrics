@@ -1,0 +1,1 @@
+export const RetrievePackage=async()=>{throw new Error('This language module needs the installed extension. Demo lyrics support built-in romanization.');};

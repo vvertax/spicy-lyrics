@@ -1,3 +1,5 @@
+import { registerDesignDocument, setInterfaceDesign } from "./InterfaceDesign.ts";
+import { settingsHistory } from "./SettingsHistory.ts";
 import { atom, computed } from "nanostores";
 import { ProjectVersion } from "../../project/config.ts";
 import { SETTING_IDS } from "../components/ReactComponents/SettingsPanel/hiddenSettings.ts";
@@ -60,7 +62,10 @@ const _settings: Record<string, any> = migrateSettingsKeys(readSettingsBlob());
  */
 export function persistAtom<T>(key: string, defaultValue: T) {
   const store = atom<T>(_settings[key] !== undefined ? _settings[key] : defaultValue);
-  store.listen((v) => {
+  settingsHistory.register(key,store);
+  store.listen((v, previous) => {
+    settingsHistory.capture(key,previous,v);
+    if(settingsHistory.previewing)return;
     _settings[key] = v;
     saveSettingsBlob(_settings);
   });
@@ -124,7 +129,10 @@ function readStaticBackgroundMode(): string {
 
 export const $staticBackgroundMode = (() => {
   const store = atom<string>(readStaticBackgroundMode());
-  store.listen((mode) => {
+  settingsHistory.register("staticBackgroundMode",store);
+  store.listen((mode,previous) => {
+    settingsHistory.capture("staticBackgroundMode",previous,mode);
+    if(settingsHistory.previewing)return;
     const legacy = mode === "legacy";
     const sharedMode = legacy || mode === "default" || mode === "off"
       ? "off"
@@ -151,6 +159,7 @@ function backgroundStyleForMode(mode: string): BackgroundStyle {
 export const $backgroundStyle = computed($staticBackgroundMode, backgroundStyleForMode);
 export const $backgroundBlur = $staticBackgroundBlur;
 $staticBackgroundBlur.listen((value) => {
+  if(settingsHistory.previewing)return;
   _settings.backgroundBlur = value;
   saveSettingsBlob(_settings);
 });
@@ -190,7 +199,10 @@ export const $popupLyricsAllowed = (() => {
   const initial: boolean =
     _settings["popupLyricsAllowed"] !== undefined ? _settings["popupLyricsAllowed"] : true;
   const store = atom<boolean>(initial);
-  store.listen((v) => {
+  settingsHistory.register("popupLyricsAllowed",store);
+  store.listen((v,previous) => {
+    settingsHistory.capture("popupLyricsAllowed",previous,v);
+    if(settingsHistory.previewing)return;
     _settings["popupLyricsAllowed"] = v;
     saveSettingsBlob(_settings);
   });
@@ -304,3 +316,15 @@ export type SubtitleLayout = { anchor: "player" | "top" | "corner" | "free"; wid
 export const $subtitleLayout = persistAtom<SubtitleLayout>("subtitleLayout", { anchor: "player", width: 780, x: .5, y: .5 });
 export const $showLyricsSourceInfo = persistAtom<boolean>("showLyricsSourceInfo", false);
 export const $showScrollResumeIndicator = persistAtom<boolean>("showScrollResumeIndicator", false);
+
+export const $prefetchNextLyrics = persistAtom<boolean>("prefetchNextLyrics", true);
+
+/** Settings appearance only; lyric rendering keeps its own style. */
+export const $settingsDesign = persistAtom<"ruytha" | "original">("settingsDesign", "ruytha");
+
+$settingsDesign.subscribe(setInterfaceDesign);
+if (typeof document !== "undefined") registerDesignDocument(document);
+
+/** Ruytha pronunciation row; the original replacement mode remains available. */
+export const $romanizationBelow = persistAtom<boolean>("romanizationBelow", true);
+export const $translationsBelow = persistAtom<boolean>("translationsBelow", false);

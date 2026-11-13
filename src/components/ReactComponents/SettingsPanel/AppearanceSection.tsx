@@ -3,6 +3,7 @@ import React from "react";
 import { toast } from "sonner";
 import { SaveFontFile, FONT_FILE_FAMILY } from "../../../utils/fonts/FontFile.ts";
 import {
+  $settingsDesign,
   $smoothSceneTransitions,
   $allowHidingSettings,
   $animationFpsCap,
@@ -31,6 +32,8 @@ interface Props {
 }
 
 export default function AppearanceSection({ query, sectionFilter, showHidden = false }: Props) {
+  const settingsDesign = useStore($settingsDesign);
+  const designMatches = !showHidden && matches(query, "Interface Design", "Choose the Ruytha or original Spicy Lyrics style for all extension windows and controls.");
   const smoothSceneTransitions = useStore($smoothSceneTransitions);
   const customFontEnabled = useStore($customFontEnabled);
   const customFont = useStore($customFont);
@@ -48,21 +51,24 @@ export default function AppearanceSection({ query, sectionFilter, showHidden = f
   const visible = (id: string) => showHidden ? hiddenSettingIds.includes(id) : !allowHidingSettings || !hiddenSettingIds.includes(id) || Boolean(query.trim());
   const scene = visible("appearance-scene-transitions") && matches(query, "Smooth Track Transitions", "Fade lyrics and song information when tracks change, alongside the background transition.");
   const r1 = visible("appearance-custom-font") && matches(query, "Use Custom Font", "Use a custom font instead of the bundled Spicy Lyrics font.");
-  const r2 = visible("appearance-custom-font") && customFontEnabled && matches(query, "Font Name Font Preset Font File", "Font family name file ttf otf woff to use for lyrics.");
+  const r2 = visible("appearance-custom-font") && matches(query, "Font Name Font Preset Font File", "Font family name file ttf otf woff to use for lyrics.");
   const r3 = visible("appearance-background-type") && matches(query, "Background Type", "Choose the dynamic, legacy, static image, or color background.");
   const r4 = visible("appearance-npv-background") && matches(query, "Display Dynamic Background in Now Playing View", "Show the animated background in the Now Playing panel.");
   const blurApplies = ["auto", "artistHeader", "coverArt"].includes(staticBackgroundMode);
-  const r6 = visible("appearance-background-blur") && blurApplies && matches(query, "Background Blur", "Soften the static background image.");
+  const r6 = visible("appearance-background-blur") && matches(query, "Background Blur", "Soften the static background image.");
   const r7 = visible("appearance-pinned-footer") && matches(query, "Pinned Lyrics Footer", "Keep source and community credits visible. Full also pins writers.");
   const r8 = visible("appearance-sliderbar-styling") && matches(query, "New SliderBar Styling", "New glass-like style for the SliderBar. Disable to revert back to the original one.");
   const r9 = visible("appearance-fps-limit") && matches(query, "Limit Animation Frame Rate", FPS_CAP_DESCRIPTION);
-  const r10 = visible("appearance-fps-cap") && fpsCapEnabled && matches(query, "Animation Frame Rate", FPS_SLIDER_DESCRIPTION);
+  const r10 = visible("appearance-fps-cap") && matches(query, "Animation Frame Rate", FPS_SLIDER_DESCRIPTION);
 
-  if (!scene && !r1 && !r2 && !r3 && !r4 && !r6 && !r7 && !r8 && !r9 && !r10) return null;
+  if (!designMatches && !scene && !r1 && !r2 && !r3 && !r4 && !r6 && !r7 && !r8 && !r9 && !r10) return null;
 
   return (
     <>
       <SectionTitle>Appearance</SectionTitle>
+      {designMatches && <Row label="Interface Design" description="Choose the Ruytha or original Spicy Lyrics style for all extension windows and controls.">
+        <Select value={settingsDesign} options={["ruytha", "original"]} labels={["Ruytha Fork", "Original Spicy Lyrics"]} onChange={value => $settingsDesign.set(value as "ruytha" | "original")} />
+      </Row>}
       {scene && <Row settingId="appearance-scene-transitions" label="Smooth Track Transitions" description="Fade lyrics and song information when tracks change, alongside the background transition."><Toggle checked={smoothSceneTransitions} onChange={value => $smoothSceneTransitions.set(value)} /></Row>}
 
       {r3 && (
@@ -77,7 +83,7 @@ export default function AppearanceSection({ query, sectionFilter, showHidden = f
       )}
 
       {r6 && (
-        <Row settingId="appearance-background-blur" label="Background Blur" description="Soften the static background image." stacked>
+        <Row settingId="appearance-background-blur" label="Background Blur" description="Soften the static background image." disabled={!blurApplies} disabledReason="Choose an image background to adjust its blur." stacked>
           <Slider
             value={staticBackgroundBlur}
             min={0}
@@ -112,7 +118,7 @@ export default function AppearanceSection({ query, sectionFilter, showHidden = f
       )}
 
       {r10 && (
-        <Row settingId="appearance-fps-cap" label="Animation Frame Rate" description={FPS_SLIDER_DESCRIPTION} stacked>
+        <Row settingId="appearance-fps-cap" label="Animation Frame Rate" description={FPS_SLIDER_DESCRIPTION} disabled={!fpsCapEnabled} disabledReason="Enable the frame rate limit to change its value." stacked>
           <Slider value={fpsCap} min={15} max={240} step={5} defaultValue={60} unit="FPS"
             onChange={(value) => $animationFpsCap.set(value)} />
         </Row>
@@ -124,13 +130,13 @@ export default function AppearanceSection({ query, sectionFilter, showHidden = f
         </Row>
       )}
 
-      {r2 && <Row settingId="appearance-custom-font" label="Font Preset" description="Choose a preset (Geist, Inter, Bricolage and Poppins download online), enter an installed font name, or load a file.">
+      {r2 && <Row settingId="appearance-font-preset" disabled={!customFontEnabled} disabledReason="Enable Use Custom Font to change this setting." label="Font Preset" description="Choose a preset (Geist, Inter, Bricolage and Poppins download online), enter an installed font name, or load a file.">
         <Select value={['Geist', 'Inter', 'Bricolage Grotesque', 'Poppins', 'Spotify Mix', 'Segoe UI', 'Arial', 'Georgia', 'Verdana', 'Trebuchet MS', FONT_FILE_FAMILY].includes(customFont) ? customFont : 'custom'}
           options={['Geist', 'Inter', 'Bricolage Grotesque', 'Poppins', 'Spotify Mix', 'Segoe UI', 'Arial', 'Georgia', 'Verdana', 'Trebuchet MS', FONT_FILE_FAMILY, 'custom']}
           labels={['Geist', 'Inter', 'Bricolage Grotesque', 'Poppins', 'Spotify Mix', 'Segoe UI', 'Arial', 'Georgia', 'Verdana', 'Trebuchet MS', 'From a File', 'Custom system font']}
           onChange={(value) => { if (value !== 'custom') $customFont.set(value); else $customFont.set(''); }} />
       </Row>}
-      {r2 && <Row settingId="appearance-custom-font" label="Font File" description="TTF, OTF, WOFF or WOFF2. Saved locally for future sessions.">
+      {r2 && <Row settingId="appearance-font-file" disabled={!customFontEnabled} disabledReason="Enable Use Custom Font to change this setting." label="Font File" description="TTF, OTF, WOFF or WOFF2. Saved locally for future sessions.">
         <button type="button" className="sl-sp-btn" onClick={() => {
           const input = document.createElement('input');
           input.type = 'file'; input.accept = '.ttf,.otf,.woff,.woff2';
@@ -147,7 +153,7 @@ export default function AppearanceSection({ query, sectionFilter, showHidden = f
         }}>Choose Font File</button>
       </Row>}
       {r2 && (
-        <Row label="Font Name" description="Enter the installed font family name to use for lyrics.">
+        <Row settingId="appearance-font-name" disabled={!customFontEnabled} disabledReason="Enable Use Custom Font to change this setting." label="Font Name" description="Enter the installed font family name to use for lyrics.">
           <input
             className="sl-sp-text-input"
             type="text"

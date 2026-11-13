@@ -1,3 +1,4 @@
+import { recordDiagnostic } from "./DiagnosticLog.ts";
 import { ProjectName } from "../../project/config";
 import { Maid } from "../modules/Maid";
 import { $developerMode } from "./stores";
@@ -39,6 +40,7 @@ class Logger {
   }
 
   error(...args: unknown[]) {
+    recordDiagnostic(this.prefix,args);
     // Errors always reach the console, regardless of developer mode.
     if (this.maid.IsDestroyed()) return;
     const [prefix, style] = this.getPrefixArgs();

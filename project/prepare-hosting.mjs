@@ -1,4 +1,4 @@
-import { readFileSync, copyFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { readFileSync, copyFileSync, mkdirSync, writeFileSync, cpSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve, dirname } from "node:path";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -7,12 +7,17 @@ if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(version)) throw new Error("In
 const bundle = `spicy-lyrics@${version}.mjs`;
 // Read before changing the staging manifest, so a missing build cannot publish a new version.
 readFileSync(resolve(root, "dist", bundle));
-const output = resolve(root, "deploy/lrc.vvrtx.lol");
+const siteHost=process.argv.find(arg=>arg.startsWith('--host='))?.slice(7)??'lrc.vvrtx.lol';
+if(!['lrc.vvrtx.lol','devlrc.vvrtx.lol'].includes(siteHost))throw new Error('Unsupported hosting target');
+const output = resolve(root, "deploy",siteHost);
 mkdirSync(output, { recursive: true });
 copyFileSync(resolve(root, "dist", bundle), resolve(output, bundle));
 copyFileSync(resolve(root, "builds/main/entrypoint.mjs"), resolve(output, "entrypoint.mjs"));
 copyFileSync(resolve(root, "hosting/spicy-lyrics-sl.mjs"), resolve(output, "spicy-lyrics-sl.mjs"));
 copyFileSync(resolve(root, "hosting/index.html"), resolve(output, "index.html"));
+for(const file of ['preview-host.js','preview-host.css'])copyFileSync(resolve(root,'hosting',file),resolve(output,file));
+if(!existsSync(resolve(root,'dist/preview/index.html')))throw new Error('Build the live preview with node project/build-preview.mjs first');
+cpSync(resolve(root,'dist/preview'),resolve(output,'preview'),{recursive:true});
 writeFileSync(resolve(output, "version"), version + "\n");
 writeFileSync(resolve(output, "_headers"), `/*
   Access-Control-Allow-Origin: *

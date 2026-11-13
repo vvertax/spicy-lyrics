@@ -1,0 +1,1 @@
+export default {OnSpotifyReady:Promise.resolve(),GetSpotifyAccessToken:async()=>{throw new Error('Spotify authorization is unavailable in the browser preview');},InvalidateSpotifyAccessToken:()=>{},SpotifyVersion:[1,3,0]};

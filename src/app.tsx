@@ -1,3 +1,6 @@
+import "./css/Romanization.css";
+import { consumeRecordingEscape } from "./components/Utils/CreativeTools.ts";
+import { initNextLyricsPrefetch } from "./utils/Lyrics/PrefetchNextLyrics.ts";
 import { waitForVisibleLyrics } from "./utils/WindowActivity.ts";
 import { initSubtitleBar } from "./components/Utils/SubtitleBar.ts";
 import { beginSceneTrackChange } from "./components/Utils/ScenePresentation.ts";
@@ -638,6 +641,9 @@ async function main() {
   };
 
   window.addEventListener("keydown", async (e) => {
+    if (e.key === "Escape" && e.repeat) { e.preventDefault(); return; }
+    if (consumeRecordingEscape(e, PageContainer)) return;
+    if (e.defaultPrevented) return;
     if (e.key === "Shift") {
       Global.Saves.shift_key_pressed = true;
       return;
@@ -1456,6 +1462,7 @@ async function main() {
 
   initNPVLyrics();
   initSubtitleBar();
+  initNextLyricsPrefetch();
 
   Hometinue();
 
@@ -1524,3 +1531,5 @@ import "./css/ForkUI.css";
 import "./css/ForkSettings.css";
 
 import "./css/PixelLoadTTML.css";
+
+import "./css/PopupLayout.css";

@@ -1,3 +1,4 @@
+import { SETTING_DEPENDENCIES } from "./UnavailableSettings.ts";
 import { $favoriteSettings } from "../../../utils/stores.ts";
 import { translateUi } from "../../../utils/i18n/translate.ts";
 import { $uiLanguage } from "../../../utils/stores.ts";
@@ -6,6 +7,7 @@ import { createPortal } from "react-dom";
 import { useStore } from "@nanostores/react";
 import { $allowHidingSettings, $hiddenSettingIds, $hideHidingIcon } from "../../../utils/stores.ts";
 
+export const NavigateSettingContext = React.createContext<(label:string,id:string)=>void>(()=>{});
 export const FavoriteSettingsContext = React.createContext(false);
 export const EditFavoritesContext = React.createContext(false);
 export const HiddenSettingsContext = React.createContext(false);
@@ -36,6 +38,8 @@ export function Row({
   stacked?: boolean;
   settingId?: string;
 }) {
+  const navigateSetting=useContext(NavigateSettingContext);
+  const dependency=settingId?SETTING_DEPENDENCIES[settingId]:undefined;
   const favoritesOnly = useContext(FavoriteSettingsContext);
   const editFavorites = useContext(EditFavoritesContext);
   const savedFavorites = useStore($favoriteSettings);
@@ -56,6 +60,7 @@ export function Row({
   };
   return (
     <div
+      data-setting-id={settingId}
       className={`sl-sp-row sl-list-row${disabled ? " sl-sp-row--disabled" : ""}${stacked ? " sl-sp-row--stacked" : ""}`}
     >
       <div className="sl-sp-label-area">
@@ -76,10 +81,10 @@ export function Row({
           {description && <span className="sl-sp-description">{description}</span>}
         </div>
       </div>
-      <div className="sl-sp-control">
+      <fieldset disabled={disabled} className="sl-sp-control">
         {children}
-      </div>
-      {disabled && disabledReason && <div className="sl-sp-row-tooltip">{disabledReason}</div>}
+      </fieldset>
+      {disabled && <div className="vv-setting-unavailable"><span>{disabledReason || "This setting is unavailable in the current configuration."}</span>{dependency&&<button className="sl-sp-btn" type="button" onClick={()=>navigateSetting(dependency.label,dependency.id)}>Go to related setting</button>}</div>}
     </div>
   );
 }

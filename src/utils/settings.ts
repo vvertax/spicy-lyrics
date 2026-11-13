@@ -1,3 +1,4 @@
+import { settingsHistory } from "./SettingsHistory.ts";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { flushSync } from "react-dom";
@@ -32,6 +33,7 @@ function renderPanel(targetDocument: Document, element: React.ReactElement, dire
 }
 
 export function openSettingsPanel(targetDocument: Document = document) {
+  settingsHistory.start();
   const rememberedLocation = $rememberSettingsMenuLocation.get()
     ? $settingsMenuLocation.get()
     : { route: "settings" as const, query: "", sectionFilter: "Appearance", scrollTop: 0 };

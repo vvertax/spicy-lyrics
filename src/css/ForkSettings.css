@@ -1,3 +1,4 @@
+:where(:root:not([data-sl-design="original"])) {
 /* Settings frame and navigation adapted from Ruytha Edition. */
 sl-generic-modal.SpicyLyricsModal .sl-modal-overlay {
   .sl-sp {
@@ -356,3 +357,21 @@ sl-generic-modal.SpicyLyricsModal .vv-preview-text .vv-preview-word {
 
 /* Editing favorites uses the same compact action as hiding a setting. */
 .sl-sp-row .sl-sp-favorite-btn { width:28px; height:28px; margin:0 6px 0 0; padding:5px; border:1px solid #d0bcf233; background:#d0bcf20d; border-radius:7px; }
+
+/* Session history, unavailable-setting explanations and diagnostics. */
+.sl-sp-control:where(fieldset) { border:0; margin:0; padding:0; min-inline-size:0; }
+.sl-sp-row:has(>.vv-setting-unavailable) { flex-wrap:wrap; }
+.sl-sp-row .vv-setting-unavailable { flex:1 0 100%; display:flex; gap:10px; align-items:center; justify-content:space-between; padding:9px 11px; border-radius:9px; background:#9cc7f20b; color:#b9b5cf; font-size:12px; line-height:1.5; }
+.sl-sp-row .vv-setting-unavailable .sl-sp-btn { flex:none; font-size:11px; }
+.vv-history-actions { display:flex; gap:10px; margin:16px 0; }
+.vv-history-entry { padding:16px!important; margin-bottom:12px!important; display:grid; gap:10px; }
+.vv-history-entry > span { color:#a9a2c4; font-size:12px; }
+.vv-history-values { overflow-wrap:anywhere; font:12px/1.6 monospace; max-height:110px; overflow:auto; color:#bcb1d2; }
+.vv-history-entry code { font-size:12px; }
+.VV_HistoryPeek { opacity:.08!important; transition:none!important; }
+.vv-diagnostics textarea { min-height:45vh; font:12px/1.6 monospace; white-space:pre; overflow:auto; }
+@media(max-width:650px) { .sl-sp-row .vv-setting-unavailable { align-items:start; flex-direction:column; } }
+
+.sl-sp-panel--settings .sl-sp-card:empty { display:none; }
+
+}

@@ -1,4 +1,5 @@
 import { visibleInterval } from "./WindowActivity.ts";
+import { observeVisualWindow } from "./VisualWindow.ts";
 import Logger from "./Logger";
 import { onAnimationFrame } from "./AnimationFrameLoop.ts";
 
@@ -12,6 +13,7 @@ class IntervalManager {
   private intervalId: (() => void) | null;
   private targetWindowProvider: () => Window;
   private activeWindow: Window | null;
+  private stopWindowObserver: (() => void) | null = null;
   public Running: boolean;
   public Destroyed: boolean;
 
@@ -43,6 +45,9 @@ class IntervalManager {
     }
 
     this.Running = true;
+    this.stopWindowObserver = observeVisualWindow(() => {
+      if (this.Running && !this.Destroyed && this.targetWindowProvider() !== this.activeWindow) this.Restart();
+    });
     const generation = ++this.generation;
 
     if (this.duration > 0 && Number.isFinite(this.duration)) {
@@ -77,6 +82,8 @@ class IntervalManager {
 
   // Stops the animation frame loop without destroying the manager
   public Stop() {
+    this.stopWindowObserver?.();
+    this.stopWindowObserver = null;
     this.generation++;
     if (this.intervalId !== null) {
       this.intervalId();

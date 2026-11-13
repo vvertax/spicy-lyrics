@@ -1,0 +1,1 @@
+import {position} from '../environment.ts';import {$playbackOffset,$songPlaybackOffsets} from '../../utils/stores.ts';import {effectiveOffset}from '../../utils/Lyrics/PlaybackOffsets.ts';import {uri} from '../environment.ts';export const requestPositionSync=()=>{};export default ()=>position()+effectiveOffset($playbackOffset.get(),$songPlaybackOffsets.get(),uri());

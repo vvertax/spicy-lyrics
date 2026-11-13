@@ -1,3 +1,4 @@
+import { $romanizationBelow } from "../../../utils/stores.ts";
 import { $showScrollResumeIndicator } from "../../../utils/stores.ts";
 import { $duetColorsEnabled,$duetLeadColor,$duetOtherColor } from "../../../utils/stores.ts";
 import { useCurrentUri } from "../LyricsManager/hooks/useCurrentUri.ts";
@@ -32,6 +33,8 @@ const uniqueWordFilterOptions = ["Off", "Gibberish", "all lowercase", "ALL UPPER
 interface Props { query: string; sectionFilter: string; showHidden?: boolean; }
 
 export default function LyricsSection({ query, sectionFilter, showHidden = false }: Props) {
+  const romanizationBelow = useStore($romanizationBelow);
+  const romanization = !showHidden && matches(query, "Romanization Under the Lyrics", "Keep the original lyrics and show synchronized romanization below. Turn off to replace the original text.");
   const duetColors=useStore($duetColorsEnabled);const leadColor=useStore($duetLeadColor);const otherColor=useStore($duetOtherColor);
   const minimalLyricsMode = useStore($minimalLyricsMode);
   const extraValue = useStore($showScrollResumeIndicator);
@@ -79,10 +82,11 @@ export default function LyricsSection({ query, sectionFilter, showHidden = false
   const splitMotion = visible("lyrics-split-word-motion") && matches(query, "Split Word Motion", "Move neighbouring syllables as the singing part grows, keeping the word centred.");
   const joinSplit = matches(query, "Join Split Words", "Show a word that's sung in syllables as one word, when its parts line up evenly.");
   const colors=matches(query,"Duet Voice Colors","Customize the two duet voices.");
-  if (![extra, trackTiming, colors,r3, r4, r5, r8, r9, r10, seek, early, lead, smooth, skeleton, credits, joinSplit, splitMotion].some(Boolean)) return null;
+  if (![romanization, extra, trackTiming, colors,r3, r4, r5, r8, r9, r10, seek, early, lead, smooth, skeleton, credits, joinSplit, splitMotion].some(Boolean)) return null;
 
   return <>
     <SectionTitle>Lyrics Display</SectionTitle>
+    {romanization && <Row label="Romanization Under the Lyrics" description="Keep the original lyrics and show synchronized romanization below. Turn off to replace the original text."><Toggle checked={romanizationBelow} onChange={value => $romanizationBelow.set(value)} /></Row>}
     {colors && <Row label="Duet Voice Colors" description="Customize the two duet voices."><Toggle checked={duetColors} onChange={v=>$duetColorsEnabled.set(v)} /></Row>}
     {colors && duetColors && <Row label="First voice"><input type="color" aria-label="First voice" value={leadColor} onChange={e=>$duetLeadColor.set(e.target.value)} /></Row>}
     {colors && duetColors && <Row label="Second voice"><input type="color" aria-label="Second voice" value={otherColor} onChange={e=>$duetOtherColor.set(e.target.value)} /></Row>}

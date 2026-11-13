@@ -1,3 +1,4 @@
+import { nextLyricsCache } from "./PrefetchedLyrics.ts";
 import { hasVisibleLyricsWindow, observeLyricsVisibility } from "../WindowActivity.ts";
 import { checkRequest } from "./RequestAbort.ts";
 import { beginSceneTrackChange } from "../../components/Utils/ScenePresentation.ts";
@@ -95,13 +96,13 @@ export function getSongKey(uri: string): string {
   return uri.split(":")[2] ?? "";
 }
 
-function getActiveLyricsSourceOrder(): LyricsSourceProviderId[] {
+export function getActiveLyricsSourceOrder(): LyricsSourceProviderId[] {
   const order = normalizeLyricsSourceOrder(Defaults.LyricsSourceOrder);
   const disabled = new Set(Defaults.DisabledLyricsSourceIds);
   return order.filter((provider) => !disabled.has(provider));
 }
 
-function getLyricsSourceCacheSignature(): string {
+export function getLyricsSourceCacheSignature(): string {
   return JSON.stringify({
     version: LYRICS_SOURCE_CACHE_VERSION,
     order: normalizeLyricsSourceOrder(Defaults.LyricsSourceOrder),
@@ -336,7 +337,10 @@ async function fetchLyricsInternal(
 
   try {
     if (!isCurrentTrack(uri) || !(await backOffIfSwitchingFast()) || !isCurrentTrack(uri)) return null;
-    const providerResult = await fetchLyricsFromProviders(
+    const prefetched = await nextLyricsCache.take(uri,getLyricsSourceCacheSignature());
+    checkRequest(options.signal);
+    if(!isCurrentTrack(uri))return null;
+    const providerResult = prefetched ?? await fetchLyricsFromProviders(
       uri,
       getActiveLyricsSourceOrder(),
       { signal: options.signal },

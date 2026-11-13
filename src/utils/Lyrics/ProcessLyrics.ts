@@ -1,3 +1,4 @@
+import { RomajiWordBreaks } from "./RomajiSpacing.ts";
 import cyrillicToLatin from "cyrillic-romanization";
 import { franc } from "franc-all";
 import Kuroshiro from "kuroshiro";
@@ -332,6 +333,8 @@ export const ProcessLyrics = async (lyrics: any) => {
     appliedRomanization = results.some(Boolean);
   }
 
+  if (presentScripts.includes("Japanese")) await AddRomajiWordBreaks(lyrics);
+
   // True if the API shipped transliterations or we generated any here.
   lyrics.HasTransliterations = hadSuppliedTransliterations || appliedRomanization;
 
@@ -468,3 +471,41 @@ export function ApplyMemeFormat(lyrics: any): void {
     }
   }
 }
+
+const markRomajiWordBreaks = async (lyrics: any) => {
+  const groups = lyrics.Content.filter((group: any) => group.Type === "Vocal").flatMap((group: any) => [
+    group.Lead,
+    ...(group.Background ?? []),
+  ]);
+  await Promise.all(
+    groups.map(async (group: any) => {
+      const syllables: any[] = group?.Syllables ?? [];
+      if (!syllables.some((s) => s.TransliteratedText) || !/[ぁ-んァ-ン一-龯]/.test(syllables.map((s) => s.Text).join("")))
+        return;
+      const text = syllables.map((s, i) => `${i > 0 && !syllables[i - 1].IsPartOfWord ? " " : ""}${s.Text}`).join("");
+      try {
+        const spaced = await romanizeJapaneseText(text);
+        const breaks = RomajiWordBreaks(
+          syllables.map((s) => s.TransliteratedText ?? s.Text),
+          spaced
+        );
+        syllables.forEach((s, i) => {
+          if (breaks[i] && s.IsPartOfWord) s.RomanSpaceAfter = true;
+        });
+      } catch (err) {
+        romanizationLogger.warn("Romaji word gaps failed for a line", err);
+      }
+    })
+  );
+};
+
+/**
+ * Word gaps for the romaji of word-synced Japanese lyrics (markRomajiWordBreaks), once per
+ * lyrics. Lyrics are cached already processed, so fetchLyrics runs it on cached and
+ * local ones too; RomajiWordBreaks on the lyrics says it's been done.
+ */
+export const AddRomajiWordBreaks = async (lyrics: any) => {
+  if (lyrics?.Type !== "Syllable" || lyrics.RomajiWordBreaks || !Array.isArray(lyrics.Content)) return;
+  lyrics.RomajiWordBreaks = true;
+  await markRomajiWordBreaks(lyrics);
+};

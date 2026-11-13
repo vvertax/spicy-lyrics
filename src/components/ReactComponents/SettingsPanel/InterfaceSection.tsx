@@ -66,9 +66,9 @@ export default function InterfaceSection({ query, sectionFilter, showHidden = fa
   return <>
     <SectionTitle>Interface</SectionTitle>
     {quick && <details className="vv-quick-settings" open={query.trim() || favoritesOnly ? true : undefined}>
-      <summary><span className="vv-quick-summary-text"><span>Quick Controls</span><span className="vv-quick-hint vv-quick-hint--closed">Click to configure</span><span className="vv-quick-hint vv-quick-hint--open">Click to collapse</span></span></summary><p>Enabled actions appear beside the menu button. Disabled actions stay inside the menu. Availability depends on the current view.</p>
+      <summary><span className="vv-quick-summary-text"><span>Quick Controls</span><span className="vv-quick-hint vv-quick-hint--closed">Click to configure</span><span className="vv-quick-hint vv-quick-hint--open">Click to collapse</span></span></summary><div className="vv-quick-body"><p>Enabled actions appear beside the menu button. Disabled actions stay inside the menu. Availability depends on the current view.</p>
       {QUICK_CONTROLS.map(([id, label]) => <Row key={id} label={label}><Toggle checked={quickIds.includes(id)} onChange={enabled => $quickControlIds.set(enabled ? [...quickIds,id] : quickIds.filter(value=>value!==id))} /></Row>)}
-      <button type="button" className="sl-sp-btn" onClick={()=>$quickControlIds.set([])}>Move all to menu</button>
+      <div className="vv-quick-footer"><button type="button" className="sl-sp-btn" onClick={()=>$quickControlIds.set([])}>Move all to menu</button></div></div>
     </details>}
     {notice && <Row settingId="interface-no-lyrics-notice" label="Detailed No Lyrics Notice" description="Show the explanation and actions when lyrics are unavailable. Turn off for a minimal message. Loading errors always show full details."><Toggle checked={showNoLyricsNotice} onChange={(v) => $showNoLyricsNotice.set(v)} /></Row>}
     {rows[0] && <Row settingId="interface-lock-media-box" label="Lock Media Box Size in Compact Mode" description="Prevent the media box from resizing when Forced Compact Mode is active."><Toggle checked={lockedMediaBox} onChange={(v) => $lockedMediaBox.set(v)} /></Row>}

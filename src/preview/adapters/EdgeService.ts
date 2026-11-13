@@ -1,0 +1,1 @@
+export async function EdgeLookup(){return {ok:false,status:0,data:null};}

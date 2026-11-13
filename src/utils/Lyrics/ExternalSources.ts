@@ -1,7 +1,7 @@
 import { checkRequest, abortable } from "./RequestAbort.ts";
 import Defaults from "../../components/Global/Defaults.ts";
 import type { LyricsSourceProviderId } from "./LyricsSourcePreferences.ts";
-import type { ExternalLyricsResult } from "./Sources/Types.ts";
+import type { ExternalLyricsResult, TrackLyricsInfo } from "./Sources/Types.ts";
 import { getTrackLyricsInfo } from "./Sources/Track.ts";
 import { fetchSpicyLyricsRaw, fetchSpicyLyrics, fetchAppleMusicLyrics } from "./Sources/Spicy.ts";
 import { fetchMusixmatchLyrics } from "./Sources/Musixmatch.ts";
@@ -79,6 +79,7 @@ const FALLBACK_PROVIDER_TIMEOUT_MS = 4000;
 type FetchLyricsFromProvidersOptions = {
   signal?: AbortSignal;
   onFirstLyrics?: (lyrics: any) => void;
+  trackInfo?: TrackLyricsInfo;
 };
 
 function withProviderTimeout<T>(
@@ -103,7 +104,7 @@ export async function fetchLyricsFromProviders(
   options = { ...options, signal: controller.signal };
   try {
   checkRequest(options.signal);
-  const trackInfo = await getTrackLyricsInfo(uri);
+  const trackInfo = options.trackInfo?.uri===uri ? options.trackInfo : await getTrackLyricsInfo(uri);
   checkRequest(options.signal);
   if (!trackInfo) {
     return null;

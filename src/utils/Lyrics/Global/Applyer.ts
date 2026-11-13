@@ -1,3 +1,5 @@
+import { ApplyRomanRows, ClearRomanRows } from "../Applyer/Utils/RomanLine.ts";
+import { $romanizationBelow } from "../../stores.ts";
 import { waitForWindowVisible } from "../../WindowActivity.ts";
 import { revealSceneLyrics } from "../../../components/Utils/ScenePresentation.ts";
 import { setDisplayedLyrics } from "../DisplayedLyrics.ts";
@@ -118,16 +120,19 @@ export function ShouldReapplyRenderedLyricsForSpaceGravity(enabled: boolean): bo
 export function UpdateRenderedRomanization(useRomanized: boolean): boolean {
   if (!renderedLyrics) return false;
 
+  const inPlace = useRomanized && !$romanizationBelow.get();
+  ClearRomanRows();
   if (renderedLyrics.Type === "Syllable") {
-    UpdateSyllableLyricsRomanization(useRomanized);
+    UpdateSyllableLyricsRomanization(inPlace);
   } else if (renderedLyrics.Type === "Line") {
-    UpdateLineLyricsRomanization(useRomanized);
+    UpdateLineLyricsRomanization(inPlace);
   } else if (renderedLyrics.Type === "Static") {
-    UpdateStaticLyricsRomanization(useRomanized);
+    UpdateStaticLyricsRomanization(inPlace);
   } else {
     return false;
   }
 
+  ApplyRomanRows(renderedLyrics, LyricsObject.Types[renderedLyrics.Type as "Syllable" | "Line" | "Static"].Lines, useRomanized);
   setRomanizedStatus(useRomanized);
   void refreshLyricsFontFallback();
   triggerRemeasureLV();
@@ -294,6 +299,7 @@ export default async function ApplyLyrics(lyricsContent: [object | string, numbe
   EmitNotApplyed();
   ClearSyllableRenderSession();
   DestroyAllLyricsContainers();
+  ClearRomanRows();
   ClearLyricsContentArrays();
   ClearScrollSimplebar();
   ClearLyricsPageContainer();
@@ -367,14 +373,18 @@ export default async function ApplyLyrics(lyricsContent: [object | string, numbe
   }
 
   if (lyrics.Type === "Syllable") {
-    ApplySyllableLyrics(lyrics as any, romanize, viewportAnchor);
+    ApplySyllableLyrics(lyrics as any, romanize && !$romanizationBelow.get(), viewportAnchor);
   } else if (lyrics.Type === "Line") {
-    ApplyLineLyrics(lyrics as any, romanize, viewportAnchor);
+    ApplyLineLyrics(lyrics as any, romanize && !$romanizationBelow.get(), viewportAnchor);
   } else if (lyrics.Type === "Static") {
     // Type assertion to StaticLyricsData since we've verified the Type is "Static"
-    ApplyStaticLyrics(lyrics as StaticLyricsData, romanize, viewportAnchor);
+    ApplyStaticLyrics(lyrics as StaticLyricsData, romanize && !$romanizationBelow.get(), viewportAnchor);
   }
 
+  if (["Syllable","Line","Static"].includes(lyrics.Type)) {
+    ApplyRomanRows(lyrics, LyricsObject.Types[lyrics.Type as "Syllable" | "Line" | "Static"].Lines, romanize);
+    setRomanizedStatus(romanize);
+  }
   appliedLyricsIdentity = incomingLyricsIdentity;
   renderedLyrics = lyrics;
   setDisplayedLyrics(uri, lyrics);
@@ -382,3 +392,5 @@ export default async function ApplyLyrics(lyricsContent: [object | string, numbe
   if (uri) await HideLoaderContainer(uri);
   if (generation === applyGeneration && PageContainer === page) revealSceneLyrics(page, uri);
 }
+
+$romanizationBelow.listen(() => { UpdateRenderedRomanization(isRomanized); });

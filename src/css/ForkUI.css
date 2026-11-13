@@ -1,5 +1,5 @@
 /* Adapted from Ruytha Edition's glass settings and page controls. */
-#SpicyLyricsPage#SpicyLyricsPage .ViewControls.sl-fork-controls { width:fit-content!important; height:auto!important; overflow:visible!important; z-index:100; }
+#SpicyLyricsPage#SpicyLyricsPage:not(.SL_PopupPage) .ViewControls.sl-fork-controls { width:fit-content!important; height:auto!important; overflow:visible!important; z-index:100; }
 #SpicyLyricsPage .sl-fork-menu-toggle { border-radius:50%; background:rgba(30,25,45,.35); border:1px solid #ffffff30; }
 #SpicyLyricsPage .sl-fork-menu { position:absolute; right:0; width:min(240px,80vw); max-height:70vh; overflow:auto; padding:10px; border-radius:22px; background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,0) 42%),rgba(26,26,28,.55); -webkit-backdrop-filter:blur(32px) saturate(1.2); backdrop-filter:blur(32px) saturate(1.2); border:1px solid #ffffff38; box-shadow:0 18px 48px #0005; color:#f5f0fa; }
 #SpicyLyricsPage .sl-fork-menu[hidden] { display:none!important; }
@@ -10,7 +10,7 @@
 #SpicyLyricsPage.SL_CoverOnly .LyricsContainer { visibility:hidden; pointer-events:none; }
 
 /* Constrain the sidebar's intrinsic search/input width inside its grid track. */
-#SpicyLyricsPage#SpicyLyricsPage .ViewControls.sl-fork-controls { left:0!important; right:0!important; margin-inline:auto!important; transform:none!important; translate:none!important; display:flex; justify-content:center; }
+#SpicyLyricsPage#SpicyLyricsPage:not(.SL_PopupPage) .ViewControls.sl-fork-controls { left:0!important; right:0!important; margin-inline:auto!important; transform:none!important; translate:none!important; display:flex; justify-content:center; }
 #SpicyLyricsPage .sl-fork-menu { box-sizing:border-box; left:50%; right:auto; transform:translateX(calc(-50% + var(--menu-shift, 0px))); }
 #SpicyLyricsPage .sl-fork-menu-item { box-sizing:border-box; }
 #SpicyLyricsPage .sl-fork-menu-item#SettingsToggle { border-top:1px solid #ffffff22; border-radius:0 0 9px 9px; margin-top:6px; padding-top:14px; }
@@ -101,7 +101,7 @@
 
 /* The inherited size container collapses fit-content/auto dimensions and wraps
    pinned actions above the menu toggle. Use a normal, single-row flex layout. */
-#SpicyLyricsPage#SpicyLyricsPage .ViewControls.sl-fork-controls { max-width:calc(100% - 24px); gap:8px; align-items:flex-start; container-type:normal; flex-wrap:nowrap; --ViewControlSize:clamp(32px, 5.5vh, 64px); }
+#SpicyLyricsPage#SpicyLyricsPage:not(.SL_PopupPage) .ViewControls.sl-fork-controls { max-width:calc(100% - 24px); gap:8px; align-items:flex-start; container-type:normal; flex-wrap:nowrap; --ViewControlSize:clamp(32px, 5.5vh, 64px); }
 /* Quick actions use the upstream ViewControl button rules from default.css. */
 #SpicyLyricsPage .sl-quick-controls { display:flex; flex:0 1 auto; min-width:0; gap:6px; max-width:min(70vw,700px); overflow-x:auto; padding:0; background:none; }
 #SpicyLyricsPage .sl-quick-controls:empty { display:none; }
@@ -259,7 +259,7 @@
 @media(prefers-reduced-motion:reduce) { .vv-quick-settings > summary::after { transition:none; } }
 
 /* No drop shadows on the lyrics toolbar, including fullscreen and hover. */
-#SpicyLyricsPage#SpicyLyricsPage .ViewControls.sl-fork-controls .ViewControl { box-shadow:none!important; }
+#SpicyLyricsPage#SpicyLyricsPage:not(.SL_PopupPage) .ViewControls.sl-fork-controls .ViewControl { box-shadow:none!important; }
 
 /* Each comparison side owns its scroll viewport, independent of the main player. */
 #SpicyLyricsPage .vv-page-comparison .vv-split-lyrics.LyricsContent { flex:1 1 0; min-height:0; overflow-y:auto!important; scroll-behavior:auto; }
@@ -667,3 +667,6 @@
 
 .vv-review-editor .vv-review-feedback { margin:12px 0 0; padding:10px 12px; border:1px solid #d0bcf22e; border-radius:9px; background:#d0bcf212; color:#d8cef4; font-size:12px; line-height:1.5; font-weight:500; }
 .vv-review-editor .vv-review-feedback:empty { display:none; }
+
+.vv-review-dialog.vv-diagnostics { background:var(--ry-sky,linear-gradient(130deg,#102445,#0b102b 60%,#37235a)); border-color:#becdff38; font-family:var(--ry-font,sans-serif); }
+.vv-review-dialog.vv-diagnostics textarea { min-height:min(45vh,400px); font:12px/1.6 monospace; resize:vertical; }

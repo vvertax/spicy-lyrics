@@ -1,3 +1,4 @@
+import { $prefetchNextLyrics } from "../../../utils/stores.ts";
 import { $showLyricsSourceInfo } from "../../../utils/stores.ts";
 import React from "react";
 import { $hiddenSettingIds, $lyricsCacheAction, $showLyricsCacheActionButton } from "../../../utils/stores.ts";
@@ -15,14 +16,17 @@ export default function SourcesSection({ query, sectionFilter, showHidden = fals
   const showLyricsCacheActionButton = useStore($showLyricsCacheActionButton);
   const hiddenSettingIds = useStore($hiddenSettingIds);
   const extraValue = useStore($showLyricsSourceInfo);
+  const prefetch=useStore($prefetchNextLyrics);
   if (sectionFilter !== "All" && sectionFilter !== SECTION_NAME) return null;
   const extra = matches(query, "Lyrics Source Info", "Show the displayed lyrics source, sync type and cache status, with a reload action.") && (!showHidden || hiddenSettingIds.includes("sources-info"));
   const sources = !showHidden && (matches(query, "Manage Sources", "Manage lyric source priority and availability.") || Object.values(LYRICS_SOURCE_PROVIDER_DEFINITIONS).some((source) => matches(query, source.label, source.description)));
   const database = !showHidden && matches(query, "Browse TTML Database", "Open the local TTML database manager.");
   const cacheButton = matches(query, "Lyrics View Cache Button", "Show a selected cache action in the lyrics view controls.") && (!showHidden || hiddenSettingIds.includes("advanced-cache-button"));
   const cacheActions = matches(query, "Cache Actions", "Clear all current-song caches, clear current in-memory lyrics, or clear stored lyrics cache.") && (!showHidden || hiddenSettingIds.includes("advanced-cache-actions"));
-  if (!extra && !sources && !database && !cacheButton && !cacheActions) return null;
+  const prefetchHit=!showHidden&&matches(query,"Preload next song lyrics","Prepare only the next queued track while a lyrics window is visible.");
+  if (!prefetchHit && !extra && !sources && !database && !cacheButton && !cacheActions) return null;
   return <>
+    {prefetchHit&&<Row label="Preload next song lyrics" description="Prepare only the next queued track while a lyrics window is visible."><Toggle checked={prefetch} onChange={value=>$prefetchNextLyrics.set(value)} /></Row>}
     {extra && <Row settingId="sources-info" label="Lyrics Source Info" description="Show the displayed lyrics source, sync type and cache status, with a reload action."><Toggle checked={extraValue} onChange={v => $showLyricsSourceInfo.set(v)} /></Row>}
     {sources && <Row label="Manage Sources" description="Manage lyric source priority and availability."><button className="sl-sp-btn" onClick={OpenLyricsSourcesManager}>Manage</button></Row>}
     {database && <Row label="Browse TTML Database" description="Open the local TTML database manager."><button className="sl-sp-btn" onClick={OpenTTMLDatabasePanelFromSettings}>Browse</button></Row>}

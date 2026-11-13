@@ -1,0 +1,1 @@
+export const getDynamicAudioAnalysis=async()=>null;export const AudioAnalysisStore={GetItem:async()=>null,SetItem:async()=>{},RemoveItem:async()=>{}};

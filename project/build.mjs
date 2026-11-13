@@ -156,3 +156,6 @@ try {
   console.error("Error copying build output:", error);
   process.exit(1);
 }
+
+const previewBuild=spawnSync(process.execPath,[resolve("project/build-preview.mjs")],{stdio:"inherit",cwd:resolve(".")});
+if(previewBuild.status!==0)process.exit(previewBuild.status??1);

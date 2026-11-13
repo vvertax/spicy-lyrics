@@ -1,0 +1,4 @@
+import {state} from '../environment.ts';import {$uiLanguage}from '../../utils/stores.ts';
+import {fixture} from '../fixtures.ts';
+export const refreshMusixmatchToken=async()=>{throw new Error('Available in Spotify');};
+export async function fetchLyricsFromProviders(uri:string,_order:any,options:any={}){return new Promise<any>((resolve,reject)=>{const timer=setTimeout(()=>{options.signal?.removeEventListener('abort',abort);if(state.announcePrefetch){state.announcePrefetch=false;window.dispatchEvent(new CustomEvent('preview:notice',{detail:$uiLanguage.get()==='ru'?'Текст следующего демо-трека готов':'Next demo lyrics ready'}));}resolve({status:200,lyrics:fixture(uri.split(':')[2])});},700);const abort=()=>{clearTimeout(timer);reject(new DOMException('Cancelled','AbortError'));};if(options.signal?.aborted)abort();else options.signal?.addEventListener('abort',abort,{once:true});});}

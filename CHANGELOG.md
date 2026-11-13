@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.11.0
+
+- Restore Popup typography by excluding PiP from full-page automatic compact sizing; restore the single original SimpleBar fade and unpinned credits. Isolate Ruytha settings styles from original mode and add a real-renderer popup preview.
+
+- Isolate Popup quick-control geometry from the full-page menu; reset the legacy caption top anchor in Popup Dock and keep artist/year text in a non-collapsing row.
+
+- Rebind visual timers and autoscroll when lyrics move into or out of Popup/Cinema windows, including a hidden host. Give Advanced, Settings History and About distinct category icons.
+
+- Port Ruytha pronunciation rows with synchronized lead/backing romanization and Japanese word spacing; retain replacement mode. Make Escape leave recording mode before closing lyrics.
+
+- Localize standalone loader recovery messages using the saved language, clarify the fork issue-tracker link and prevent operational help links to other forks.
+
+- Add a saved interface design selector across extension windows: Ruytha styling or the original Spikerko presentation, keeping all fork controls. Improve animation preview insets and readable before/after settings history.
+
+- Add a lazy-loaded browser preview on the website using the production lyric renderer, settings and creative tools, with isolated local demo data and original font assets.
+
+- Add session settings history with grouped undo/redo and a temporary before/after preview that does not persist preview values.
+- Explain unavailable settings inline and link to their controlling settings, including hidden controls found through search.
+- Add a locally generated, editable diagnostic report with source status, animation settings and redacted recent extension errors.
+- Preload one upcoming queue track while a lyrics window is visible; reuse its request on playback and cancel obsolete work.
+- Move Experiments from Advanced into its own settings category, preserving individual experiment choices and search.
+
 ## 1.10.2
 
 - Rebuild lyric review with searchable vocal rows, independent backing-vocal timing and identities, a dedicated note editor and explicit preview seeking. Existing notes and exports remain supported.

@@ -1,3 +1,93 @@
+// Standalone loader UI: available even when the extension bundle cannot load.
+const FORK_ISSUES_URL = "https://github.com/vvertax/spicy-lyrics/issues";
+const LOADER_RU = {
+  "Build Channel": "Канал сборок",
+  "Manage": "Настроить",
+  "Apply & Reload": "Применить и перезапустить",
+  "Branch Name": "Название ветки",
+  "API Host": "Адрес API",
+  "Storage Host": "Адрес хранилища",
+  "Use the same host for both API and Storage": "Один адрес для API и хранилища",
+  "Fixed Version": "Закреплённая версия",
+  "Cancel": "Отмена",
+  "Save Branch": "Сохранить канал",
+  "Channel name is required": "Введите название канала",
+  "Fixed version is required when enabled": "Укажите закреплённую версию",
+  "Cannot override built-in channels": "Встроенные каналы нельзя переопределить",
+  "Manage Branches": "Управление каналами",
+  "Move up": "Переместить выше",
+  "Move down": "Переместить ниже",
+  "Selected": "Выбран",
+  "Switch": "Переключить",
+  "Remove": "Удалить",
+  "Add Branch": "Добавить канал",
+
+  "Couldn't connect": "Не удалось подключиться",
+  "Couldn't start": "Не удалось запустить расширение",
+  "Switch Build Channel": "Сменить канал сборки",
+  "Try again": "Повторить",
+  "Connecting…": "Подключение…",
+  "Retry in background": "Повторять в фоне",
+  "Spicy Lyrics keeps trying in the background.": "Spicy Lyrics продолжает подключаться в фоне.",
+  "Still can't reach the servers. Trying again automatically.": "Серверы всё ещё недоступны. Повторим попытку автоматически.",
+  "Waiting for our API to come back before trying again.": "Ожидаем восстановления API перед следующей попыткой.",
+  "Still not working? Ask on our": "Проблема осталась? Сообщите о ней в нашем",
+  "Still not working? Share the error above on our": "Проблема осталась? Пришлите ошибку выше в нашем",
+  "issue tracker": "трекере ошибок",
+  "The lyrics servers didn't answer after several tries. Check your connection or the ": "Серверы текстов не ответили после нескольких попыток. Проверьте подключение или ",
+  "status page": "страницу состояния",
+  "Stop retrying": "Остановить попытки",
+  "Checking status…": "Проверка состояния…",
+  "Checking our server status…": "Проверяем состояние серверов…",
+  "Reconnecting": "Повторное подключение",
+  "API down": "API недоступен",
+  "Maintenance": "Технические работы",
+  "Recovering": "Восстановление",
+  "Now": "Сейчас",
+  "Dismiss": "Закрыть",
+  "Show details": "Подробнее",
+  "Reload Spotify": "Перезапустить Spotify",
+  "Later": "Позже",
+  "Hide": "Скрыть",
+  "Fix available": "Доступно исправление",
+  "Waiting for a fix": "Ожидаем исправление",
+  "Checking for a fix…": "Проверка исправления…",
+  "Stop checking for a fix": "Прекратить проверку исправлений",
+  "Watch for a fix": "Ожидать исправление",
+  "Pinned version failed": "Ошибка закреплённой версии",
+  "Waiting for Spicetify": "Ожидаем Spicetify",
+  "Starting…": "Запуск…",
+  "Wait in background": "Ожидать в фоне",
+  "Spicy Lyrics is back": "Spicy Lyrics снова работает",
+  "The extension downloaded but crashed while starting up. Reloading Spotify usually fixes this. If it keeps happening, update Spicetify.": "Расширение загружено, но произошла ошибка при запуске. Обычно помогает перезапуск Spotify. Если ошибка повторяется, обновите Spicetify.",
+  "This channel is pinned to a version. Reload it or switch build channels.": "Для этого канала закреплена версия. Перезагрузите её или смените канал сборки.",
+  "Checking this channel for a fixed version in the background.": "Проверяем наличие исправленной версии этого канала в фоне.",
+  "Spicetify is taking longer than usual to load. Spicy Lyrics keeps waiting in the background and starts on its own once it's ready.": "Spicetify загружается дольше обычного. Spicy Lyrics ожидает в фоне и запустится автоматически, когда всё будет готово.",
+  "If nothing changes, reload Spotify. If that doesn't help, update Spicetify.": "Если ничего не меняется, перезапустите Spotify. Если это не поможет, обновите Spicetify.",
+  "Our API is up right now, so something between you and our servers is probably blocking it, like a VPN, firewall, or ad blocker.": "API работает. Возможно, соединение с серверами блокирует VPN, брандмауэр или блокировщик рекламы.",
+  "Our API is down right now. Spicy Lyrics will load once it's back, so try again in a few minutes.": "API сейчас недоступен. Spicy Lyrics загрузится после восстановления. Повторите попытку через несколько минут.",
+  "Our API is recovering from an outage. Try again in a minute.": "API восстанавливается после сбоя. Повторите попытку через минуту.",
+  "Our API is down for scheduled maintenance. Try again once it's over.": "На API идут плановые технические работы. Повторите попытку после их завершения.",
+  "Our status service didn't answer either, so your internet connection is the likely cause.": "Сервис состояния тоже не ответил. Возможно, проблема с подключением к интернету.",
+};
+const loaderLanguage = () => {
+  try {
+    const raw = globalThis.Spicetify?.LocalStorage?.get?.("SL:settings") ?? globalThis.localStorage?.getItem("SL:settings");
+    const language = JSON.parse(raw ?? "{}")?.uiLanguage;
+    if (language === "ru" || language === "en") return language;
+  } catch { /* Fall back to the system language before settings are available. */ }
+  return globalThis.navigator?.language?.toLowerCase().startsWith("ru") ? "ru" : "en";
+};
+const loaderText = value => {
+  if (typeof value !== "string" || loaderLanguage() !== "ru") return value;
+  if (LOADER_RU[value]) return LOADER_RU[value];
+  let match = value.match(/^Couldn't load the (.+) channel from (.+) \/ (.+)\. Check your connection or switch build channels\.$/);
+  if (match) return `Не удалось загрузить канал ${match[1]} с ${match[2]} / ${match[3]}. Проверьте подключение или смените канал сборки.`;
+  match = value.match(/^Spicy Lyrics (.+) is out\. Reload Spotify to start it\. Reloading also clears anything the crashed version left half set up\.$/);
+  if (match) return `Доступна Spicy Lyrics ${match[1]}. Перезапустите Spotify, чтобы запустить её и сбросить состояние после ошибки.`;
+  return value;
+};
+
 // Built-in channel → [apiHost, storageHost, fixedVersion?] map
 const CHANNEL_MAP = {
   "vvertax Edition": ["lrc.vvrtx.lol", "lrc.vvrtx.lol"],
@@ -184,7 +274,7 @@ const showPanel = (title, buildContent) => {
   const header = document.createElement("div");
   header.className = "SpicyLyricsSettingsHeader";
   const titleEl = document.createElement("span");
-  titleEl.textContent = title;
+  titleEl.textContent = loaderText(title);
   const closeBtn = document.createElement("button");
   closeBtn.className = "SpicyLyricsSettingsHeaderClose";
   closeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
@@ -217,7 +307,7 @@ const makeRow = (labelText, control) => {
   row.className = "sl-settings-row";
   const lbl = document.createElement("span");
   lbl.className = "sl-settings-label";
-  lbl.textContent = labelText;
+  lbl.textContent = loaderText(labelText);
   row.appendChild(lbl);
   row.appendChild(control);
   return row;
@@ -246,14 +336,14 @@ const makeBtn = (text, modifiers = "") => {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "sl-btn" + (modifiers ? " " + modifiers : "");
-  btn.textContent = text;
+  btn.textContent = loaderText(text);
   return btn;
 };
 
 const makeGroup = (text) => {
   const h = document.createElement("h3");
   h.className = "sl-settings-group";
-  h.textContent = text;
+  h.textContent = loaderText(text);
   return h;
 };
 
@@ -1357,14 +1447,14 @@ const h = (tag, props, ...children) => {
     if (key === "class") node.className = value;
     else node.setAttribute(key, value);
   }
-  node.append(...children);
+  node.append(...children.map(loaderText));
   return node;
 };
 
 const svg = (tag, attributes, ...children) => {
   const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
   for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, value);
-  node.append(...children);
+  node.append(...children.map(loaderText));
   return node;
 };
 
@@ -1395,8 +1485,8 @@ const link = (href, label) => h("a", { class: "sle-link", href }, label);
 const text = (...children) => h("p", { class: "sle-text" }, ...children);
 
 const discordNote = (lead) =>
-  h("p", { class: "sle-text sle-text--quiet" }, `${lead} `,
-    usesOfficialStatus() ? link(DISCORD_URL, "Discord") : link("https://github.com/vvertax/spicy-lyrics/issues", "fork issue tracker"), ".");
+  h("p", { class: "sle-text sle-text--quiet" }, `${loaderText(lead)} `,
+    usesOfficialStatus() ? link(DISCORD_URL, "Discord") : link(FORK_ISSUES_URL, "issue tracker"), ".");
 
 const channelRecoveryControl = () => {
   const button = makeBtn("Switch Build Channel");
@@ -1439,6 +1529,7 @@ const setLineState = (node, state) => {
 
 // Lines grow, shrink, and cross-fade between messages instead of making the dialog jump.
 const setLine = (node, text, state) => {
+  text = loaderText(text);
   const label = node.firstElementChild;
   if (label.textContent === text && (node.dataset.state ?? "") === (state ?? "") && node.hidden === !text) {
     return;
@@ -1494,6 +1585,7 @@ const line = (className, props = {}) =>
 
 // The button eases to its new width, so the button beside it slides rather than jumps.
 const setButtonContent = (button, label, busy) => {
+  label = loaderText(label);
   const from = button.getBoundingClientRect().width;
   const content = h("span", { class: "sle-button-content" });
   if (busy) content.append(h("span", { class: "sle-spinner", "aria-hidden": "true" }));
@@ -1550,7 +1642,7 @@ const progressLine = () => {
   const set = (message, countdown, running) => {
     setLine(node, countdown ? message : "");
     if (!countdown) return;
-    time.textContent = running ? "Now" : formatWait(countdown.until - Date.now());
+    time.textContent = running ? loaderText("Now") : formatWait(countdown.until - Date.now());
     if (shown !== countdown) {
       shown = countdown;
       drain(fill, countdown, BAR_DRAIN);
@@ -1748,6 +1840,7 @@ const createPill = () => {
 
 // state: { tone, label, countdown?, busy?, done?, stopLabel?, onOpen?, onStop? }. done turns it into a toast.
 const showPill = (state, { delay = 0 } = {}) => {
+  state = { ...state, label: loaderText(state.label), stopLabel: loaderText(state.stopLabel) };
   ensurePopupStyles();
   const newDesign = usesNewSettingsDesign();
   const animate = !reducedMotion.matches && newDesign;
@@ -1794,14 +1887,14 @@ const showPill = (state, { delay = 0 } = {}) => {
   }
 
   view.stop.hidden = Boolean(state.done);
-  view.stop.setAttribute("aria-label", state.stopLabel ?? "Dismiss");
+  view.stop.setAttribute("aria-label", state.stopLabel ?? loaderText("Dismiss"));
   if (state.done) {
     view.main.setAttribute("aria-disabled", "true");
     view.main.setAttribute("aria-label", `Spicy Lyrics: ${state.label}`);
     view.announcer.textContent = state.label;
   } else {
     view.main.removeAttribute("aria-disabled");
-    view.main.setAttribute("aria-label", `Spicy Lyrics: ${state.label}${remaining ? `, ${remaining}` : ""}. Show details`);
+    view.main.setAttribute("aria-label", `Spicy Lyrics: ${state.label}${remaining ? `, ${remaining}` : ""}. ${loaderText("Show details")}`);
   }
 
   if (!animate) return;

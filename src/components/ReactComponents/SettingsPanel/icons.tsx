@@ -66,7 +66,16 @@ export const ExperimentsIcon = (
 
 export const AdvancedIcon = (
   <Icon>
-    <path d="M3 4.5l3 3.5-3 3.5M8 11.5h5" />
+    <path d="M2 4h4m3 0h5M2 12h7m3 0h2" />
+    <circle cx="7.5" cy="4" r="1.5" />
+    <circle cx="10.5" cy="12" r="1.5" />
+    <path d="M2 8h12" />
+  </Icon>
+);
+
+export const HistoryIcon = (
+  <Icon>
+    <path d="M2 7a6 6 0 1 1 1.3 4.7M2 3.5V7h3.5M8 4.5V8l2.2 1.4" />
   </Icon>
 );
 

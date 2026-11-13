@@ -13,20 +13,25 @@ import { Icons } from "../Styling/Icons.ts";
 
 type Modes = { karaoke: boolean; recording: boolean };
 const modes = new WeakMap<HTMLElement, Modes>();
+/** Called by the host capture handler before any page/fullscreen Escape action. */
+export function consumeRecordingEscape(event: KeyboardEvent, page: HTMLElement | null | undefined): boolean {
+  if (event.key !== "Escape" || !page || !modes.get(page)?.recording) return false;
+  event.preventDefault(); event.stopImmediatePropagation();
+  modes.get(page)!.recording = false; page.classList.remove("VV_Recording");
+  toast.success("Recording mode off"); return true;
+}
 function state(page: HTMLElement): Modes {
   const existing = modes.get(page); if (existing) return existing;
   const value = { karaoke: false, recording: false }; modes.set(page, value);
   const doc = page.ownerDocument; const win = doc.defaultView!;
   const stopRecording = (event: KeyboardEvent) => {
     if (event.key === "Escape" && value.recording) {
-      event.preventDefault(); event.stopImmediatePropagation();
-      value.recording = false; page.classList.remove("VV_Recording");
-      toast.success("Recording mode off");
+      consumeRecordingEscape(event, page);
     }
   };
-  doc.addEventListener("keydown", stopRecording, true);
+  win.addEventListener("keydown", stopRecording, true);
   const timer = visibleInterval(win,() => {
-    if (!page.isConnected) { timer(); doc.removeEventListener("keydown", stopRecording, true); modes.delete(page); return; }
+    if (!page.isConnected) { timer(); win.removeEventListener("keydown", stopRecording, true); modes.delete(page); return; }
     if (!value.karaoke) return;
     const position = GetProgress();
     for (const line of [...LyricsObject.Types.Line.Lines, ...LyricsObject.Types.Syllable.Lines]) {

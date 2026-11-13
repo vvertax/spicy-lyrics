@@ -1,10 +1,12 @@
+/* Ruytha presentation is optional; shared base styles stay active in both designs. */
+:where(:root:not([data-sl-design="original"])) {
 /*
  * Ruytha Edition theme: ruytha.dev's night-sky palette, glass and fonts on Spicy's UI
  * (settings, modals, view controls, credits buttons). Lyric text keeps Spicy's own styling.
  * Loaded after tokens.css, so the token overrides below win.
  */
 
-:root {
+& {
   --ry-bg: #030718;
   --ry-text: #eef1fa;
   --ry-muted: #9aa3bf;
@@ -485,4 +487,6 @@ sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-reset .sl-sp-btn[data-armed] {
   background: rgba(255, 92, 92, 0.2);
   box-shadow: inset 0 0 0 1px rgba(255, 92, 92, 0.45);
   color: #ffd9d9;
+}
+
 }

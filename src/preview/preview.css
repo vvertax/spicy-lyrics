@@ -1,0 +1,25 @@
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101020;color:#eee2ff;font-family:SpicyLyrics,system-ui,sans-serif}*{box-sizing:border-box}#preview-shell{height:100%;display:flex;flex-direction:column}#preview-tools{height:54px;flex:none;display:flex;gap:8px;padding:9px 12px;overflow-x:auto;background:#151322;scrollbar-width:thin}#preview-tools button,#preview-player button{flex:none;border:1px solid #d0bcf230;color:#e7ddfa;background:#d0bcf212;border-radius:9px;padding:7px 11px;font:600 12px system-ui;cursor:pointer}#preview-tools button:hover,#preview-player button:hover{background:#d0bcf22c}#preview-stage{position:relative;min-height:0;flex:1;overflow:hidden}#preview-player{display:flex;align-items:center;gap:10px;padding:12px 18px;height:70px;flex:none;background:#151322;border-top:1px solid #ffffff15}#preview-player input{min-width:50px;flex:1;accent-color:#d0bcf2}.preview-track-title{font-size:12px;max-width:200px}.preview-time{font-variant-numeric:tabular-nums;font-size:12px}.preview-library{display:grid;place-items:center;height:100%;padding:30px;color:#b9accb;font-size:22px;text-align:center}#preview-notice{position:fixed;bottom:82px;left:50%;transform:translateX(-50%);z-index:99999;max-width:90%;background:#30243f;color:#e7ddfa;padding:12px 18px;border-radius:14px;font:13px system-ui}#preview-notice:empty{display:none}.preview-error{position:fixed;inset:15%;padding:30px;background:#31152a;color:#fff;z-index:99999}#preview-stage>#SpicyLyricsPage{position:absolute;inset:0;width:100%;height:100%}sl-generic-modal.SpicyLyricsModal{z-index:9999}.sl-modal-overlay-animated:not(.Active){opacity:0}.sl-modal-overlay-animated.Active{opacity:1}@media(max-width:600px){#preview-player{padding:8px;gap:6px}.preview-track-title{display:none}#preview-tools{height:50px}}
+
+/* Browser-only narrow layout; keep the production controls and visual tokens. */
+@media(max-width:650px){
+ html[data-preview] sl-generic-modal.SpicyLyricsModal:has(.sl-sp-panel--settings) .sl-sp-panel--settings{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+ html[data-preview] sl-generic-modal.SpicyLyricsModal:has(.sl-sp-panel--settings) .sl-sp-panel--settings .sl-sp-sidebar{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;overflow:hidden;border-right:0;border-bottom:1px solid #becdff25}
+ html[data-preview] sl-generic-modal.SpicyLyricsModal:has(.sl-sp-panel--settings) .sl-sp-panel--settings .sl-sp-brand{grid-column:1;margin:0}.sl-sp-sidebar .sl-sp-title{font-size:20px!important}
+ html[data-preview] sl-generic-modal.SpicyLyricsModal:has(.sl-sp-panel--settings) .sl-sp-sidebar .vv-language{grid-column:2;align-self:center;gap:6px;font-size:12px}
+ html[data-preview] sl-generic-modal.SpicyLyricsModal:has(.sl-sp-panel--settings) .sl-sp-sidebar .sl-sp-search-wrap{grid-column:1/-1}
+ html[data-preview] sl-generic-modal.SpicyLyricsModal:has(.sl-sp-panel--settings) .sl-sp-sidebar .sl-sp-tabs{grid-column:1/-1;display:flex;flex-direction:row;overflow-x:auto;overflow-y:hidden;gap:5px;padding-bottom:4px;scrollbar-width:thin}
+ html[data-preview] sl-generic-modal.SpicyLyricsModal:has(.sl-sp-panel--settings) .sl-sp-sidebar .sl-sp-tabs .sl-sp-tab{min-width:max-content;margin:0;font-size:12px;padding:0 8px}
+ html[data-preview] sl-generic-modal.SpicyLyricsModal:has(.sl-sp-panel--settings) .sl-sp-sidebar .sl-sp-hide-action{margin:0;padding:7px;font-size:11px;min-height:30px}
+ html[data-preview] sl-generic-modal.SpicyLyricsModal:has(.sl-sp-panel--settings) .sl-sp-panel--settings .sl-sp-pane{min-width:0;min-height:0}
+ html[data-preview] sl-generic-modal.SpicyLyricsModal:has(.sl-sp-panel--settings) .sl-sp-panel--settings .sl-sp-pane-header{padding:14px}
+ html[data-preview] sl-generic-modal.SpicyLyricsModal:has(.sl-sp-panel--settings) .sl-sp-panel--settings .sl-sp-settings-scroll{padding:0 12px 20px}
+ html[data-preview] sl-generic-modal.SpicyLyricsModal:has(.sl-sp-panel--settings) .sl-sp-panel--settings .sl-sp-row{flex-wrap:wrap;gap:10px}.sl-sp-label-area{min-width:0}
+ html[data-preview] sl-generic-modal.SpicyLyricsModal:has(.sl-sp-panel--settings) .sl-sp-panel--settings .sl-sp-row .sl-sp-label-area{flex:1 0 100%}
+ html[data-preview] sl-generic-modal.SpicyLyricsModal:has(.sl-sp-panel--settings) .sl-sp-panel--settings .sl-sp-row .sl-sp-control{min-width:0;max-width:100%;flex-wrap:wrap}
+}
+
+html[data-preview]{color-scheme:dark}html[data-preview] *{scrollbar-width:thin;scrollbar-color:#d0bcf255 transparent}
+
+@media(max-width:650px){html[data-preview] sl-generic-modal.SpicyLyricsModal:has(.sl-sp-panel--settings) .sl-sp-sidebar .sl-sp-tabs .sl-sp-tab{width:auto!important}}
+
+html[data-popup-preview] :is(#preview-tools,#preview-player){display:none} html[data-popup-preview] #preview-stage {height:100%}

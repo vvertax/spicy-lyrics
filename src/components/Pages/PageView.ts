@@ -1,3 +1,5 @@
+import { ClearRomanRows } from "../../utils/Lyrics/Applyer/Utils/RomanLine.ts";
+import { notifyVisualWindowChanged } from "../../utils/VisualWindow.ts";
 import { waitForWindowVisible } from "../../utils/WindowActivity.ts";
 import { mountScenePresentation, unmountScenePresentation } from "../Utils/ScenePresentation.ts";
 import { RegisterFontFile, FONT_FILE_FAMILY } from "../../utils/fonts/FontFile.ts";
@@ -113,7 +115,7 @@ function applyAnimatorPreset(element: HTMLElement): void {
 }
 
 function applyPinnedFooterMode(element: HTMLElement): void {
-  const mode = $pinnedFooterMode.get();
+  const mode = element.classList.contains("SL_PopupPage") ? "Off" : $pinnedFooterMode.get();
   element.classList.toggle("PinnedFooterMode_NoWriters", mode === "No Writers");
   element.classList.toggle("PinnedFooterMode_Full", mode === "Full");
 }
@@ -284,6 +286,7 @@ async function OpenPage(
   const targetDocument = AppendTo?.ownerDocument ?? document;
   const elem = targetDocument.createElement("div");
   elem.id = "SpicyLyricsPage";
+  if (IsPIP) elem.classList.add("SL_PopupPage");
   // Spotify's OverlayScrollbars (main view, NPV panel) ignores mutations inside
   // this marker. Without it, every per-frame word style write made it re-measure
   // its viewport, forcing an extra style + layout pass mid-frame. The page's size
@@ -428,6 +431,7 @@ async function OpenPage(
 
   addLinesEvListener();
   SetLyricsRendererWindow(targetDocument.defaultView);
+  notifyVisualWindowChanged();
 
   elem.querySelector<HTMLButtonElement>("#ScrollToActiveLyric")?.addEventListener("click", () => {
     ScrollToCurrentActiveLine();
@@ -521,6 +525,11 @@ export function Compactify(Element: HTMLElement | undefined = undefined) {
   if (!Fullscreen.IsOpen) return;
   const elem = Element ?? PageContainer;
   if (!elem) return;
+  if (IsPIP) {
+    elem.classList.remove("CompactifyEnabledCompactMode");
+    EnableCompactMode();
+    return;
+  }
   if (isSizeReadyToBeCompacted()) {
     elem.classList.add("CompactifyEnabledCompactMode");
     EnableCompactMode();
@@ -560,6 +569,7 @@ async function DestroyPage() {
   PageResizeListener = null;
   $lyricsContainerExists.set(false);
   $lyricsRendererPaused.set(false);
+  ClearRomanRows();
   DestroyAllLyricsContainers();
   CleanUpIsByCommunity();
 
@@ -582,6 +592,7 @@ async function DestroyPage() {
   Global.Event.evoke("page:destroy", null);
   PageView.IsTippyCapable = true;
   PageContainer = null;
+  notifyVisualWindowChanged();
 }
 
 export let LyricsApplied = false;

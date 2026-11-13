@@ -1,0 +1,47 @@
+/* Pronunciation row styling adapted from Ruytha Edition. */
+#SpicyLyricsPage .LyricsContainer .LyricsContent .line > .SL_RomanLine {
+  flex-basis: 100%;
+  margin-top: 0.18em;
+  font-size: 0.56em;
+  font-weight: 600 !important;
+  line-height: 1.25;
+  letter-spacing: 0;
+  background: none !important;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 var(--BlurAmount, 0) rgba(255, 255, 255, 0.62) !important;
+  pointer-events: none;
+}
+
+#SpicyLyricsPage .LyricsContainer .LyricsContent .line.Active > .SL_RomanLine {
+  text-shadow: 0 0 0 rgba(255, 255, 255, 0.78) !important;
+}
+
+/* Synced, the row lights up part by part with the lyrics (RuythaPage.css draws the sweep),
+   so its parts paint their own text instead of the shadow, and the line's blur moves to
+   a filter: a text-shadow's blur radius is about twice a filter's. */
+#SpicyLyricsPage .LyricsContainer .LyricsContent .line > .SL_RomanLine.SL_RomanSynced {
+  --SL_RomanLit: rgba(255, 255, 255, 0.92);
+  --SL_RomanDim: rgba(255, 255, 255, 0.42);
+  text-shadow: none !important;
+  filter: blur(calc(var(--BlurAmount, 0px) / 2));
+}
+
+
+#SpicyLyricsPage .SL_RomanSynced {
+  --SL_RomanLit: currentColor;
+  --SL_RomanDim: color-mix(in srgb, currentColor 40%, transparent);
+}
+
+#SpicyLyricsPage .SL_RomanSynced > .SL_RomanPart {
+  background-image: linear-gradient(
+    90deg,
+    var(--SL_RomanLit) calc(var(--SL_RomanFill, 0) * 130% - 30%),
+    var(--SL_RomanDim) calc(var(--SL_RomanFill, 0) * 130%)
+  ) !important;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* AMLL keeps the row at 30%, too faint for the lit part to show. On the line being sung
+   it's raised, with the unlit part dimmed back to about where AMLL had it. */

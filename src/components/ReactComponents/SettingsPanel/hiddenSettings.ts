@@ -1,4 +1,7 @@
 export const SETTING_CATALOG = [
+  ["appearance-font-preset", "Font Preset", "Choose a preset font.", "Appearance"],
+  ["appearance-font-file", "Font File", "Load a locally saved font file.", "Appearance"],
+  ["appearance-font-name", "Font Name", "Enter the installed font family name to use for lyrics.", "Appearance"],
   ["sources-info", "Lyrics Source Info", "Show the displayed lyrics source, sync type and cache status, with a reload action.", "Sources"],
   ["lyrics-resume-indicator", "Autoscroll Resume Indicator", "Show the follow cooldown after manual scrolling. Click to return immediately.", "Lyrics Display"],
   ["appearance-scene-transitions", "Smooth Track Transitions", "Fade lyrics and song information when tracks change, alongside the background transition.", "Appearance"],

@@ -2,7 +2,7 @@ import { useStore } from "@nanostores/react";
 import { $experiment, $experimentOverrides, $experimentsSyncing, forcedExperimentState, getAdvancedExperiments, getVisibleExperiments, RefreshExperimentOverrides, setExperiment, type ExperimentId, type ResolvedExperiment } from "../../../utils/experiments.ts";
 import { useEffect } from "react";
 import { $enableExperimentalWordSync, $externalCinemaLyricsAllowed } from "../../../utils/stores.ts";
-import { Row, SectionTitle, Toggle } from "./components.tsx";
+import { matches, Row, SectionTitle, Toggle } from "./components.tsx";
 
 const experimentSettingIds: Partial<Record<ExperimentId, string>> = {
   newSettingsDesign: "appearance-settings-design",
@@ -21,20 +21,22 @@ export default function ExperimentsPanel({ experimentIds, advancedOnly = false, 
   </div>;
 }
 
-export function ExperimentSettings({ title = false, experimentIds, advancedOnly = false, showBuiltIn = true }: { title?: boolean; experimentIds?: readonly ExperimentId[]; advancedOnly?: boolean; showBuiltIn?: boolean }) {
+export function ExperimentSettings({ title = false, experimentIds, advancedOnly = false, showBuiltIn = true, query = "" }: { query?:string; title?: boolean; experimentIds?: readonly ExperimentId[]; advancedOnly?: boolean; showBuiltIn?: boolean }) {
   useStore($experimentOverrides);
   useEffect(() => { void RefreshExperimentOverrides(); }, []);
   const experimentalWordSync = useStore($enableExperimentalWordSync);
   const externalCinemaLyricsAllowed = useStore($externalCinemaLyricsAllowed);
   const experiments = advancedOnly ? getAdvancedExperiments() : getVisibleExperiments();
 
+  const filtered=experiments.filter(exp=>(!experimentIds||experimentIds.includes(exp.id))&&matches(query,exp.label,exp.description));
+  if(!filtered.length&&(!showBuiltIn||(!matches(query,"Enable Cinema Lyrics Window","Show or hide the Cinema Lyrics button in the playback bar.")&&!matches(query,"Experimental Word Sync","Estimate word sync for line or static lyrics."))))return null;
   return (
     <>
       {title && <SectionTitle>Experiments</SectionTitle>}
-      {experiments.filter((exp) => !experimentIds || experimentIds.includes(exp.id)).map((exp) => (
+      {filtered.map((exp) => (
         <ExperimentRow key={exp.id} experiment={exp} />
       ))}
-      {showBuiltIn && <><Row
+      {showBuiltIn && <>{matches(query,"Enable Cinema Lyrics Window","Show or hide the Cinema Lyrics button in the playback bar.") && <Row
         label="Enable Cinema Lyrics Window"
         description="Show or hide the Cinema Lyrics button in the playback bar."
         labelAccessory={
@@ -50,10 +52,10 @@ export function ExperimentSettings({ title = false, experimentIds, advancedOnly 
         }
       >
         <Toggle checked={externalCinemaLyricsAllowed} onChange={(v) => $externalCinemaLyricsAllowed.set(v)} />
-      </Row>
-      <Row label="Experimental Word Sync" description="Estimate word sync for line or static lyrics.">
+      </Row>}
+      {matches(query,"Experimental Word Sync","Estimate word sync for line or static lyrics.") && <Row label="Experimental Word Sync" description="Estimate word sync for line or static lyrics.">
         <Toggle checked={experimentalWordSync} onChange={(v) => $enableExperimentalWordSync.set(v)} />
-      </Row></>}
+      </Row>}</>}
     </>
   );
 }

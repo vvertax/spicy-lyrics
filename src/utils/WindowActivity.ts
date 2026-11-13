@@ -1,3 +1,4 @@
+import { registerDesignDocument } from "./InterfaceDesign.ts";
 type Listener = () => void;
 const windows = new Map<Window, { listeners: Set<Listener>; cleanup: () => void }>();
 const listeners = new Set<Listener>();
@@ -5,6 +6,7 @@ const closedWindows = new WeakSet<Window>();
 export const isWindowVisible = (win: Window): boolean => !win.closed && !closedWindows.has(win) && !win.document.hidden;
 export function registerActivityWindow(win: Window): void {
   if (windows.has(win) || win.closed || closedWindows.has(win)) return;
+  const releaseDesign = registerDesignDocument(win.document);
   const local = new Set<Listener>();
   const paused = new Set<Animation>(), videos = new Set<HTMLVideoElement>();
   const sync = () => {
@@ -20,7 +22,7 @@ export function registerActivityWindow(win: Window): void {
     }
     local.forEach(listener => listener()); listeners.forEach(listener => listener());
   };
-  const close = () => { closedWindows.add(win); win.document.removeEventListener('visibilitychange', sync); windows.delete(win); local.forEach(listener => listener()); listeners.forEach(listener => listener()); };
+  const close = () => { releaseDesign(); closedWindows.add(win); win.document.removeEventListener('visibilitychange', sync); windows.delete(win); local.forEach(listener => listener()); listeners.forEach(listener => listener()); };
   windows.set(win, { listeners: local, cleanup: close });
   win.document.addEventListener('visibilitychange', sync); win.addEventListener('pagehide', close, { once: true });
   listeners.forEach(listener => listener());

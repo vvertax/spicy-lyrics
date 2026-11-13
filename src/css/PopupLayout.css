@@ -1,0 +1,59 @@
+/* Popup controls must not inherit full-page quick-action geometry. */
+.spicy-pip-wrapper #SpicyLyricsPage .ViewControls.sl-fork-controls {
+  display:flex; flex-wrap:nowrap; align-items:center; justify-content:flex-end; gap:6px;
+  width:max-content; max-width:calc(100vw - 24px); height:auto!important; overflow:visible;
+  margin:0!important; z-index:100; container-type:normal;
+  --ViewControlSize:var(--PD_ViewSize,28px);
+}
+.spicy-pip-wrapper #SpicyLyricsPage .ViewControls.sl-fork-controls .ViewControl {
+  flex:none; display:flex; align-items:center; justify-content:center;
+  width:var(--ViewControlSize); height:var(--ViewControlSize); min-width:0; min-height:0;
+  margin:0; padding:0; border-radius:50%; box-shadow:none!important;
+}
+.spicy-pip-wrapper #SpicyLyricsPage .ViewControls.sl-fork-controls .ViewControl svg { position:static; width:14px; height:14px; }
+/* A popup is already a separate window: the full-page fullscreen-exit action does not apply. */
+.spicy-pip-wrapper #SpicyLyricsPage .ViewControls .sl-fullscreen-exit { display:none!important; }
+.spicy-pip-wrapper #SpicyLyricsPage .sl-quick-controls { max-width:calc(100vw - 72px); gap:5px; }
+.spicy-pip-wrapper #SpicyLyricsPage .sl-fork-menu { width:min(240px,calc(100vw - 24px)); max-height:calc(100vh - 70px); box-sizing:border-box; }
+
+/* top:0 from the legacy compact caption wins over bottom unless explicitly reset. */
+.spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock .ContentBox .NowBar .CenteredView .Header .Metadata { top:auto; }
+.spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock .ContentBox .NowBar .CenteredView .Header .Metadata .ArtistsRow {
+  display:flex; align-items:center; justify-content:flex-start; width:100%; max-width:100%; min-width:0; margin:0; padding:0; gap:0;
+}
+.spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock .ContentBox .NowBar .CenteredView .Header .Metadata .ArtistsRow .Artists {
+  flex:0 1 auto; width:auto; max-width:100%; min-width:0; margin:0;
+}
+.spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock .ContentBox .NowBar .CenteredView .Header .Metadata .ArtistYear {
+  position:static; flex:none; font-size:var(--PD_ArtistSize)!important; line-height:1.35!important;
+}
+.spicy-pip-wrapper #SpicyLyricsPage:not(.Exp_PopupDock) .ViewControls.sl-fork-controls {
+  position:fixed; top:10px; right:10px; left:auto; transform:none; translate:none;
+}
+.spicy-pip-wrapper #SpicyLyricsPage:not(.Exp_PopupDock) .ContentBox .NowBar .Header .Metadata {
+  left:16px; right:84px; width:auto; max-width:none; box-sizing:border-box;
+}
+.spicy-pip-wrapper #SpicyLyricsPage:not(.Exp_PopupDock) .ContentBox .NowBar .Header .Metadata .ArtistsRow {
+  width:100%; max-width:100%; margin:0; padding-left:0;
+}
+.spicy-pip-wrapper #SpicyLyricsPage:not(.Exp_PopupDock) .ContentBox .NowBar .Header .Metadata .Artists {
+  flex:0 1 auto; width:auto; min-width:0;
+}
+
+/* Inline-size containment plus absolutely positioned artist spans collapses an auto-sized row. */
+.spicy-pip-wrapper #SpicyLyricsPage .ContentBox .NowBar .CenteredView .Header .Metadata .ArtistsRow .Artists { container-type:normal; }
+.spicy-pip-wrapper #SpicyLyricsPage .ContentBox .NowBar .CenteredView .Header .Metadata .ArtistsRow .Artists > span {
+  position:relative; display:inline-flex; width:max-content; max-width:none; height:auto; padding:0!important;
+  font-size:inherit!important; line-height:inherit!important;
+}
+
+/* Original Spikerko text viewport: exactly one fade, no full-page zoom/clip expansion. */
+.spicy-pip-wrapper #SpicyLyricsPage .LyricsContainer { overflow:hidden; }
+.spicy-pip-wrapper #SpicyLyricsPage .LyricsContainer .LyricsContent {
+ --DefaultLyricsSize:clamp(1.2rem,min(max(1.7rem,5.5vw),8vh,8vw),2.6rem);
+ --ImageMask:linear-gradient(180deg,transparent 0,transparent min(16px,6%),#000 calc(min(64px,25%) + var(--SL-LyricsContent_MaskTopPadding)),#000 calc(100% - min(64px,25%)),transparent calc(100% - min(16px,6%)),transparent);
+ overflow-x:hidden!important; overflow-clip-margin:0; --SL-LyricsContent_MaskTopPadding:0px;
+}
+.spicy-pip-wrapper #SpicyLyricsPage .LyricsContainer .LyricsContent .simplebar-content-wrapper { mask-image:none; -webkit-mask-image:none; }
+.spicy-pip-wrapper #SpicyLyricsPage .LyricsContainer .LyricsContent[data-simplebar] > .simplebar-wrapper { mask-image:var(--ImageMask); -webkit-mask-image:var(--ImageMask); }
+.spicy-pip-wrapper #SpicyLyricsPage .LyricsContainer .SpicyLyricsScrollContainer[data-lyrics-type="Static"] { --DefaultLyricsSize:clamp(1rem,min(max(1.4rem,6vw),7vh,7vw),2.3rem); }
