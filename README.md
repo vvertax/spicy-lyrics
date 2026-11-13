@@ -21,7 +21,7 @@ An unofficial Spicetify extension for desktop Spotify, based on Spicy Lyrics and
 Requires desktop Spotify and [Spicetify](https://spicetify.app).
 Disable any other Spicy Lyrics extension before installing.
 
-1. Download [spicy-lyrics-sl.mjs](https://lrc.vvrtx.lol/spicy-lyrics-sl.mjs).
+1. Download [spicy-lyrics-sl.mjs](https://github.com/vvertax/spicy-lyrics/blob/main/hosting/spicy-lyrics-sl.mjs).
 2. Place it in your Spicetify **Extensions** folder. Run `spicetify -c` to locate the configuration file; the folder is beside it.
 3. Run:
 

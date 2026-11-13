@@ -21,7 +21,7 @@
 Нужны настольный Spotify и [Spicetify](https://spicetify.app).
 Перед установкой отключите другие расширения Spicy Lyrics.
 
-1. Скачайте [spicy-lyrics-sl.mjs](https://lrc.vvrtx.lol/spicy-lyrics-sl.mjs).
+1. Скачайте [spicy-lyrics-sl.mjs](https://github.com/vvertax/spicy-lyrics/blob/main/hosting/spicy-lyrics-sl.mjs).
 2. Положите файл в папку **Extensions** вашего Spicetify. Команда `spicetify -c` покажет путь к конфигурации; папка находится рядом с ней.
 3. Выполните:
 
