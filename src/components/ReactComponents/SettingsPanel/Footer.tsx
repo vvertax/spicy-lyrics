@@ -1,3 +1,5 @@
+import { CheckForUpdates } from "../../../utils/version/CheckForUpdates.tsx";
+import { toast } from "sonner";
 import { useStore } from "@nanostores/react";
 import React, { useEffect, useState } from "react";
 import Session from "../../Global/Session.ts";
@@ -42,7 +44,7 @@ export default function Footer() {
     <div className="sl-sp-about-hero">
       <span className="sl-sp-about-wordmark">Spicy Lyrics</span>
       <div className="sl-sp-about-status-row"><span className="sl-sp-about-version">v{version}</span>
-        {(status === "latest" || status === "outdated") && <><span className="sl-sp-about-sep">·</span><span className={`sl-sp-about-status sl-sp-about-status--${status}`}>{status === "latest" ? "Latest" : "Outdated"}</span>{status === "outdated" && <button type="button" className="sl-sp-about-update" onClick={() => Session.Navigate({ pathname: "/SpicyLyrics/Update" })}>Update</button>}</>}
+        {(status === "latest" || status === "outdated") && <><span className="sl-sp-about-sep">·</span><span className={`sl-sp-about-status sl-sp-about-status--${status}`}>{status === "latest" ? "Latest" : "Outdated"}</span>{status === "outdated" && <button type="button" className="sl-sp-about-update" onClick={() => { void CheckForUpdates(true).catch(() => toast.error("Could not check for updates.")); }}>Update</button>}</>}
       </div>
       <span className="sl-sp-about-build">Build: <span className="sl-sp-about-build-value">vvertax Edition</span></span>
     </div>

@@ -57,3 +57,9 @@
 .spicy-pip-wrapper #SpicyLyricsPage .LyricsContainer .LyricsContent .simplebar-content-wrapper { mask-image:none; -webkit-mask-image:none; }
 .spicy-pip-wrapper #SpicyLyricsPage .LyricsContainer .LyricsContent[data-simplebar] > .simplebar-wrapper { mask-image:var(--ImageMask); -webkit-mask-image:var(--ImageMask); }
 .spicy-pip-wrapper #SpicyLyricsPage .LyricsContainer .SpicyLyricsScrollContainer[data-lyrics-type="Static"] { --DefaultLyricsSize:clamp(1rem,min(max(1.4rem,6vw),7vh,7vw),2.3rem); }
+
+/* Match caption and timeline gutters; keep long text scrollable with a clear end hold. */
+.spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock .ContentBox .NowBar .CenteredView .Header .Metadata .ArtistsRow { overflow:hidden; }
+.spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock .ContentBox .NowBar .CenteredView .Header .Metadata :is(.SongName,.Artists) > span { padding:0!important; }
+.spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock .ContentBox .NowBar .CenteredView .Header .Metadata .SongName.CanMarquee > span,
+.spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock .ContentBox .NowBar .CenteredView .Header .Metadata .ArtistsRow .Artists.CanMarquee > span { padding-right:14px!important; }

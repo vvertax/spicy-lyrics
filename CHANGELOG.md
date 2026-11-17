@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.11.3
+
+- Make the About Update button show the update notification instead of opening the build-channel selector.
+- Fix clipped fullscreen Canvas buttons when the volume slider is below; center side volume sliders with matching insets.
+- Match the TTML Reviewer, diagnostics, and settings history expand/collapse controls to Quick Controls.
+- Remove unnecessary fades from popup track and artist names and improve dock spacing and alignment.
+- Fix missing popup playback controls when fullscreen controls are set to stay visible.
+- Fix popup background flickering when hovering over the playback panel.
+- Add Russian translations for songwriter, community, contributor, source, and Up Next labels.
+
 ## 1.11.2
 
 - Match the Background and Effects expand/collapse controls to Quick Controls, with circular arrow buttons and matching hints.

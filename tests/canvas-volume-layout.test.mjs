@@ -30,3 +30,24 @@ test('below slider remains horizontal, and Canvas transitions release the old an
   assert.equal(f.nodes[0].removed,true);assert.equal(f.nodes[1].parent.name,'dock');assert.deepEqual(f.cleaned,['observer','layout']);
   f.setCanvas(false);f.observers[1].callback();assert.equal(f.nodes[2].parent.name,'cover');
 });
+
+test('Canvas toolbar anchor updates when the volume row changes header padding without resizing the page', async()=>{
+  const canvasSource=readFileSync('src/components/DynamicBG/CanvasImmersive.ts','utf8');
+  const observerStart=canvasSource.indexOf('  const resizeObserver = new ResizeObserver(');
+  const observerEnd=canvasSource.indexOf('resizeObserver.observe(header);',observerStart)+'resizeObserver.observe(header);'.length;
+  const measureStart=canvasSource.indexOf('function updateSquareTop(');
+  const measureEnd=canvasSource.indexOf("// A row's own CSS",measureStart);
+  const {code}=await transform(canvasSource.slice(observerStart,observerEnd)+'\n'+canvasSource.slice(measureStart,measureEnd),{loader:'ts'});
+  let squareTop=151,callback;
+  const properties=new Map(),observed=[];
+  const media={getBoundingClientRect:()=>({top:squareTop})};
+  const header={querySelector:()=>media};
+  const nowBar={getBoundingClientRect:()=>({top:54}),style:{setProperty:(k,v)=>properties.set(k,v)}};
+  const context=vm.createContext({mount:{header,nowBar},header,nowBar,contentBox:{},active:true,resizeAmbient(){},
+    ResizeObserver:class{constructor(cb){callback=cb;}observe(node){observed.push(node);}}});
+  vm.runInContext(code,context);
+  assert.ok(observed.includes(header),'header content resize must be observed');
+  callback();assert.equal(properties.get('--CanvasSquareTop'),'97px');
+  squareTop-=48;callback();assert.equal(properties.get('--CanvasSquareTop'),'49px');
+  squareTop+=48;callback();assert.equal(properties.get('--CanvasSquareTop'),'97px');
+});

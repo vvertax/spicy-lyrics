@@ -266,6 +266,7 @@ function shouldPlaceTimelineOutsideMediaContent() {
 }
 
 function shouldPlacePlaybackControlsOutsideMediaContent() {
+  if (IsPIP || IsCompactMode()) return false;
   const alwaysShow = $alwaysShowInFullscreen.get();
   return alwaysShow === "Controls" || alwaysShow === "Both" || alwaysShow === "All";
 }

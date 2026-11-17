@@ -288,6 +288,9 @@ function MountOnPage(page: HTMLElement) {
   });
   resizeObserver.observe(contentBox);
   resizeObserver.observe(nowBar);
+  // A Below volume row changes the header's content height without resizing the NowBar.
+  // Re-measure the square anchor so the toolbar keeps its screen-space top inset.
+  resizeObserver.observe(header);
 
   // The page's classes change all the time (our own toggle included); only a change in
   // whether the theme owns the background is worth a refresh.

@@ -875,5 +875,14 @@
   "Copy and open bug tracker": "Скопировать и открыть баг-трекер",
   "Copy only": "Только скопировать",
   "Edit report": "Редактировать отчёт",
-  "New": "Новое"
+  "New": "Новое",
+  "Could not check for updates.": "Не удалось проверить обновления.",
+  "Written by": "Авторы песни",
+  "Provided by": "Источник",
+  "Community lyrics": "Текст сообщества",
+  "These lyrics have been provided by our community": "Этот текст предоставлен сообществом",
+  "Made by": "Синхронизация",
+  "Uploaded by": "Загрузил",
+  "via": "через",
+  "Lyrics by the creator of vvertax Edition": "Текст от автора vvertax Edition"
 }
