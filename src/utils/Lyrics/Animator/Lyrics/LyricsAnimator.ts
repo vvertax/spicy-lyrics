@@ -1507,7 +1507,7 @@ export function Animate(position: number, target?: { type: "Syllable" | "Line"; 
                       if (!nextWord.PreSLMAnimated) {
                         nextWord.PreSLMAnimated = true;
                         nextWord.HTMLElement.style.removeProperty("--SLM_GradientPosition");
-                        const delay = Math.max(0, word.StartTime + totalDuration * 0.845 - 130 - ProcessedPosition);
+                        const delay = Math.max(0, word.StartTime + (word.EndTime - word.StartTime) * 0.845 - 130 - ProcessedPosition);
                         nextWord.HTMLElement.style.animation = getPreSLMAnimation(250, delay);
                       }
                     }
@@ -1526,7 +1526,7 @@ export function Animate(position: number, target?: { type: "Syllable" | "Line"; 
                   } else {
                     word.HTMLElement.style.removeProperty("--SLM_GradientPosition");
                     //word.HTMLElement.style.removeProperty("--SLM_TranslateY");
-                    word.HTMLElement.style.animation = getSLMAnimation(totalDuration, ProcessedPosition - word.StartTime);
+                    word.HTMLElement.style.animation = getSLMAnimation(word.EndTime - word.StartTime, ProcessedPosition - word.StartTime);
                     word.SLMAnimated = true;
                     word.PreSLMAnimated = false;
                     const nextWord = words[wordIndex + 1];
@@ -1534,7 +1534,7 @@ export function Animate(position: number, target?: { type: "Syllable" | "Line"; 
                       if (!nextWord.PreSLMAnimated) {
                         nextWord.PreSLMAnimated = true;
                         nextWord.HTMLElement.style.removeProperty("--SLM_GradientPosition");
-                        const delay = Math.max(0, word.StartTime + totalDuration * 0.6 - 22 - ProcessedPosition);
+                        const delay = Math.max(0, word.StartTime + (word.EndTime - word.StartTime) * 0.6 - 22 - ProcessedPosition);
                         nextWord.HTMLElement.style.animation = getPreSLMAnimation(125, delay);
                       }
                     }

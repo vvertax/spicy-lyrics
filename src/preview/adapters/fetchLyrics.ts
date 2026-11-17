@@ -10,3 +10,6 @@ export const getActiveLyricsSourceOrder=()=>['spicy'] as any;
 export const getLyricsSourceCacheSignature=()=> 'demo-v1';
 export const GetLastLyricsFailure=()=>null;export const ShowQueueLoader=()=>{};export const LYRICS_QUEUE_MESSAGE='Demo';export const ClearLyricsPageContainer=()=>{};
 export default async function fetchLyrics(u:string){if(u!==uri())return null;$currentlyFetching.set(true);const prefetched=await nextLyricsCache.take(u,'demo-v1');const data=structuredClone(SessionTTMLStore.get(getSongKey(u))??prefetched?.lyrics??fixture(getSongKey(u)));await ProcessLyrics(data);if(u!==uri()){$currentlyFetching.set(false);return null;}$currentLyricsData.set(JSON.stringify(data));$currentLyricsType.set(data.Type);$currentlyFetching.set(false);return [data,200] as [any,number];}
+
+export const GetLyricsAnsweredFrom = () => "Demo";
+export const HoldsTemporaryUpload = () => false;

@@ -1,13 +1,14 @@
+import { forkReleaseHost } from "./ForkReleaseHost.ts";
 const CHANNEL_PREFIX = "SpicyLyrics-";
 const DEFAULT_API_HOST = "api.spicylyrics.org";
 const VERSION_TIMEOUT_MS = 5000;
 
 type ChannelHosts = [string, string] | [string, string, string];
 
-function selectedChannel(): { apiHost: string; fixedVersion: string | null } {
+function selectedChannel(): { apiHost: string; fixedVersion: string | null; storageHost?: string } {
   const name = Spicetify.LocalStorage.get(`${CHANNEL_PREFIX}buildChannel`) ?? "vvertax Edition";
-  if (name === "vvertax Edition" || name === "SL") return { apiHost: "lrc.vvrtx.lol", fixedVersion: null };
-  if (name === "Stable" || name === "Beta") return { apiHost: DEFAULT_API_HOST, fixedVersion: null };
+  if (name === "vvertax Edition" || name === "SL") return { apiHost: forkReleaseHost(), fixedVersion: null };
+  if (name === "Stable" || name === "Beta") return { apiHost: DEFAULT_API_HOST, storageHost: "public.storage.spicylyrics.org", fixedVersion: null };
 
   try {
     const custom = JSON.parse(Spicetify.LocalStorage.get(`${CHANNEL_PREFIX}customChannels`) ?? "{}");
@@ -15,13 +16,14 @@ function selectedChannel(): { apiHost: string; fixedVersion: string | null } {
     if (Array.isArray(hosts) && typeof hosts[0] === "string") {
       return {
         apiHost: hosts[0],
+        storageHost: hosts[1],
         fixedVersion: typeof hosts[2] === "string" && hosts[2].trim() ? hosts[2].trim() : null,
       };
     }
   } catch {
     // Match the entrypoint's SL fallback when stored channels are invalid.
   }
-  return { apiHost: "lrc.vvrtx.lol", fixedVersion: null };
+  return { apiHost: forkReleaseHost(), fixedVersion: null };
 }
 
 export async function fetchSelectedChannelVersion(): Promise<string | undefined> {
@@ -31,14 +33,18 @@ export async function fetchSelectedChannelVersion(): Promise<string | undefined>
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), VERSION_TIMEOUT_MS);
   try {
-    const response = await fetch(`https://${channel.apiHost}/version`, {
+    const official = channel.apiHost === DEFAULT_API_HOST && channel.storageHost === "public.storage.spicylyrics.org";
+    const response = await fetch(`https://${channel.apiHost}${official ? '/bp/loader/grabClientInfo' : '/version'}`, {
       cache: "no-store",
       signal: controller.signal,
     });
     if (!response.ok) throw new Error(`Version request failed with HTTP ${response.status}`);
-    const version = (await response.text()).trim();
-    if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(version)) {
-      throw new Error(`Unexpected version response: ${JSON.stringify(version.slice(0, 40))}`);
+    const info = official ? await response.json() : null;
+    const version = official
+      ? (Array.isArray(info?.branches) ? info.branches.find((branch: { tag?: string; version?: unknown }) => branch?.tag === 'public')?.version : undefined)
+      : (await response.text()).trim();
+    if (typeof version !== 'string' || !/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(version)) {
+      throw new Error(`Unexpected version response: ${JSON.stringify(String(version).slice(0, 40))}`);
     }
     return version;
   } finally {

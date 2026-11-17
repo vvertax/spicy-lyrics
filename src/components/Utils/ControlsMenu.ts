@@ -1,3 +1,4 @@
+import { prepareMenuButton, controlMenuPlacement } from "./ControlPresentation.ts";
 import { bindLyricsExtras } from "./LyricsExtras.ts";
 import { $experiment } from "../../utils/experiments.ts";
 import { $subtitlePanelVisible } from "../../utils/stores.ts";
@@ -38,7 +39,8 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
     (button as HTMLButtonElement & { _tippy?: { destroy(): void } })._tippy?.destroy();
     button.dataset.controlId = controlId(button.id, label);
     button.dataset.controlLabel = label;
-    button.role = 'menuitem'; button.className = 'sl-fork-menu-item';
+    const pressed = prepareMenuButton(button);
+    button.role = pressed === null ? 'menuitem' : 'menuitemcheckbox'; button.className = 'sl-fork-menu-item';
     const text = doc.createElement('span'); text.textContent = label; button.append(text);
     menu.append(button);
   };
@@ -88,23 +90,24 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   const toggle = doc.createElement('button'); toggle.type = 'button'; toggle.className = 'ViewControl sl-fork-menu-toggle';
   toggle.innerHTML = Icons.More; toggle.setAttribute('aria-label', 'Lyrics page controls');
   toggle.setAttribute('aria-haspopup', 'menu'); toggle.setAttribute('aria-expanded', 'false');
-  const close = (focus = false) => { menu.hidden = true; toggle.setAttribute('aria-expanded', 'false'); if (focus && toggle.isConnected) toggle.focus(); };
+  const close = (focus = false) => { if (typeof menu.hidePopover === 'function' && menu.matches(':popover-open')) menu.hidePopover(); menu.hidden = true; toggle.setAttribute('aria-expanded', 'false'); if (focus && toggle.isConnected) toggle.focus(); };
   const items = () => Array.from(menu.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')).filter(button => !button.hidden);
   const open = () => {
     menu.hidden = false; toggle.setAttribute('aria-expanded', 'true');
+    if (typeof menu.showPopover === 'function' && !menu.matches(':popover-open')) menu.showPopover();
     const rect = toggle.getBoundingClientRect();
-    menu.style.left = `${toggle.offsetLeft + toggle.offsetWidth / 2}px`;
-    menu.style.setProperty('--menu-shift', '0px');
+    menu.style.maxHeight = `${Math.max(1, win.innerHeight - 24)}px`;
     const bounds = menu.getBoundingClientRect();
-    const shift = Math.max(12 - bounds.left, Math.min(0, win.innerWidth - 12 - bounds.right));
-    menu.style.setProperty('--menu-shift', `${shift}px`);
-    menu.style.bottom = rect.top > win.innerHeight / 2 ? 'calc(100% + 10px)' : 'auto';
-    menu.style.top = rect.top > win.innerHeight / 2 ? 'auto' : 'calc(100% + 10px)';
-    menu.style.transformOrigin = rect.top > win.innerHeight / 2 ? 'center bottom' : 'center top';
+    const placement = controlMenuPlacement(rect, bounds.width, bounds.height, { width: win.innerWidth, height: win.innerHeight });
+    menu.style.left = `${placement.left}px`;
+    menu.style.top = `${placement.top}px`;
+    menu.style.bottom = 'auto';
+    menu.style.maxHeight = `${placement.maxHeight}px`;
+    menu.style.transformOrigin = placement.opensAbove ? 'right bottom' : 'right top';
     if (!win.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       menu.getAnimations().forEach(animation => animation.cancel());
       menu.animate([
-        { opacity: 0, scale: '0.96', translate: rect.top > win.innerHeight / 2 ? '0 6px' : '0 -6px' },
+        { opacity: 0, scale: '0.96', translate: placement.opensAbove ? '0 6px' : '0 -6px' },
         { opacity: 1, scale: '1', translate: '0 0' },
       ], { duration: 180, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
     }
@@ -115,7 +118,7 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   menu.addEventListener('click', () => close());
   win.addEventListener('resize', closeOnResize);
   function closeOnResize() { close(); }
-  const outside = (event: Event) => { if (!controls.contains(event.target as Node)) close(); };
+  const outside = (event: Event) => { if (!controls.contains(event.target as Node) && !menu.contains(event.target as Node)) close(); };
   const keys = (event: KeyboardEvent) => {
     if (menu.hidden) return;
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(true); }
@@ -130,7 +133,10 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   exitFullscreen.innerHTML = Icons.CloseFullscreen;
   exitFullscreen.setAttribute('aria-label', 'Exit Fullscreen'); exitFullscreen.title = 'Exit Fullscreen';
   exitFullscreen.onclick = () => { close(); void Fullscreen.Close(); };
-  controls.classList.add('sl-fork-controls'); controls.append(exitFullscreen, toggle, menu);
+  controls.classList.add('sl-fork-controls'); controls.append(exitFullscreen, toggle);
+  // A top-layer sibling can blur the page instead of the fading toolbar's backdrop root.
+  if (typeof menu.showPopover === 'function') menu.popover = 'manual';
+  page.append(menu);
   const quickbar = doc.createElement('div'); quickbar.className='sl-quick-controls'; quickbar.role='toolbar'; quickbar.setAttribute('aria-label','Quick lyrics controls');
   controls.insertBefore(quickbar, exitFullscreen);
   const allRows=Array.from(menu.querySelectorAll<HTMLButtonElement>('button'));
@@ -162,9 +168,7 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
     if (!page.isConnected || !event.altKey || !event.shiftKey || event.ctrlKey || event.metaKey || event.repeat) return;
     const target = event.target as HTMLElement | null;
     if (target?.closest('input, textarea, select, [contenteditable="true"], [role="textbox"]') || doc.querySelector('dialog[open]') || doc.querySelector('sl-generic-modal .sl-modal-overlay.Active')) return;
-    const action = event.code === 'KeyK' ? controls.querySelector<HTMLButtonElement>('[data-vv-action="karaoke"]')
-      : event.code === 'KeyR' ? controls.querySelector<HTMLButtonElement>('[data-vv-action="recording"]')
-      : event.code === 'KeyT' ? controls.querySelector<HTMLButtonElement>('#RomanizationToggle') : null;
+    const action = allRows.find(row => event.code === 'KeyK' ? row.dataset.vvAction === 'karaoke' : event.code === 'KeyR' ? row.dataset.vvAction === 'recording' : event.code === 'KeyT' ? row.id === 'RomanizationToggle' : false);
     if (event.code === 'KeyL') { event.preventDefault(); ScrollToCurrentActiveLine(); }
     else if (action) { event.preventDefault(); action.click(); }
   };
@@ -172,5 +176,5 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   doc.addEventListener('pointerdown', outside); doc.addEventListener('keydown', keys, true);
   const observer = new MutationObserver(() => { if (!controls.isConnected) cleanup?.(); });
   observer.observe(doc.body, { childList: true, subtree: true });
-  cleanup = () => { unbindExtras(); stopSubtitleFlag(); stopSubtitleVisible(); unbindDrop();unbindLines();unsubscribeQuick(); pressedObserver.disconnect(); doc.removeEventListener('keydown', shortcuts); close(); win.removeEventListener('resize', closeOnResize); observer.disconnect(); doc.removeEventListener('pointerdown', outside); doc.removeEventListener('keydown', keys, true); cleanup = undefined; };
+  cleanup = () => { unbindExtras(); stopSubtitleFlag(); stopSubtitleVisible(); unbindDrop();unbindLines();unsubscribeQuick(); pressedObserver.disconnect(); doc.removeEventListener('keydown', shortcuts); close(); menu.remove(); win.removeEventListener('resize', closeOnResize); observer.disconnect(); doc.removeEventListener('pointerdown', outside); doc.removeEventListener('keydown', keys, true); cleanup = undefined; };
 }

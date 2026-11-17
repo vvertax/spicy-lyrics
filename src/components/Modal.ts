@@ -15,7 +15,6 @@ type ModalDisplayOptions = {
 };
 
 type ModalTransitionOptions = {
-	title?: string;
 	content: any;
 	isLarge?: boolean;
 	onClose?: (() => void) | null;

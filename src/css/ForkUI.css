@@ -455,7 +455,14 @@
 #SpicyLyricsPage .vv-source-info button { margin-inline-start:10px; padding:0; border:0; color:inherit; background:transparent; cursor:pointer; font:inherit; text-decoration:underline; text-underline-offset:3px; opacity:.8; }
 #SpicyLyricsPage .vv-source-info button:hover { opacity:1; }
 #SpicyLyricsPage .ScrollToActiveLyric .vv-resume-indicator { position:absolute; bottom:calc(100% + 10px); left:50%; translate:-50% 0; padding:0; color:#ffffff8c; font:600 18px/1.2 var(--SpicyLyrics-Font,SpicyLyrics),sans-serif; font-variant-numeric:tabular-nums; white-space:nowrap; text-shadow:0 1px 5px #0005; pointer-events:none; }
-#SpicyLyricsPage .vv-zoom-badge { position:absolute; right:16px; bottom:16px; z-index:25; border:1px solid #ffffff25; border-radius:12px; background:#292330df; backdrop-filter:blur(16px); color:#eee2ff; font:13px/1.5 SpicyLyrics,sans-serif; padding:9px 12px; cursor:pointer; }
+#SpicyLyricsPage .vv-zoom-badge { position:absolute; right:28px; bottom:28px; z-index:25; display:grid; grid-template-columns:auto auto; align-items:center; gap:1px 20px; min-width:172px; box-sizing:border-box; padding:12px 16px; border:1px solid rgb(255 255 255 / .18); border-radius:16px; background:rgb(20 20 26 / .88); -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); box-shadow:0 8px 32px #0004; color:#fff; font-family:SpicyLyrics,sans-serif; text-align:left; cursor:pointer; }
+#SpicyLyricsPage .vv-zoom-label { grid-column:1; color:rgb(255 255 255 / .6); font-size:11px; line-height:1.5; }
+#SpicyLyricsPage .vv-zoom-value { grid-column:1; font-size:23px; line-height:1.2; font-weight:600; font-variant-numeric:tabular-nums; letter-spacing:-.03em; }
+#SpicyLyricsPage .vv-zoom-reset { grid-column:2; grid-row:1 / 3; font-size:12px; color:rgb(255 255 255 / .75); }
+#SpicyLyricsPage .vv-zoom-badge:hover { background:rgb(32 30 40 / .95); border-color:rgb(255 255 255 / .32); }
+#SpicyLyricsPage .vv-zoom-badge:focus-visible { outline:2px solid #cdb4ff; outline-offset:4px; }
+@media(max-width:600px) { #SpicyLyricsPage .vv-zoom-badge { right:20px; bottom:20px; min-width:156px; padding:10px 14px; } }
+
 #SpicyLyricsPage :is(.vv-source-info,.vv-resume-indicator,.vv-zoom-badge)[hidden] { display:none!important; }
 #SpicyLyricsPage.VV_Recording :is(.vv-source-info,.vv-resume-indicator,.vv-zoom-badge) { display:none!important; }
 
@@ -670,3 +677,56 @@
 
 .vv-review-dialog.vv-diagnostics { background:var(--ry-sky,linear-gradient(130deg,#102445,#0b102b 60%,#37235a)); border-color:#becdff38; font-family:var(--ry-font,sans-serif); }
 .vv-review-dialog.vv-diagnostics textarea { min-height:min(45vh,400px); font:12px/1.6 monospace; resize:vertical; }
+
+/* Quick buttons remain independent; never turn their wrapper into a backdrop root. */
+#SpicyLyricsPage .ViewControls.sl-fork-controls {
+  background: transparent !important; border: 0 !important; border-radius: 0 !important;
+  box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+#SpicyLyricsPage > .sl-fork-menu {
+  position: fixed; inset: auto; margin: 0; transform: none; translate: none;
+  z-index: 1000; width: min(240px, 80vw); max-height: calc(100vh - 24px);
+  isolation: isolate;
+}
+#SpicyLyricsPage > .sl-fork-menu::backdrop { background: transparent; }
+#SpicyLyricsPage > .sl-fork-menu .sl-fork-menu-item > svg { width: 16px; height: 16px; }
+
+/* Dedicated upstream settings panes use the fork's existing card materials. */
+.sl-sp-reviewer { display: grid; gap: 18px; }
+.sl-sp-reviewer-list { display: grid; gap: 0; }
+.sl-sp-reviewer-item { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--hairline, #ffffff20); font-size: 13px; }
+.sl-sp-reviewer-value { text-align: right; color: var(--color-text-secondary); flex: none; }
+.sl-sp-bug { display: grid; gap: 14px; }
+.sl-sp-bug > p { margin: 0; line-height: 1.6; font-size: 13px; }
+.sl-sp-bug textarea { width: 100%; min-height: 320px; resize: vertical; box-sizing: border-box; padding: 14px; color: inherit; background: #0002; border: 1px solid var(--hairline, #ffffff25); border-radius: 12px; font: 12px/1.6 monospace; }
+.sl-sp-bug-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.sl-sp-settings-group { margin-top: 16px; border: 1px solid var(--hairline, #ffffff25); border-radius: 14px; overflow: hidden; }
+.sl-sp-settings-group > summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 18px; cursor: pointer; list-style: none; font-size: 14px; font-weight: 600; background: #ffffff05; }
+.sl-sp-settings-group > summary::-webkit-details-marker { display: none; }
+.sl-sp-settings-group > summary:hover { background: #ffffff0a; }
+.sl-sp-settings-group > summary:focus-visible { outline: 2px solid currentColor; outline-offset: -3px; }
+.sl-sp-settings-group > summary > span[aria-hidden] { font-size: 18px; line-height: 1; }
+.sl-sp-settings-group[open] > summary { border-bottom: 1px solid var(--hairline, #ffffff20); }
+.sl-sp-settings-group[open] > summary > span[aria-hidden] { transform: rotate(180deg); }
+.sl-sp-settings-group-body { padding: 16px 18px; }
+.sl-sp-panel--settings .sl-sp-sidebar { min-height: 0; }
+sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings .sl-sp-sidebar .sl-sp-tabs {
+  display: flex; flex-flow: column nowrap; align-items: stretch; justify-content: flex-start;
+  flex: 1 1 0; min-height: 0; min-width: 0; max-width: 100%;
+  overflow-x: hidden; overflow-y: auto; scrollbar-width: thin;
+}
+sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings .sl-sp-tabs > .sl-sp-tab {
+  flex: 0 0 auto; box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%;
+  height: auto; min-height: 34px; justify-content: flex-start; white-space: normal;
+}
+sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings .sl-sp-sidebar .sl-sp-tabs > .sl-sp-tab > .sl-sp-tab-label {
+  min-width: 0; white-space: normal; overflow: visible; text-overflow: clip;
+  overflow-wrap: anywhere; line-height: 1.35;
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings .sl-sp-tabs > .sl-sp-tabs-divider {
+  display: block; flex: 0 0 auto; height: 1px; margin: 8px 10px; background: var(--hairline, #ffffff25);
+}
+
+.sl-sp-new-badge { display:inline-flex; align-items:center; flex:none; padding:2px 7px; border:1px solid #bba0f54a; border-radius:6px; background:#bba0f51a; color:#ddccff; font-size:10px !important; font-weight:600; line-height:1.4; white-space:nowrap; vertical-align:middle; }
+.sl-sp-settings-group-label { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }

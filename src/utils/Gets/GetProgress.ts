@@ -1,9 +1,13 @@
+import { $ttmlReviewer } from "../ttmlReviewer.ts";
 import { $playbackOffset, $songPlaybackOffsets } from "../stores.ts";
 import { effectiveOffset } from "../Lyrics/PlaybackOffsets.ts";
 
 import { SpotifyPlayer } from "./../../components/Global/SpotifyPlayer.ts";
+import Logger from "../Logger.ts";
 
-const getOffset = () => effectiveOffset($playbackOffset.get(), $songPlaybackOffsets.get(), SpotifyPlayer.GetUri());
+const progressLogger = new Logger("Sync Position");
+
+const getOffset = () => effectiveOffset($playbackOffset.get(), ($ttmlReviewer.get() ? {} : $songPlaybackOffsets.get()), SpotifyPlayer.GetUri());
 
 interface SyncedPosition {
   StartedSyncAt: number;
@@ -354,7 +358,7 @@ export const requestPositionSync = () => {
       // reschedule below lives in the success path, so a single failed poll
       // would leave syncedPosition frozen with no way to recover.
       .catch((error: unknown) => {
-        console.error("Sync Position: Poll failed, More Details:", error);
+        progressLogger.error("Poll failed:", error);
       })
       .then(() => {
         const delay = isLocallyPlaying
@@ -366,7 +370,7 @@ export const requestPositionSync = () => {
         setTimeout(requestPositionSync, delay * 1000);
       });
   } catch (error) {
-    console.error("Sync Position: Fail, More Details:", error);
+    progressLogger.error("Failed:", error);
     // A synchronous throw (a Platform API not ready or renamed) must not kill
     // the loop either — retry on a slow cadence instead of hammering.
     setTimeout(requestPositionSync, 1000);
@@ -379,7 +383,9 @@ export default function GetProgress() {
   }
 
   if (!syncedPosition) {
-    console.error("Synced Position: Unavailable");
+    // Expected before the first position sync lands; falls back below. A warning, so
+    // bug reports (which keep errors) aren't filled with it.
+    progressLogger.warn("Unavailable");
     if (SpotifyPlayer?._DEPRECATED_?.GetTrackPosition) {
       // Also added this backup in case, if the "sycedPosition" is unavailable, but the "_DEPRECATED_" version is available
       console.warn("Synced Position: Skip, Using DEPRECATED Version");
@@ -422,7 +428,7 @@ export default function GetProgress() {
 export function _DEPRECATED___GetProgress() {
   // Ensure Spicetify is loaded and state is available
   if (!(Spicetify?.Player as any)?.origin?._state) {
-    console.error("Spicetify Player state is not available.");
+    progressLogger.warn("Spicetify Player state is not available.");
     return 0;
   }
 
@@ -435,7 +441,7 @@ export function _DEPRECATED___GetProgress() {
 
   // Validate data integrity
   if (positionAsOfTimestamp == null || timestamp == null) {
-    console.error("Playback state is incomplete.");
+    progressLogger.warn("Playback state is incomplete.");
     return null;
   }
 

@@ -17,7 +17,7 @@
   sl-generic-modal.SpicyLyricsModal .sl-modal-title { font-family:var(--ry-font); }
 }
 /* A visible pause between the main categories and maintenance sections. */
-sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings .sl-sp-tabs .sl-sp-tab[data-section="Advanced"] { margin-top:12px; }
+sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings .sl-sp-tabs .sl-sp-tab[data-section="Advanced"] { margin-top:0; }
 sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings .sl-sp-tabs .sl-sp-tab:nth-last-child(2) { margin-top:0; }
 
 /* Preview contents need their own inset in both card presentations. */
@@ -150,3 +150,8 @@ sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings .vv-shortcut-help { fon
  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='m3 4.5 3 3 3-3' fill='none' stroke='%23c9bddf' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
  background-repeat:no-repeat; background-size:12px 12px; background-position:right 8px center;
 }
+
+.vv-diagnostics-formats { display:flex; gap:4px; padding:3px; border:1px solid var(--ry-line); border-radius:9px; background:rgb(0 0 0 / .14); }
+.vv-diagnostics .vv-diagnostics-formats button { margin:0; padding:5px 10px; border:0; border-radius:6px; background:transparent; color:var(--ry-muted); font:500 11px/1.4 SpicyLyrics,sans-serif; cursor:pointer; }
+.vv-diagnostics .vv-diagnostics-formats button[aria-pressed="true"] { background:var(--ry-surface); color:var(--ry-text); box-shadow:0 1px 4px #0003; }
+.vv-review-dialog.vv-diagnostics .vv-diagnostics-editor textarea { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.7; }

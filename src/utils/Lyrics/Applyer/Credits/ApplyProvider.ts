@@ -1,7 +1,7 @@
 import { CreditsRow } from "./CreditsRow.ts";
 import { PinFooterDetailWithoutWriters } from "./CreateLyricsFooter.ts";
 
-const ProviderMap = {
+export const ProviderMap = {
     "spt": "Spotify",
     "aml": "Apple Music",
     "spl": "Spicy Lyrics",

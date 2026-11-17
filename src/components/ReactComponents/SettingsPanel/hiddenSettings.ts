@@ -1,38 +1,51 @@
 export const SETTING_CATALOG = [
+  ["ctrlWheelLyricsZoom", "Ctrl + Wheel Lyrics Zoom", "Resize lyrics with Ctrl and the mouse wheel. Use the scale badge to reset to 100%.", "Lyrics Display"],
+  ["rendererVisualStyle", "Renderer Style", "Spring keeps the fork animations. Bloom uses the new line sweep and syllable emphasis.", "Lyrics Display"],
+  ["lyricsSize", "Lyrics Size", "Scale lyrics in every view.", "Lyrics Display"],
+  ["syllableMerge", "Syllable Merge", "Choose which split words Bloom joins. Original timing remains available with Off.", "Lyrics Display"],
+  ["syllablePace", "Syllable Pace", "Time the letters of joined Bloom words by their original syllables.", "Lyrics Display"],
+  ["staticAutoScroll", "Unsynced Auto-scroll", "Scroll unsynced lyrics with the music. Advanced mode follows detected vocals when available.", "Playback"],
+  ["motionArtwork", "Motion Artwork", "Play animated album artwork when available.", "Background"],
+  ["motionArtworkOnStage", "Motion Artwork on Stage", "Allow animated album artwork to fill Canvas Stage.", "Background"],
+  ["motionArtworkPriority", "Artwork Priority", "Choose what plays when a song has both Canvas and motion artwork.", "Background"],
+  ["ttmlReviewer", "TTML Reviewer", "Temporarily use neutral timing and visuals for reviewing TTML. Turning it off restores your saved settings.", "TTML Reviewer"],
+
   ["appearance-font-preset", "Font Preset", "Choose a preset font.", "Appearance"],
   ["appearance-font-file", "Font File", "Load a locally saved font file.", "Appearance"],
   ["appearance-font-name", "Font Name", "Enter the installed font family name to use for lyrics.", "Appearance"],
   ["sources-info", "Lyrics Source Info", "Show the displayed lyrics source, sync type and cache status, with a reload action.", "Sources"],
-  ["lyrics-resume-indicator", "Autoscroll Resume Indicator", "Show the follow cooldown after manual scrolling. Click to return immediately.", "Lyrics Display"],
+  ["lyrics-resume-indicator", "Autoscroll Resume Indicator", "Show the follow cooldown after manual scrolling. Click to return immediately.", "Playback"],
   ["appearance-scene-transitions", "Smooth Track Transitions", "Fade lyrics and song information when tracks change, alongside the background transition.", "Appearance"],
-  ["lyrics-song-offset", "Timing for This Song", "Save a timing offset for the current song instead of the global value.", "Lyrics Display"],
+  ["appearance-pinned-footer", "Pinned Lyrics Footer", "Keep source and community credits visible. Full also pins writers.", "Appearance"],
+  ["lyrics-song-offset", "Timing for This Song", "Save a timing offset for the current song instead of the global value.", "Playback"],
   ["lyrics-split-word-motion", "Split Word Motion", "Move neighbouring syllables as the singing part grows, keeping the word centred.", "Lyrics Display"],
   ["appearance-custom-font", "Use Custom Font", "Use a custom font instead of the bundled Spicy Lyrics font.", "Appearance"],
-  ["appearance-background-type", "Background Type", "Choose the dynamic, legacy, static image, or color background.", "Appearance"],
-  ["appearance-background-blur", "Background Blur", "Soften the static background image.", "Appearance"],
-  ["appearance-npv-background", "Display Dynamic Background in Now Playing View", "Show the animated background in the Now Playing panel.", "Appearance"],
+  ["appearance-background-type", "Background Type", "Choose the dynamic, legacy, static image, or color background.", "Background"],
+  ["appearance-background-blur", "Background Blur", "Soften the static background image.", "Background"],
+  ["appearance-npv-background", "Display Dynamic Background in Now Playing View", "Show the animated background in the Now Playing panel.", "Background"],
   ["appearance-sliderbar-styling", "New SliderBar Styling", "New glass-like style for the SliderBar. Disable to revert back to the original one.", "Appearance"],
   ["appearance-fps-limit", "Limit Animation Frame Rate", "Limit how often lyrics, animated backgrounds, and smooth scrolling redraw. Turn off to redraw on every display refresh.", "Appearance"],
   ["appearance-fps-cap", "Animation Frame Rate", "Frames per second while the cap is on.", "Appearance"],
-  ["appearance-cover-art-animation", "Cover Art Animation", "Animate cover art changes in the NowBar.", "Effects"],
+  ["appearance-cover-art-animation", "Cover Art Animation", "Animate cover art changes in the NowBar.", "Background"],
   ["lyrics-space-gravity", "Space Gravity Mode", "Let word-synced lyrics drift and tumble freely while their timing animations continue.", "Effects"],
   ["lyrics-word-filters", "Unique Word Filters", "Transform every lyric word.", "Effects"],
   ["lyrics-simple-mode", "Simple Lyrics Mode", "Off disables Simple Lyrics Mode. Calculate and Animate choose how simple lyric transitions render.", "Effects"],
   ["effects-animator-presets", "Animator Presets", "Choose Default, Pixel, or Custom animator behavior.", "Effects"],
   ["lyrics-minimal-mode", "Minimal Lyrics Mode", "Hides sung lyrics lines in Fullscreen and Cinema Mode", "Lyrics Display"],
   ["lyrics-right-align", "Right Align Lyrics", "Flip duet/opposite lyric alignment.", "Lyrics Display"],
-  ["lyrics-scroll-active", "Show Scroll to Active Button", "Show an arrow when the active lyric is outside the viewport.", "Lyrics Display"],
-  ["lyrics-seek-compensation", "Seek Fade-in Compensation", "Seek 300ms before a clicked lyric.", "Lyrics Display"],
-  ["lyrics-early-scroll", "Early Scroll", "Start scrolling before the next lyric becomes active.", "Lyrics Display"],
-  ["lyrics-early-scroll-time", "Early Scroll Time", "How early to move to the next line.", "Lyrics Display"],
-  ["lyrics-smooth-scrolling", "Smooth Scrolling", "Use spring motion for lyric scrolling.", "Lyrics Display"],
+  ["lyrics-scroll-active", "Show Scroll to Active Button", "Show an arrow when the active lyric is outside the viewport.", "Playback"],
+  ["lyrics-seek-compensation", "Seek Fade-in Compensation", "Seek 300ms before a clicked lyric.", "Playback"],
+  ["lyrics-early-scroll", "Early Scroll", "Start scrolling before the next lyric becomes active.", "Playback"],
+  ["lyrics-early-scroll-time", "Early Scroll Time", "How early to move to the next line.", "Playback"],
+  ["lyrics-smooth-scrolling", "Smooth Scrolling", "Use spring motion for lyric scrolling.", "Playback"],
   ["lyrics-loading-skeleton", "Lyrics Loading Skeleton", "Show placeholder lines while lyrics load.", "Lyrics Display"],
   ["interface-remove-spotify-lyrics", "Remove Spotify's Lyrics Button", "Hide Spotify's built-in lyrics button.", "Interface"],
-  ["lyrics-playback-offset", "Playback Offset", "Shift lyrics timing earlier or later, in milliseconds.", "Lyrics Display"],
+  ["lyrics-playback-offset", "Playback Offset", "Shift lyrics timing earlier or later, in milliseconds.", "Playback"],
   ["lyrics-line-hover", "Line Hover Background", "Shows a highlight box behind a lyrics line when you hover over it", "Lyrics Display"],
   ["lyrics-wide-duet-padding", "Wide duet line padding", "Separate duet voices into wider columns. Disable for compact padding.", "Lyrics Display"],
   ["lyrics-credits-follow-singer", "Credits Follow the Last Singer", "Align credits with the last duet line.", "Lyrics Display"],
   ["interface-no-lyrics-notice", "Detailed No Lyrics Notice", "Show the explanation and actions when lyrics are unavailable. Turn off for a minimal message. Loading errors always show full details.", "Interface"],
+  ["interface-auto-queue", "Show Queue When a Song Has No Lyrics", "In Fullscreen and Cinema View, open the queue in place of the lyrics. It closes again on the next song with lyrics.", "Interface"],
   ["interface-lock-media-box", "Lock Media Box Size in Compact Mode", "Prevent the media box from resizing when Forced Compact Mode is active.", "Interface"],
   ["interface-disable-popup", "Disable Popup Lyrics Window", "Show or hide the Popup Lyrics button in the playback bar.", "Interface"],
   ["interface-open-profiles-browser", "Open Profiles in Browser", "Open contributor profiles in your browser instead of inside Spotify.", "Interface"],
@@ -53,8 +66,12 @@ export type SettingCatalogEntry = { id: SettingId; label: string; description: s
 
 export const SETTINGS = SETTING_CATALOG.map(([id, label, description, category]) => ({ id, label, description, category })) as SettingCatalogEntry[];
 export const SETTING_IDS = new Set<string>(SETTINGS.map((setting) => setting.id));
-export const SETTING_SECTIONS = ["Appearance", "Lyrics Display", "Effects", "Interface", "Sources", "Advanced"];
+export const SETTING_SECTIONS = ["Appearance", "Background", "Lyrics Display", "Playback", "Effects", "Interface", "Sources", "Advanced", "TTML Reviewer", "Bug report"];
 
 export function isSettingVisible(hiddenIds: string[], id: string, matched = true) {
   return matched && !hiddenIds.includes(id);
+}
+
+export function settingInSection(id: string, section: string): boolean {
+  return section === "All" || SETTINGS.find(row => row.id === id)?.category === section;
 }

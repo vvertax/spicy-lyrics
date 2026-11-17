@@ -1,3 +1,5 @@
+import NewFeatureBadge, { isNewFeature } from "./NewFeatureBadge.tsx";
+import { $ttmlReviewer, isHeldByReviewer, REVIEWER_LOCK_REASON } from "../../../utils/ttmlReviewer.ts";
 import { SETTING_DEPENDENCIES } from "./UnavailableSettings.ts";
 import { $favoriteSettings } from "../../../utils/stores.ts";
 import { translateUi } from "../../../utils/i18n/translate.ts";
@@ -7,6 +9,7 @@ import { createPortal } from "react-dom";
 import { useStore } from "@nanostores/react";
 import { $allowHidingSettings, $hiddenSettingIds, $hideHidingIcon } from "../../../utils/stores.ts";
 
+export const RevealedSettingContext = React.createContext<string | null>(null);
 export const NavigateSettingContext = React.createContext<(label:string,id:string)=>void>(()=>{});
 export const FavoriteSettingsContext = React.createContext(false);
 export const EditFavoritesContext = React.createContext(false);
@@ -28,6 +31,7 @@ export function Row({
   labelAccessory,
   stacked,
   settingId,
+  featureId,
 }: {
   label: string;
   description?: string;
@@ -37,8 +41,12 @@ export function Row({
   labelAccessory?: React.ReactNode;
   stacked?: boolean;
   settingId?: string;
+  featureId?: string;
 }) {
+  const reviewer = useStore($ttmlReviewer);
+  if (reviewer && settingId && isHeldByReviewer(settingId)) { disabled = true; disabledReason = REVIEWER_LOCK_REASON; }
   const navigateSetting=useContext(NavigateSettingContext);
+  const revealedSetting = useContext(RevealedSettingContext);
   const dependency=settingId?SETTING_DEPENDENCIES[settingId]:undefined;
   const favoritesOnly = useContext(FavoriteSettingsContext);
   const editFavorites = useContext(EditFavoritesContext);
@@ -53,7 +61,7 @@ export function Row({
   const hiddenSettingIds = useStore($hiddenSettingIds);
   const isHidden = settingId && hiddenSettingIds.includes(settingId);
   if (favoritesOnly && !favorite) return null;
-  if (settingId && isHidden && allowHidingSettings && !showHidden && !showHiddenInSearch) return null;
+  if (settingId && isHidden && allowHidingSettings && !showHidden && !showHiddenInSearch && revealedSetting !== settingId) return null;
   const toggleVisibility = () => {
     if (!settingId) return;
     $hiddenSettingIds.set(isHidden ? hiddenSettingIds.filter((id) => id !== settingId) : [...hiddenSettingIds, settingId]);
@@ -61,6 +69,7 @@ export function Row({
   return (
     <div
       data-setting-id={settingId}
+      data-setting-highlight={revealedSetting === settingId || undefined}
       className={`sl-sp-row sl-list-row${disabled ? " sl-sp-row--disabled" : ""}${stacked ? " sl-sp-row--stacked" : ""}`}
     >
       <div className="sl-sp-label-area">
@@ -76,6 +85,7 @@ export function Row({
         <div className="sl-sp-label-wrap">
           <span className="sl-sp-label-line">
             <span className="sl-sp-label">{label}</span>
+            {isNewFeature(featureId ?? settingId ?? label) && <NewFeatureBadge />}
             {labelAccessory}
           </span>
           {description && <span className="sl-sp-description">{description}</span>}
@@ -108,41 +118,7 @@ export function Toggle({
   );
 }
 
-export function Select({
-  value,
-  options,
-  labels,
-  onChange,
-  disabled,
-}: {
-  value: string;
-  options: string[];
-  labels?: string[];
-  onChange: (v: string) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <span className="sl-sp-select-wrap">
-      <span className="sl-sp-select-sizer" aria-hidden="true">
-        {options.map((opt, i) => (
-          <span key={opt}>{labels?.[i] ?? opt}</span>
-        ))}
-      </span>
-      <select
-        className="sl-sp-select"
-        value={value}
-        onChange={(e) => onChange(e.currentTarget.value)}
-        disabled={disabled}
-      >
-        {options.map((opt, i) => (
-          <option key={opt} value={opt}>
-            {labels?.[i] ?? opt}
-          </option>
-        ))}
-      </select>
-    </span>
-  );
-}
+export { Select } from "./Select.tsx";
 
 /**
  * Bipolar position slider — a snapping range control centred on a neutral

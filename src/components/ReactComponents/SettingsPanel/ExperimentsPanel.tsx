@@ -1,3 +1,4 @@
+import { $ttmlReviewer } from "../../../utils/ttmlReviewer.ts";
 import { useStore } from "@nanostores/react";
 import { $experiment, $experimentOverrides, $experimentsSyncing, forcedExperimentState, getAdvancedExperiments, getVisibleExperiments, RefreshExperimentOverrides, setExperiment, type ExperimentId, type ResolvedExperiment } from "../../../utils/experiments.ts";
 import { useEffect } from "react";
@@ -61,13 +62,14 @@ export function ExperimentSettings({ title = false, experimentIds, advancedOnly 
 }
 
 function ExperimentRow({ experiment }: { experiment: ResolvedExperiment }) {
+  const reviewer = useStore($ttmlReviewer);
   const store = $experiment(experiment.id);
   const enabled = useStore(store);
   const forced = forcedExperimentState(experiment.id);
   const syncing = useStore($experimentsSyncing);
 
   return (
-    <Row settingId={experimentSettingIds[experiment.id]} label={experiment.label} description={experiment.description} disabled={syncing || forced !== undefined} disabledReason={syncing ? "Refreshing experiments" : forced ? "Forced on" : "Forced off"}>
+    <Row featureId={experiment.id} settingId={experimentSettingIds[experiment.id]} label={experiment.label} description={experiment.description} disabled={reviewer || syncing || forced !== undefined} disabledReason={syncing ? "Refreshing experiments" : forced ? "Forced on" : "Forced off"}>
       <Toggle checked={enabled} onChange={(v) => setExperiment(experiment.id, v)} />
     </Row>
   );

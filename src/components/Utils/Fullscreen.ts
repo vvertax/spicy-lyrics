@@ -1,3 +1,4 @@
+import { keepVolumeSliderInView } from "./VolumeSliderLayout.ts";
 import { GetCurrentLyricsContainerInstance } from "../../utils/Lyrics/Applyer/CreateLyricsContainer.ts";
 import { SyncNoLyricsLayout } from "../../utils/Lyrics/LyricsNotice.ts";
 import { ResetLastLine } from "../../utils/Scrolling/ScrollToActiveLine.ts";
@@ -7,7 +8,7 @@ import Global from "../Global/Global.ts";
 import Defaults from "../Global/Defaults.ts";
 import { SetKawarpSuspended } from "../DynamicBG/dynamicBackground.ts";
 import PageView, { Compactify, GetPageRoot, PageContainer, Tooltips } from "../Pages/PageView.ts";
-import { EnableCompactMode, IsCompactMode } from "./CompactMode.ts";
+import { DisableCompactMode, EnableCompactMode, IsCompactMode } from "./CompactMode.ts";
 import { CleanUpNowBarComponents, CloseNowBar, DeregisterNowBarBtn, OpenNowBar } from "./NowBar.ts";
 import TransferElement from "./TransferElement.ts";
 import { IsPIP } from "./PopupLyrics.ts";
@@ -16,6 +17,9 @@ import { Spring } from "../../modules/Spring.ts";
 import { Maid } from "../../modules/Maid.ts";
 import Scheduler from "../../modules/Scheduler.ts";
 import { cancelCappedFrame, requestCappedFrame } from "../../utils/AnimationFrameLoop.ts";
+import Logger from "../../utils/Logger.ts";
+
+const fullscreenLogger = new Logger("Fullscreen");
 
 const Fullscreen = {
   Open,
@@ -164,6 +168,19 @@ export const SetControlsDragLock = (locked: boolean) => {
   if (!locked) ToggleControls(true);
 };
 
+// The spring's goal as a state on the MediaBox, for layouts that fade their controls with a short CSS
+// transition instead of following the spring (the view controls beside the cover, PlayerBelowCover.css).
+// Written only when it changes, so it costs one style change per hover change, not one per frame.
+const SetControlsState = (goal: number) => {
+  const mediaBox = PageContainer?.querySelector<HTMLElement>(".ContentBox .NowBar .Header .MediaBox");
+  if (!mediaBox) return;
+  const state = goal <= 0 ? "Hidden" : goal < 0.9 ? "Dim" : "Full";
+  if (mediaBox.dataset.controls !== state) mediaBox.dataset.controls = state;
+  // The Lyrics / Queue switch in the corner (QueueView.ts) comes and goes with the controls.
+  const viewSwitch = PageContainer?.querySelector<HTMLElement>(".ContentBox > .ViewSwitch");
+  if (viewSwitch && viewSwitch.dataset.controls !== state) viewSwitch.dataset.controls = state;
+};
+
 const ToggleControls = (force: boolean = false) => {
   if (controlsDragLock) return;
 
@@ -201,9 +218,11 @@ const ToggleControls = (force: boolean = false) => {
     spring.SetDampingRatio(immersive ? 1 : 2);
   }
 
-  controlsOpacitySpring.SetGoal(getControlsOpacityGoal());
+  const controlsGoal = getControlsOpacityGoal();
+  controlsOpacitySpring.SetGoal(controlsGoal);
   artworkBrightnessSpring.SetGoal(getArtworkBrightnessGoal());
   SyncFullscreenAlwaysShowClasses();
+  SetControlsState(controlsGoal);
 
   if (force || visualsApplied === false) {
     visualsApplied = true;
@@ -213,8 +232,10 @@ const ToggleControls = (force: boolean = false) => {
 
 let EventAbortController: AbortController | undefined;
 let ActiveVolumeSliderElement: HTMLElement | null = null;
+let cleanupVolumeLayout: (() => void) | null = null;
 
 function setupFullscreenVolumeSlider() {
+  cleanupVolumeLayout?.(); cleanupVolumeLayout = null;
   CleanUpVolumeSlider();
   ActiveVolumeSliderElement?.remove();
   ActiveVolumeSliderElement = null;
@@ -223,9 +244,11 @@ function setupFullscreenVolumeSlider() {
 
   const volumeContainer = getPageDocument().createElement("div");
   const showBelow = Defaults.ShowVolumeSliderFullscreen === "Below";
+  const canvas = PageContainer?.classList.contains("CanvasImmersive") === true;
   volumeContainer.className = `FullscreenVolumeSlider ${
     Defaults.ShowVolumeSliderFullscreen === "Right" ? "RightSide" : ""
   } ${showBelow ? "Below" : ""}`.trim();
+  volumeContainer.classList.toggle("CanvasVolumeSlider", canvas);
 
   if (showBelow) {
     const header = PageContainer?.querySelector<HTMLElement>(".ContentBox .NowBar .Header");
@@ -236,16 +259,26 @@ function setupFullscreenVolumeSlider() {
     anchor.insertAdjacentElement("afterend", volumeContainer);
     ActiveVolumeSliderElement = volumeContainer;
     SetupVolumeSlider(volumeContainer, true);
-    return;
+  } else {
+    // Canvas turns the cover into a transparent sizing anchor and moves the dock.
+    // Keep its volume control on the dock instead of outside the hidden cover.
+    const anchor = PageContainer?.querySelector<HTMLElement>(canvas
+      ? ".ContentBox .NowBar > .CenteredView"
+      : ".ContentBox .NowBar .Header .MediaBox");
+    if (!anchor) return;
+    anchor.appendChild(volumeContainer);
+    ActiveVolumeSliderElement = volumeContainer;
+    SetupVolumeSlider(volumeContainer);
   }
-
-  const mediaBox = PageContainer?.querySelector<HTMLElement>(
-    ".ContentBox .NowBar .Header .MediaBox"
-  );
-  if (!mediaBox) return;
-  mediaBox.appendChild(volumeContainer);
-  ActiveVolumeSliderElement = volumeContainer;
-  SetupVolumeSlider(volumeContainer);
+  if (PageContainer) {
+    const page = PageContainer;
+    const stopLayout = keepVolumeSliderInView(volumeContainer, page);
+    const observer = new (getPageWindow().MutationObserver)(() => {
+      if (page.classList.contains("CanvasImmersive") !== canvas) setupFullscreenVolumeSlider();
+    });
+    observer.observe(page, { attributes: true, attributeFilter: ["class"] });
+    cleanupVolumeLayout = () => { observer.disconnect(); stopLayout(); };
+  }
 }
 
 const MediaBox_MouseIn = () => {
@@ -386,7 +419,7 @@ export const EnterSpicyLyricsFullscreen = async () => {
     }
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err);
-    console.error(`Fullscreen error: ${errorMessage}`);
+    fullscreenLogger.error(`Fullscreen error: ${errorMessage}`);
   }
 
   pageDocument.documentElement.focus();
@@ -473,7 +506,7 @@ function Open(skipDocumentFullscreen: boolean = false, moveElement: boolean = tr
         getPageWindow().setTimeout(() => { if (stillOpen()) PageView.AppendViewControls(true); }, 50);
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : String(err);
-        console.error(`Fullscreen error: ${errorMessage}`);
+        fullscreenLogger.error(`Fullscreen error: ${errorMessage}`);
       }
     };
 
@@ -712,6 +745,7 @@ function CloseImmediately() {
 
 function clearFullscreenControls(): void {
   SyncFullscreenAlwaysShowClasses();
+  cleanupVolumeLayout?.(); cleanupVolumeLayout = null;
   CleanUpVolumeSlider();
   ActiveVolumeSliderElement?.remove();
   ActiveVolumeSliderElement = null;
@@ -751,6 +785,7 @@ $showVolumeSliderFullscreen.listen(() => {
 });
 
 Global.Event.listen("compact-mode:enable", () => {
+  cleanupVolumeLayout?.(); cleanupVolumeLayout = null;
   CleanUpVolumeSlider();
   ActiveVolumeSliderElement?.remove();
   ActiveVolumeSliderElement = null;
@@ -774,3 +809,5 @@ function Toggle(skipDocumentFullscreen: boolean = false) {
 
 export { CleanupMediaBox, RefreshFullscreenControlsVisibility, RefreshFullscreenVolumeSlider };
 export default Fullscreen;
+
+Global.Event.listen("nowbar:side-swap:after", RefreshFullscreenVolumeSlider);

@@ -29,7 +29,7 @@ const { openSettingsPanel, getSettingsReturn } = await import(`data:text/javascr
 
 test("returning from a subpanel preserves the settings location and restores working hidden-settings actions", () => {
   openSettingsPanel(doc);
-  fixture.current.content.element.props.onStateChange({ query: "", sectionFilter: "Advanced", scrollTop: 0 });
+  fixture.current.content.element.props.onStateChange({ query: "", sectionFilter: "Advanced", expandedGroup: "Diagnostic report", scrollTop: 0 });
   fixture.scrollTop = 94;
   const back = getSettingsReturn(doc);
   modal.transition({ content: {} });
@@ -37,12 +37,14 @@ test("returning from a subpanel preserves the settings location and restores wor
   const settings = fixture.current.content.element;
   assert.equal(settings.type, "settings");
   assert.equal(settings.props.initialState.sectionFilter, "Advanced");
+  assert.equal(settings.props.initialState.expandedGroup, "Diagnostic report");
   assert.equal(settings.props.initialState.scrollTop, 94);
   settings.props.onOpenHiddenSettings();
   assert.equal(fixture.current.title, "Hidden Settings");
   assert.equal(fixture.current.content.element.type, "hidden");
   fixture.current.content.element.props.onBack();
   assert.equal(fixture.current.content.element.type, "settings");
+  assert.equal(fixture.current.content.element.props.initialState.expandedGroup, "Diagnostic report");
   assert.equal(typeof fixture.current.content.element.props.onOpenHiddenSettings, "function");
   assert.equal(typeof fixture.current.content.element.props.onManageAnimator, "function");
   assert.ok(fixture.unmounted >= 3);

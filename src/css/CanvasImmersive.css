@@ -134,6 +134,11 @@
   object-position: 50% 40%;
 }
 
+/* Motion artwork is a square album cover: cropped evenly, since the art is composed around its centre. */
+#SpicyLyricsPage .ContentBox > .CanvasStage .CanvasStageFrame > .CanvasLayer[data-source="motion"] > video {
+  object-position: 50% 50%;
+}
+
 /* Dimmed so it backs the lyrics instead of competing with them; the fullscreen hover spring
    dims it further, at a gentler depth than the cover since this is a whole side of the screen.
    A black veil at 1 - b over the opaque frame is exactly brightness(b), without running a
@@ -368,6 +373,23 @@
   grid-column: 3;
   text-align: right;
 }
+
+/* The fork's volume controls belong to the stage dock, outside the fading cover. */
+#SpicyLyricsPage.Fullscreen.CanvasImmersive .CanvasVolumeSlider:not(.Below) {
+  left: 12px; right: auto; top: clamp(64px, 15cqh, 130px); bottom: auto;
+  width: 32px; height: clamp(160px, 42cqh, 300px); z-index: 110; pointer-events: auto;
+}
+#SpicyLyricsPage.Fullscreen.CanvasImmersive .CanvasVolumeSlider.RightSide:not(.Below) { left: auto; right: 12px; }
+#SpicyLyricsPage.Fullscreen.CanvasImmersive .CanvasVolumeSlider:not(.Below) .SliderBar { width: 100%; }
+#SpicyLyricsPage.Fullscreen.CanvasImmersive:not(.Exp_NewProgressBar) .CanvasVolumeSlider:not(.Below) .SliderBar { width: 12px; }
+#SpicyLyricsPage.Fullscreen.CanvasImmersive:not(.CompactMode, .ForcedCompactMode) .NowBar .CenteredView > .Header:has(> .FullscreenVolumeSlider.Below) {
+  padding-bottom: calc(var(--DockBottom) + var(--DockReserve) + 48px);
+}
+#SpicyLyricsPage.Fullscreen.CanvasImmersive .NowBar .Header > .CanvasVolumeSlider.Below {
+  position: absolute; top: auto; bottom: var(--DockBottom); left: var(--DockGutter); right: var(--DockGutter);
+  width: auto; height: 32px; margin: 0; z-index: 110; pointer-events: auto;
+}
+#SpicyLyricsPage.Fullscreen.Exp_NewProgressBar.CanvasImmersive .CanvasVolumeSlider.Below .SliderBar { height: 32px; }
 
 /* Hover overlay. It lives in the square MediaBox, whose bottom edge is the top of the title row. */
 #SpicyLyricsPage.Fullscreen.CanvasImmersive:not(.CompactMode, .ForcedCompactMode) .ContentBox .NowBar .CenteredView .Header .MediaBox .MediaContent {

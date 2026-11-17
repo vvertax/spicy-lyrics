@@ -1,6 +1,6 @@
 const React = Spicetify.React;
 const { useState } = React;
-const ReactDOM = Spicetify.ReactDOM;
+const ReactDOM = Spicetify.ReactDOM as typeof Spicetify.ReactDOM & { render: (node: React.ReactNode, container: Element) => void };
 
 import type {
   ISettingsField,
@@ -170,7 +170,6 @@ class SettingsSection {
   };
 
   private FieldsContainer = () => {
-    // @ts-expect-error
     const [rerender, setRerender] = useState<number>(0);
     this.setRerender = setRerender;
 

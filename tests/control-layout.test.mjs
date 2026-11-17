@@ -8,3 +8,16 @@ test("quick settings ignore invalid persisted entries and duplicates",()=>assert
 test("shortcut labels retain stable control IDs",()=>assert.equal(controlId("","Karaoke · Alt+Shift+K"),"karaoke"));
 test("existing controls retain their original IDs",()=>assert.equal(controlId("RomanizationToggle","Enable Romanization"),"RomanizationToggle"));
 test("all quick action identifiers are unique",()=>assert.equal(new Set(QUICK_CONTROLS.map(([id])=>id)).size,QUICK_CONTROLS.length));
+
+const {code:presentationCode}=await transform(readFileSync(new URL("../src/components/Utils/ControlPresentation.ts",import.meta.url),"utf8"),{loader:"ts",format:"esm"});
+const {prepareMenuButton,controlMenuPlacement}=await import(`data:text/javascript;base64,${Buffer.from(presentationCode).toString('base64')}`);
+test('renderer toggle becomes one menu glyph with a checked state instead of a second disc',()=>{
+ const attrs=new Map([['aria-pressed','true']]);let removed=0,animationCleared=0;
+ const button={getAttribute:k=>attrs.get(k)??null,removeAttribute:k=>attrs.delete(k),setAttribute:(k,v)=>attrs.set(k,v),querySelectorAll:s=>s.includes('KnockoutDisc')?[{remove(){removed++}}]:[{classList:{remove(){animationCleared++}}}]};
+ assert.equal(prepareMenuButton(button),'true');assert.equal(removed,1);assert.equal(animationCleared,1);assert.equal(attrs.has('aria-pressed'),false);assert.equal(attrs.get('aria-checked'),'true');
+});
+test('detached controls menu stays within the viewport and opens above a bottom toolbar',()=>{
+ const top=controlMenuPlacement({left:1200,right:1244,top:20,bottom:64},260,500,{width:1280,height:720});assert.equal(top.opensAbove,false);assert.ok(top.left+260<=1268);assert.equal(top.top,74);
+ const bottom=controlMenuPlacement({left:24,right:68,top:650,bottom:694},260,500,{width:1280,height:720});assert.equal(bottom.opensAbove,true);assert.equal(bottom.left,12);assert.equal(bottom.top+500,640);
+ const narrow=controlMenuPlacement({left:0,right:44,top:20,bottom:64},260,500,{width:320,height:260});assert.equal(narrow.left,12);assert.ok(narrow.maxHeight+narrow.top<=248);
+});

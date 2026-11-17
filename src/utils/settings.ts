@@ -1,3 +1,4 @@
+import { settingDestination } from "../components/ReactComponents/SettingsPanel/SettingNavigation.ts";
 import { settingsHistory } from "./SettingsHistory.ts";
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -41,6 +42,7 @@ export function openSettingsPanel(targetDocument: Document = document) {
     query: rememberedLocation.query,
     sectionFilter: rememberedLocation.sectionFilter,
     scrollTop: rememberedLocation.scrollTop,
+    expandedGroup: "expandedGroup" in rememberedLocation ? rememberedLocation.expandedGroup : undefined,
   };
   let currentRoute = rememberedLocation.route;
   const updateState = (state: SettingsPanelState) => {
@@ -110,7 +112,7 @@ export function openSettingsPanel(targetDocument: Document = document) {
   const openHiddenSettingsPanel = () => {
     captureScrollPosition();
     currentRoute = "hidden";
-    const { container, root } = renderPanel(targetDocument, React.createElement(HiddenSettingsPanel, { onBack: backToSettings }), "forward");
+    const { container, root } = renderPanel(targetDocument, React.createElement(HiddenSettingsPanel, { onBack: backToSettings, onNavigate: (id: string) => { const destination = settingDestination(id); if (!destination) return; currentState = { query: "", sectionFilter: destination.section, scrollTop: 0, targetSettingId: id }; backToSettings(); } }), "forward");
     PopupModal.transition({ title: "Hidden Settings", content: container, modalId: MODAL_ID, onClose: () => closePanel(root) });
   };
   const backToSettings = () => {

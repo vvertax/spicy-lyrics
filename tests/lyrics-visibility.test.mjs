@@ -12,7 +12,7 @@ const stubs={
 'stores.ts':'const f=globalThis.__visibilityFixture;export const $currentLyricsData=f.data,$currentLyricsType=f.type,$currentlyFetching=f.fetching;',
 'SpotifyPlayer.ts':'const f=globalThis.__visibilityFixture;export const SpotifyPlayer={GetUri:()=>f.uri,IsDJ:()=>false,GetMediaType:()=>"audio",GetContentType:()=>"track"};',
 'PageView.ts':'export const PageContainer=null;export default {AppendViewControls(){globalThis.__visibilityFixture.presented++}};',
-'ProcessLyrics.ts':'export const ProcessLyrics=async()=>{globalThis.__visibilityFixture.processed++};',
+'ProcessLyrics.ts':'export const JapaneseRomajiIsCurrent=()=>true;export const ProcessLyrics=async()=>{globalThis.__visibilityFixture.processed++};',
 'EmptyLines.ts':'export const IsEmptyLyrics=()=>false;',
 'Logger.ts':'export default class Logger{debug(){} error(){} warn(){}}',
 'index.ts':'export const LocalLyricsManager={get:async()=>{globalThis.__visibilityFixture.reads++;return null}};',

@@ -1,3 +1,9 @@
+import { setEarlySungBefore } from "../Lyrics/lyrics.ts";
+import { setBloomScrollDuration } from "../Lyrics/LyricsVirtualizer.ts";
+import { $staticAutoScroll } from "../stores.ts";
+import { GetStaticPace, type StaticPace } from "./StaticPace.ts";
+import { lyricsCenterScrollTopAt, setLyricsScrollPosition, clearLyricsScrollFraction } from "../Lyrics/LyricsVirtualizer.ts";
+let staticReturning = false;
 import {
   $currentLyricsType,
   $lyricsContainerExists,
@@ -186,7 +192,7 @@ function getPlaybackTargetLine(
 function getCurrentPlaybackTargetLine(): {
   line: EnhancedLyricsItem;
 } | null {
-  const currentType = $currentLyricsType.get() as LyricsType;
+  const currentType = $currentLyricsType.get() as LyricsType | "None";
   if (currentType === "Static" || currentType === "None") return null;
   const lines = LyricsObject.Types[currentType]?.Lines as LyricsLine[] | LyricsSyllable[] | undefined;
   if (!lines) return null;
@@ -453,7 +459,141 @@ export const GetForceScrollingPolicy = () => {
   return allowForceScrolling;
 };
 
+// Unsynced lyrics with auto-scroll on follow the song's pace from StaticPace.ts.
+let staticPace: { key: string; pace: StaticPace | null } = { key: "", pace: null };
+let lastStaticFrame = 0;
+let lastStaticPosition = 0;
+let staticScrollY: number | null = null;
+
+function ScrollStaticLyrics(ScrollSimplebar: any) {
+  const mode = $staticAutoScroll.get();
+  const uri = SpotifyPlayer.GetUri();
+  const lineCount = LyricsObject.Types.Static.Lines.length;
+  if (mode === "off" || !uri || !lineCount) {
+    hideScrollToActiveButton();
+    ReleaseStaticScroll();
+    return;
+  }
+
+  const key = `${mode}:${uri}`;
+  if (staticPace.key !== key) {
+    staticPace = { key, pace: null };
+    staticReturning = false;
+    GetStaticPace(uri, SpotifyPlayer.GetDuration(), mode).then((pace) => {
+      if (staticPace.key === key) staticPace.pace = pace;
+    });
+  }
+  const pace = staticPace.pace;
+  const container = ScrollSimplebar?.getScrollElement() as HTMLElement | undefined;
+  if (!pace || !container) {
+    hideScrollToActiveButton();
+    return;
+  }
+
+  const now = performance.now();
+  const frameMs = lastStaticFrame ? Math.min(now - lastStaticFrame, 100) : 16;
+  lastStaticFrame = now;
+  const position = SpotifyPlayer.GetPosition();
+  // A seek takes the list back from a hand scroll, as it does for synced lyrics.
+  if (wasDrasticPositionChange(lastStaticPosition, position)) lastUserScrollTime = 0;
+  lastStaticPosition = position;
+  if (IsScrollbarDragging()) handleUserScroll(ScrollSimplebar);
+
+  const target = lyricsCenterScrollTopAt(pace(position) * (lineCount - 1));
+  if (target === null) return;
+  // scrollTop only holds whole device pixels, so the list's own position is kept here.
+  // Anything else moving it (a hand scroll, a relayout) takes over from where it put it.
+  if (staticScrollY === null || Math.abs(staticScrollY - container.scrollTop) > 2) {
+    staticScrollY = container.scrollTop;
+  }
+  const distance = target - staticScrollY;
+  // A hand scroll that left the point being sung half a screen or more away holds auto-scroll off.
+  const scrolledAway = lastUserScrollTime !== 0 && Math.abs(distance) > container.clientHeight / 2;
+  renderScrollToActiveButton(scrolledAway ? (distance < 0 ? "above" : "below") : null);
+  // After a hand scroll, take over again once it has settled with the point being sung in view.
+  if (lastUserScrollTime) {
+    // The hand has the list: let it sit on scrollTop, with no offset of ours left over.
+    ReleaseStaticScroll();
+    if (now - lastUserScrollTime <= USER_SCROLL_COOLDOWN) return;
+    if (scrolledAway) return;
+    lastUserScrollTime = 0;
+  }
+  if (Math.abs(distance) < 0.05) {
+    staticReturning = false;
+    return;
+  }
+  // Eased toward the target each frame; more than a screen away (new lyrics, a seek) it jumps.
+  const next =
+    Math.abs(distance) > container.clientHeight && !staticReturning
+      ? target
+      : staticScrollY + distance * (1 - Math.exp(-frameMs / 200));
+  staticScrollY = setLyricsScrollPosition(next);
+  // Without the virtualizer, whole steps only. "instant" because the container's CSS
+  // smooth scrolling would queue up every step.
+  if (staticScrollY === null) container.scrollTo({ top: next, behavior: "instant" });
+}
+
+function ReleaseStaticScroll() {
+  if (staticScrollY === null) return;
+  staticScrollY = null;
+  clearLyricsScrollFraction();
+}
+
+const IsBGLine = (line: LyricsLine | LyricsSyllable) => "BGLine" in line && line.BGLine === true;
+/**
+ * Bloom's timed scroll: a move into a line takes longer the more room there is
+ * before it, from MinMs when the line follows straight on to MaxMs after a
+ * pause, and starts that long before the line so it arrives as it's sung.
+ */
+const BloomScroll = { MinMs: 480, MaxMs: 750, GapFromMs: 200, GapToMs: 750 };
+
+// Where a line's own singing ends. Fade Away Previous Lines stretches EndTime
+// to the next line; LeadEndTime keeps the real end.
+const GetLeadEndTime = (line: LyricsLine | LyricsSyllable): number =>
+  (line as { LeadEndTime?: number }).LeadEndTime ?? line.EndTime;
+
+// How long the move into the next line takes (Ms), and how far ahead of it
+// the scroll may start (LeadMs): never before the line above, with its
+// background vocals, has finished singing, so nothing is cut off.
+const GetBloomScroll = (
+  Lines: LyricsLine[] | LyricsSyllable[],
+  position: number
+): { Ms: number; LeadMs: number } => {
+  let next = -1;
+  for (let i = 0; i < Lines.length; i++) {
+    if (!IsBGLine(Lines[i]) && Lines[i].StartTime > position) {
+      next = i;
+      break;
+    }
+  }
+  if (next < 0) return { Ms: BloomScroll.MaxMs, LeadMs: 0 };
+  let prevEnd = -Infinity;
+  for (let i = next - 1; i >= 0; i--) {
+    const end = GetLeadEndTime(Lines[i]);
+    if (end > prevEnd) prevEnd = end;
+    if (!IsBGLine(Lines[i])) break;
+  }
+  const room = Lines[next].StartTime - prevEnd;
+  const gap = Math.min(BloomScroll.GapToMs, Math.max(BloomScroll.GapFromMs, room));
+  const share = (gap - BloomScroll.GapFromMs) / (BloomScroll.GapToMs - BloomScroll.GapFromMs);
+  const ms = Math.round(BloomScroll.MinMs + (BloomScroll.MaxMs - BloomScroll.MinMs) * share);
+  return { Ms: ms, LeadMs: Math.min(ms, Math.max(0, room)) };
+};
+
+// The line Bloom's timed scroll is bringing in. It grows to full size as it
+// arrives, rather than when its first word is sung (Mixed.css).
+let bloomFocus: HTMLElement | null = null;
+const SetBloomFocus = (el: HTMLElement | null) => {
+  if (el === bloomFocus) return;
+  bloomFocus?.classList.remove("BloomFocus");
+  bloomFocus = el;
+  el?.classList.add("BloomFocus");
+};
+
+
 export function ScrollToActiveLine(ScrollSimplebar: any) {
+  if ($currentLyricsType.get() === "Static" && $lyricsContainerExists.get() && !$lyricsRendererPaused.get()) { ScrollStaticLyrics(ScrollSimplebar); return; }
+
   manualResumeEligible = false;
   if (PageContainer?.classList.contains("SpaceGravityMode")) {
     cleanupScrollButtonObserver();
@@ -471,7 +611,7 @@ export function ScrollToActiveLine(ScrollSimplebar: any) {
     return;
   }
 
-  const currentType = $currentLyricsType.get() as LyricsType;
+  const currentType = $currentLyricsType.get() as LyricsType | "None";
   const Lines = LyricsObject.Types[currentType]?.Lines as LyricsLine[] | LyricsSyllable[];
   if (!Lines) {
     cleanupScrollButtonObserver();
@@ -490,12 +630,21 @@ export function ScrollToActiveLine(ScrollSimplebar: any) {
   // the moment it does. Only the target changes — line states (Status) still
   // follow the real position.
   const configuredLead = $scrollLeadMs.get();
-  const PositionOffset = $scrollLeadEnabled.get()
+  let PositionOffset = $scrollLeadEnabled.get()
     ? Math.max(0, Math.min(800, Number.isFinite(configuredLead) ? configuredLead : 250))
     : 0;
+  const bloomTimed = !!PageContainer?.classList.contains("BloomRenderer") && !PageContainer.classList.contains("MinimalLyricsMode");
+  const bloomEarly = bloomTimed && (IsPIP || !!PageContainer?.classList.contains("CardMode"));
+  if (bloomTimed) {
+    const scroll = GetBloomScroll(Lines, Position);
+    setBloomScrollDuration(scroll.Ms);
+    if (bloomEarly) PositionOffset = scroll.LeadMs;
+  }
   const ProcessedPosition = Position + PositionOffset;
   const isPlaybackBacktrack = lastPosition !== 0 && Position < lastPosition - 250;
   const currentLine = GetScrollLine(Lines, ProcessedPosition) as EnhancedLyricsItem | null;
+  SetBloomFocus(bloomTimed ? currentLine?.HTMLElement ?? null : null);
+  setEarlySungBefore(bloomEarly && currentLine ? currentLine._LineIndex : -1);
   const playbackTargetLine = currentLine ?? getPlaybackTargetLine(Lines, ProcessedPosition);
 
   if (!currentLine) {
@@ -839,7 +988,7 @@ export function PositionInitialLyrics(ScrollSimplebar: any): void {
  * current line as new and scrolls away from the restored viewport anchor.
  */
 export function AdoptReappliedScrollPosition() {
-  const currentType = $currentLyricsType.get() as LyricsType;
+  const currentType = $currentLyricsType.get() as LyricsType | "None";
   if (currentType === "Static" || currentType === "None") return;
   const lines = LyricsObject.Types[currentType]?.Lines as
     | LyricsLine[]

@@ -1,6 +1,8 @@
+import { Select } from "./SettingsPanel/Select.tsx";
 import { useStore } from "@nanostores/react";
 import React, { useEffect, useMemo, useState } from "react";
 import { $buildChannel } from "../../utils/stores.ts";
+import { forkReleaseHost } from "../../utils/version/ForkReleaseHost.ts";
 
 type ChannelHosts = [string, string] | [string, string, string];
 type ChannelMap = Record<string, ChannelHosts>;
@@ -12,7 +14,7 @@ const DEFAULT_API_HOST = "api.spicylyrics.org";
 const DEFAULT_STORAGE_HOST = "public.storage.spicylyrics.org";
 
 const BUILT_IN_CHANNELS: ChannelMap = {
-  "vvertax Edition": ["lrc.vvrtx.lol", "lrc.vvrtx.lol"],
+  "vvertax Edition": [forkReleaseHost(), forkReleaseHost()],
   Stable: [DEFAULT_API_HOST, DEFAULT_STORAGE_HOST],
   Beta: [DEFAULT_API_HOST, DEFAULT_STORAGE_HOST],
 };
@@ -39,6 +41,7 @@ function readCustomChannels(): ChannelMap {
     for (const [name, hosts] of Object.entries(parsed)) {
       if (
         typeof name === "string" &&
+        name !== "SL" && !Object.hasOwn(BUILT_IN_CHANNELS, name) &&
         Array.isArray(hosts) &&
         (hosts.length === 2 || hosts.length === 3) &&
         hosts.every((host) => typeof host === "string")
@@ -96,24 +99,7 @@ export function BuildChannelSettingControl({ onManage }: { onManage: () => void 
 
   return (
     <div className="sl-sp-btn-group">
-      <span className="sl-sp-select-wrap">
-        <span className="sl-sp-select-sizer" aria-hidden="true">
-          {Object.keys(channelMap).map((channelName) => <span key={channelName}>{channelName}</span>)}
-        </span>
-        <select
-          className="sl-sp-select"
-          aria-label="Build Channel"
-          value={selectedChannel}
-          onChange={(event) => {
-            persistBuildChannel(event.currentTarget.value);
-            window.location.reload();
-          }}
-        >
-          {Object.keys(channelMap).map((channelName) => (
-            <option key={channelName} value={channelName}>{channelName}</option>
-          ))}
-        </select>
-      </span>
+      <Select label="Build Channel" value={selectedChannel} options={Object.keys(channelMap)} onChange={value => {persistBuildChannel(value);window.location.reload();}} />
       <button className="sl-sp-btn" onClick={onManage} type="button">Manage</button>
     </div>
   );
@@ -241,19 +227,7 @@ export default function BuildChannelPanel() {
             <button className="sl-build-channel-secondary" onClick={() => setManagingChannels((open) => !open)} type="button">
               Manage
             </button>
-            <span className="sl-build-channel-select-wrap">
-              <select
-                className="sl-build-channel-select"
-                value={selectedChannel}
-                onChange={(e) => setSelectedChannel(e.currentTarget.value)}
-              >
-                {Object.keys(channelMap).map((channelName) => (
-                  <option key={channelName} value={channelName}>
-                    {channelName}
-                  </option>
-                ))}
-              </select>
-            </span>
+            <Select label="Channel" value={selectedChannel} options={Object.keys(channelMap)} onChange={setSelectedChannel} />
           </span>
         </label>
         {selectedHosts && (

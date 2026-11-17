@@ -1,6 +1,6 @@
 import { registerDesignDocument, setInterfaceDesign } from "./InterfaceDesign.ts";
 import { settingsHistory } from "./SettingsHistory.ts";
-import { atom, computed } from "nanostores";
+import { atom, computed, type WritableAtom } from "nanostores";
 import { ProjectVersion } from "../../project/config.ts";
 import { SETTING_IDS } from "../components/ReactComponents/SettingsPanel/hiddenSettings.ts";
 
@@ -35,6 +35,12 @@ function migrateSettingsKeys(blob: Record<string, any>): Record<string, any> {
     "experiment:duetLinePadding": "duetLinePadding",
   };
   let changed = false;
+  if ("experiment:ctrlWheelLyricsZoom" in blob) {
+    blob.ctrlWheelLyricsZoom ??= blob["experiment:ctrlWheelLyricsZoom"];
+    delete blob["experiment:ctrlWheelLyricsZoom"];
+    changed = true;
+  }
+
   for (const [oldKey, newKey] of Object.entries(renames)) {
     if (oldKey in blob) {
       if (!(newKey in blob)) blob[newKey] = blob[oldKey];
@@ -49,11 +55,82 @@ function migrateSettingsKeys(blob: Record<string, any>): Record<string, any> {
     delete blob[updateDesignKey];
     changed = true;
   }
+  // The old "Join Split Words" toggle joined only evenly sung words, which is "steady".
+  if ("joinSplitWords" in blob) {
+    blob.syllableMerge ??= blob.joinSplitWords ? "steady" : "off";
+    // Keep the fork's existing toggle as a compatibility alias.
+    changed = true;
+  }
+  if (migrateRendererStyle(blob)) changed = true;
   if (changed) saveSettingsBlob(blob);
   return blob;
 }
 
+// The old Simple Lyrics Mode toggle became the Bloom style. Its refreshed look
+// was an experiment; Bloom is that look, so whoever had Simple Lyrics Mode on
+// gets Bloom whatever the experiment was set to. Exported for the migration test.
+export function migrateRendererStyle(blob: Record<string, any>): boolean {
+  let changed = false;
+  if ("simpleLyricsMode" in blob) {
+    blob.rendererVisualStyle ??= blob.simpleLyricsMode === true ? "bloom" : "spring";
+    // Keep the fork's simple-mode setting and saved animation choices.
+    changed = true;
+  }
+  if ("experiment:refreshedSimpleLyrics" in blob) {
+    // Keep the fork's opt-out for its legacy renderer.
+    changed = true;
+  }
+  if ("rendererVisualStyle" in blob && !RENDERER_VISUAL_STYLES.includes(blob.rendererVisualStyle)) {
+    delete blob.rendererVisualStyle;
+    changed = true;
+  }
+  return changed;
+}
+
+// How the synced lyrics move. "spring" is the original renderer; "bloom" fills
+// each line behind one soft edge, swells held words letter by letter, and
+// follows the song with a staggered scroll.
+export type RendererVisualStyle = "spring" | "bloom";
+export const RENDERER_VISUAL_STYLES: readonly RendererVisualStyle[] = ["spring", "bloom"];
+export const RENDERER_VISUAL_STYLE_LABELS: Record<RendererVisualStyle, string> = {
+  spring: "Spring (Default)",
+  bloom: "Bloom",
+};
+
 const _settings: Record<string, any> = migrateSettingsKeys(readSettingsBlob());
+
+/**
+ * Every persisted atom and its default, so the bug report can list what someone
+ * changed and TTML Reviewer mode can put values back through the atoms. Writing the
+ * blob instead wouldn't do: the atoms keep their values in memory and would save
+ * theirs over it on their next change.
+ */
+export const PersistedSettings = new Map<
+  string,
+  {
+    get: () => unknown;
+    set: (value: any) => void;
+    /** Whether the blob holds a value, as opposed to it never having been set. */
+    isStored: () => boolean;
+    /** Back to never having been set, so a later change of default still reaches it. */
+    unset: () => void;
+    defaultValue: unknown;
+  }
+>();
+
+function registerPersisted<T>(key: string, store: WritableAtom<T>, defaultValue: T) {
+  PersistedSettings.set(key, {
+    get: () => store.get(),
+    set: (value) => store.set(value),
+    isStored: () => _settings[key] !== undefined,
+    unset: () => {
+      store.set(defaultValue);
+      delete _settings[key];
+      saveSettingsBlob(_settings);
+    },
+    defaultValue,
+  });
+}
 
 /**
  * An atom backed by the settings blob. Exported so feature modules (e.g.
@@ -69,6 +146,7 @@ export function persistAtom<T>(key: string, defaultValue: T) {
     _settings[key] = v;
     saveSettingsBlob(_settings);
   });
+  registerPersisted(key, store, defaultValue);
   return store;
 }
 
@@ -165,10 +243,24 @@ $staticBackgroundBlur.listen((value) => {
 });
 export const $simpleLyricsMode = persistAtom<boolean>("simpleLyricsMode", false);
 export const $simpleLyricsModeRenderingType = persistAtom<string>("simpleLyricsModeRenderingType", "calculate");
+
+// Lyrics text size as a percentage of what each view uses by default.
+export const $lyricsSize = persistAtom<number>("lyricsSize", 100);
+export const $ctrlWheelLyricsZoom = persistAtom<boolean>("ctrlWheelLyricsZoom", true);
+export const $rendererVisualStyle = persistAtom<RendererVisualStyle>("rendererVisualStyle", "spring");
+export const isBloomRenderer = (): boolean => $rendererVisualStyle.get() === "bloom";
+
 export const $minimalLyricsMode = persistAtom<boolean>("minimalLyricsMode", false);
 // Shows a word sung in syllables as one word when its parts line up evenly.
 export const $splitWordMotion = persistAtom<boolean>("splitWordMotion", true);
 export const $joinSplitWords = persistAtom<boolean>("joinSplitWords", false);
+// Which words sung in syllables are shown as one word: none, all, those whose
+// parts line up evenly, or those long enough to be drawn letter by letter.
+export type SyllableMerge = "off" | "full" | "steady" | "held";
+export const $syllableMerge = persistAtom<SyllableMerge>("syllableMerge", "off");
+// A joined word drawn letter by letter times its letters by the syllables it
+// was joined from, instead of spreading them evenly over the whole word.
+export const $syllablePace = persistAtom<boolean>("syllablePace", false);
 // Tinted box drawn behind a lyrics line while the pointer is over it.
 export const $lineHoverBackground = persistAtom<boolean>("lineHoverBackground", true);
 // Wide inset on the side a duet line leans away from, so the two voices read as
@@ -191,6 +283,9 @@ export const $hideNpvLyricsWhenUnavailable = persistAtom<boolean>(
 // only the song info instead of the notice. Errors still show theirs. The NPV card
 // has its own switch above.
 export const $showNoLyricsNotice = persistAtom<boolean>("showNoLyricsNotice", true);
+// In Fullscreen and Cinema View, a song with no lyrics opens the queue in the lyrics column,
+// and the next song with lyrics closes it again.
+export const $showQueueWhenNoLyrics = persistAtom<boolean>("showQueueWhenNoLyrics", false);
 // Hide Spotify's own lyrics button in the playback bar (ours is left alone).
 export const $removeSpotifyLyricsButton = persistAtom<boolean>("removeSpotifyLyricsButton", false);
 export const $lockedMediaBox = persistAtom<boolean>("lockedMediaBox", false);
@@ -206,6 +301,7 @@ export const $popupLyricsAllowed = (() => {
     _settings["popupLyricsAllowed"] = v;
     saveSettingsBlob(_settings);
   });
+  registerPersisted("popupLyricsAllowed", store, true);
   return store;
 })();
 export const $externalCinemaLyricsAllowed = persistAtom<boolean>("externalCinemaLyricsAllowed", false);
@@ -260,6 +356,18 @@ export const $musixmatchToken = persistAtom<string>("musixmatchToken", "");
 // Reserved for upstream's in-artwork volume controller. This fork keeps its
 // own placement selector, so the controller stays disabled.
 export const $showVolumeSlider = persistAtom<boolean>("showVolumeSlider", false);
+// The album's animated cover, played over the still one when it has one.
+export const $motionArtwork = persistAtom<boolean>("motionArtwork", true);
+// With Canvas Stage on, what plays when a song has both a Canvas and motion artwork.
+export type MotionArtworkPriority = "motion" | "canvas";
+export const $motionArtworkPriority = persistAtom<MotionArtworkPriority>("motionArtworkPriority", "motion");
+// Motion artwork may fill the Canvas Stage (while Canvas Stage is on); off keeps it on the NowBar cover.
+export const $motionArtworkOnStage = persistAtom<boolean>("motionArtworkOnStage", true);
+// Volume band below the playback controls in Fullscreen / Cinema View / Popup Lyrics.
+
+// Unsynced lyrics scroll through at the song's pace: "basic" follows loudness, "advanced" the voice.
+export type StaticAutoScroll = "off" | "basic" | "advanced";
+export const $staticAutoScroll = persistAtom<StaticAutoScroll>("staticAutoScroll", "off");
 // Playback timing offset in milliseconds (bipolar: negative = earlier, positive = later)
 export const $playbackOffset = persistAtom<number>("playbackOffset", 0);
 export const $songPlaybackOffsets = persistAtom<Record<string, number>>("songPlaybackOffsets", {});
@@ -278,6 +386,8 @@ export const $scrollLeadEnabled = persistAtom<boolean>("scrollLeadEnabled", fals
 export const $scrollLeadMs = persistAtom<number>("scrollLeadMs", 250);
 // Spring-driven auto-scroll instead of the browser's native smooth scroll.
 export const $smoothScrolling = persistAtom<boolean>("smoothScrolling", false);
+// A button back to the line being sung while a hand scroll has left it out of view.
+export const $showScrollToActive = $showScrollToActiveButton;
 // Frame rate cap for everything that redraws every frame (lyrics animation,
 // animated background, smooth-scroll glide). On high refresh rate displays every
 // extra frame is another repaint of the whole page, so this bounds the per-second
@@ -328,3 +438,16 @@ if (typeof document !== "undefined") registerDesignDocument(document);
 /** Ruytha pronunciation row; the original replacement mode remains available. */
 export const $romanizationBelow = persistAtom<boolean>("romanizationBelow", true);
 export const $translationsBelow = persistAtom<boolean>("translationsBelow", false);
+
+// Compatibility view for the fork's existing synchronized pronunciation rows.
+export type RomanizationDisplay = "replace" | "underLine";
+export const $romanizationDisplay = computed($romanizationBelow, below => below ? "underLine" : "replace");
+
+// Register the fork's background adapter so reviewer mode restores its effective value.
+registerPersisted("backgroundStyle", {
+  get: () => $backgroundStyle.get(),
+  set: (style: BackgroundStyle) => $staticBackgroundMode.set(({dynamic:"default",artist:"artistHeader",cover:"coverArt",color:"color",none:"none",legacy:"legacy"})[style]),
+} as WritableAtom<BackgroundStyle>, "dynamic");
+registerPersisted("backgroundBlur", $backgroundBlur, 0);
+
+PersistedSettings.get("backgroundStyle")!.isStored = () => _settings.backgroundStyle !== undefined || _settings.staticBackgroundMode !== undefined || _settings.pixelLegacyBackground === true;

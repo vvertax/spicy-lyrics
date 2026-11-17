@@ -1,8 +1,10 @@
 // Standalone loader UI: available even when the extension bundle cannot load.
+const FORK_RELEASE_HOST = "lrc.vvrtx.lol";
 const FORK_ISSUES_URL = "https://github.com/vvertax/spicy-lyrics/issues";
 const LOADER_RU = {
   "Build Channel": "Канал сборок",
   "Manage": "Настроить",
+  "Choose the release stream used after reload.": "Выберите канал, который будет загружен после перезапуска.",
   "Apply & Reload": "Применить и перезапустить",
   "Branch Name": "Название ветки",
   "API Host": "Адрес API",
@@ -140,7 +142,7 @@ const getCustomChannels = () => {
       const parsed = JSON.parse(raw);
       const clean = {};
       for (const [name, hosts] of Object.entries(parsed)) {
-        if (Array.isArray(hosts) && (hosts.length === 2 || hosts.length === 3)) {
+        if (!BUILT_IN_CHANNELS.includes(name) && name !== "SL" && Array.isArray(hosts) && (hosts.length === 2 || hosts.length === 3)) {
           clean[name] = hosts;
         }
       }
@@ -618,10 +620,10 @@ const renderChannelSettings = () => {
   labelWrap.className = "sl-sp-label-wrap";
   const label = document.createElement("span");
   label.className = "sl-sp-label";
-  label.textContent = "Build Channel";
+  label.textContent = loaderText("Build Channel");
   const description = document.createElement("span");
   description.className = "sl-sp-description";
-  description.textContent = "Choose the release stream used after reload.";
+  description.textContent = loaderText("Choose the release stream used after reload.");
   labelWrap.append(label, description);
 
   const control = document.createElement("div");
@@ -633,7 +635,7 @@ const renderChannelSettings = () => {
   const manage = document.createElement("button");
   manage.type = "button";
   manage.className = "sl-sp-btn";
-  manage.textContent = "Manage";
+  manage.textContent = loaderText("Manage");
   manage.addEventListener("click", showChannelManager);
   const select = document.createElement("select");
   select.className = "sl-sp-select";
@@ -779,11 +781,15 @@ const fetchVersion = async (channel = activeChannel) => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const response = await fetch(`https://${channel.apiHost}/version`, { signal: controller.signal });
+    const official = usesOfficialStatus(channel);
+    const response = await fetch(`https://${channel.apiHost}${official ? '/bp/loader/grabClientInfo' : '/version'}`, { cache: 'no-store', signal: controller.signal });
     if (!response.ok) throw new Error(`Version request failed with HTTP ${response.status}`);
-    const version = (await response.text()).trim();
-    if (!VERSION_PATTERN.test(version)) {
-      throw new Error(`Unexpected version response: ${JSON.stringify(version.slice(0, 40))}`);
+    const info = official ? await response.json() : null;
+    const version = official
+      ? (Array.isArray(info?.branches) ? info.branches.find(branch => branch?.tag === 'public')?.version : undefined)
+      : (await response.text()).trim();
+    if (typeof version !== 'string' || !VERSION_PATTERN.test(version)) {
+      throw new Error(`Unexpected version response: ${JSON.stringify(String(version).slice(0, 40))}`);
     }
     return version;
   } finally {
@@ -796,17 +802,22 @@ let importCount = 0;
 
 const failedInitializations = new Map();
 const importExtension = (version, channel, canContinue) => {
-  const url = `https://${channel.storageHost}/spicy-lyrics@${encodeURIComponent(version)}.mjs`;
+  // Official builds require the upstream loader, which obtains their signed URL.
+  // Fork, custom and pinned channels keep their explicitly configured bundle URL.
+  const url = usesOfficialStatus(channel)
+    ? `https://${channel.apiHost}/bp/loader/grabPluginFile`
+    : `https://${channel.storageHost}/spicy-lyrics@${encodeURIComponent(version)}.mjs`;
   // A bundle that threw may have registered listeners before failing. Never
   // evaluate another copy of that version in the same Spotify session.
-  if (failedInitializations.has(url)) return Promise.reject(failedInitializations.get(url));
-  window._spicy_lyrics_metadata = { LoadedVersion: version };
+  const initializationKey = `${url}#${version}`;
+  if (failedInitializations.has(initializationKey)) return Promise.reject(failedInitializations.get(initializationKey));
+  window._spicy_lyrics_metadata = { LoadedVersion: version, ForkReleaseHost: FORK_RELEASE_HOST };
   return withRetries(
     IMPORT_ATTEMPTS,
     () => {
       const attempt = importCount++;
       return import(attempt === 0 ? url : `${url}?retry=${attempt}`).catch((error) => {
-        if (!isModuleFetchFailure(error)) failedInitializations.set(url, error);
+        if (!isModuleFetchFailure(error)) failedInitializations.set(initializationKey, error);
         throw error;
       });
     },

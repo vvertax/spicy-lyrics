@@ -2,7 +2,7 @@
 
 The preview bundles the production page, settings, lyric animator and creative tools. Only Spotify/environment boundaries are replaced by modules under `src/preview/adapters`.
 
-Build with `node project/build-preview.mjs`. The normal extension build also runs this step. `project/prepare-hosting.mjs` copies the resulting `dist/preview` directory and the Material You host page into the deployment package; `--host=devlrc.vvrtx.lol` selects the separate development staging directory.
+Build with `node project/build-preview.mjs`. The normal extension build also runs this step. `project/prepare-hosting.mjs` copies the resulting `dist/preview` directory and the Material You host page into the deployment package; `--host=<hostname>` selects the selected local staging directory.
 
 The first preview build retrieves the four original Spicy Lyrics font weights from the font service already used by the extension. Later builds reuse `.cache/preview-fonts`; generated fonts and bundles remain outside Git. Both the main and development site use relative preview paths.
 

@@ -1,3 +1,6 @@
+import { settingInSection } from "./hiddenSettings.ts";
+import { useContext as useRevealedContext } from "react";
+import { RevealedSettingContext } from "./components.tsx";
 import { $romanizationBelow } from "../../../utils/stores.ts";
 import { $showScrollResumeIndicator } from "../../../utils/stores.ts";
 import { $duetColorsEnabled,$duetLeadColor,$duetOtherColor } from "../../../utils/stores.ts";
@@ -33,8 +36,9 @@ const uniqueWordFilterOptions = ["Off", "Gibberish", "all lowercase", "ALL UPPER
 interface Props { query: string; sectionFilter: string; showHidden?: boolean; }
 
 export default function LyricsSection({ query, sectionFilter, showHidden = false }: Props) {
+  const revealedSetting = useRevealedContext(RevealedSettingContext);
   const romanizationBelow = useStore($romanizationBelow);
-  const romanization = !showHidden && matches(query, "Romanization Under the Lyrics", "Keep the original lyrics and show synchronized romanization below. Turn off to replace the original text.");
+  const romanization = sectionFilter !== "Playback" && !showHidden && matches(query, "Romanization Under the Lyrics", "Keep the original lyrics and show synchronized romanization below. Turn off to replace the original text.");
   const duetColors=useStore($duetColorsEnabled);const leadColor=useStore($duetLeadColor);const otherColor=useStore($duetOtherColor);
   const minimalLyricsMode = useStore($minimalLyricsMode);
   const extraValue = useStore($showScrollResumeIndicator);
@@ -62,10 +66,10 @@ export default function LyricsSection({ query, sectionFilter, showHidden = false
   const creditsFollowLastLine = useStore($creditsFollowLastLine);
   const allowHidingSettings = useStore($allowHidingSettings);
   const hiddenSettingIds = useStore($hiddenSettingIds);
-  if (sectionFilter !== "All" && sectionFilter !== SECTION_NAME) return null;
+  if (!["All", SECTION_NAME, "Playback"].includes(sectionFilter)) return null;
 
-  const visible = (id: string) => showHidden ? hiddenSettingIds.includes(id) : !allowHidingSettings || !hiddenSettingIds.includes(id) || Boolean(query.trim());
-  const extra = matches(query, "Autoscroll Resume Indicator", "Show the follow cooldown after manual scrolling. Click to return immediately.") && (!showHidden || hiddenSettingIds.includes("lyrics-resume-indicator"));
+  const visible = (id: string) => settingInSection(id, sectionFilter) && (id === revealedSetting || (showHidden ? hiddenSettingIds.includes(id) : !allowHidingSettings || !hiddenSettingIds.includes(id) || Boolean(query.trim())));
+  const extra = settingInSection("lyrics-resume-indicator", sectionFilter) && matches(query, "Autoscroll Resume Indicator", "Show the follow cooldown after manual scrolling. Click to return immediately.") && (!showHidden || hiddenSettingIds.includes("lyrics-resume-indicator"));
   const r3 = visible("lyrics-minimal-mode") && matches(query, "Minimal Lyrics Mode", "Hides sung lyrics lines in Fullscreen and Cinema Mode");
   const r4 = visible("lyrics-right-align") && matches(query, "Right Align Lyrics", "Flip duet/opposite lyric alignment.");
   const r5 = visible("lyrics-scroll-active") && matches(query, "Show Scroll to Active Button", "Show an arrow button when the active lyric is outside the viewport.");
@@ -80,12 +84,12 @@ export default function LyricsSection({ query, sectionFilter, showHidden = false
   const skeleton = visible("lyrics-loading-skeleton") && matches(query, "Lyrics Loading Skeleton", "Show placeholder lines while lyrics load; disable to restore the spinner.");
   const credits = visible("lyrics-credits-follow-singer") && matches(query, "Credits Follow the Last Singer", "Align credits with the last duet line.");
   const splitMotion = visible("lyrics-split-word-motion") && matches(query, "Split Word Motion", "Move neighbouring syllables as the singing part grows, keeping the word centred.");
-  const joinSplit = matches(query, "Join Split Words", "Show a word that's sung in syllables as one word, when its parts line up evenly.");
-  const colors=matches(query,"Duet Voice Colors","Customize the two duet voices.");
+  const joinSplit = sectionFilter !== "Playback" && matches(query, "Join Split Words", "Show a word that's sung in syllables as one word, when its parts line up evenly.");
+  const colors=sectionFilter !== "Playback" && matches(query,"Duet Voice Colors","Customize the two duet voices.");
   if (![romanization, extra, trackTiming, colors,r3, r4, r5, r8, r9, r10, seek, early, lead, smooth, skeleton, credits, joinSplit, splitMotion].some(Boolean)) return null;
 
   return <>
-    <SectionTitle>Lyrics Display</SectionTitle>
+    <SectionTitle>{sectionFilter === "Playback" ? "Playback" : "Lyrics Display"}</SectionTitle>
     {romanization && <Row label="Romanization Under the Lyrics" description="Keep the original lyrics and show synchronized romanization below. Turn off to replace the original text."><Toggle checked={romanizationBelow} onChange={value => $romanizationBelow.set(value)} /></Row>}
     {colors && <Row label="Duet Voice Colors" description="Customize the two duet voices."><Toggle checked={duetColors} onChange={v=>$duetColorsEnabled.set(v)} /></Row>}
     {colors && duetColors && <Row label="First voice"><input type="color" aria-label="First voice" value={leadColor} onChange={e=>$duetLeadColor.set(e.target.value)} /></Row>}

@@ -1,3 +1,5 @@
+import { ApplySyllableLyrics as ApplyBloomSyllableLyrics } from "./BloomSyllable.ts";
+import { isBloomRenderer } from "../../../stores.ts";
 import { $lyricsContainerExists, $minimalLyricsMode, $simpleLyricsMode, $spaceGravityMode } from "../../../../utils/stores.ts";
 import { PageContainer } from "../../../../components/Pages/PageView.ts";
 import { applyStyles, removeAllStyles } from "../../../CSS/Styles.ts";
@@ -346,6 +348,11 @@ export function ApplySyllableLyrics(
   UseRomanized: boolean = false,
   viewportAnchor: LyricsViewportAnchor | null = null
 ): void {
+  if (isBloomRenderer() && !$spaceGravityMode.get()) {
+    ClearSyllableRenderSession();
+    return ApplyBloomSyllableLyrics(data as any, UseRomanized);
+  }
+
   if (!$lyricsContainerExists.get()) return;
   EmitNotApplyed();
 

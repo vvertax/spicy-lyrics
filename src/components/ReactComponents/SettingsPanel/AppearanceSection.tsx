@@ -1,9 +1,13 @@
+import { settingInSection } from "./hiddenSettings.ts";
+import { useContext as useRevealedContext } from "react";
+import { RevealedSettingContext } from "./components.tsx";
 import { useStore } from "@nanostores/react";
 import React from "react";
 import { toast } from "sonner";
 import { SaveFontFile, FONT_FILE_FAMILY } from "../../../utils/fonts/FontFile.ts";
 import {
   $settingsDesign,
+  $coverArtAnimation,
   $smoothSceneTransitions,
   $allowHidingSettings,
   $animationFpsCap,
@@ -32,8 +36,10 @@ interface Props {
 }
 
 export default function AppearanceSection({ query, sectionFilter, showHidden = false }: Props) {
+  const revealedSetting = useRevealedContext(RevealedSettingContext);
   const settingsDesign = useStore($settingsDesign);
-  const designMatches = !showHidden && matches(query, "Interface Design", "Choose the Ruytha or original Spicy Lyrics style for all extension windows and controls.");
+  const coverArtAnimation = useStore($coverArtAnimation);
+  const designMatches = sectionFilter !== "Background" && !showHidden && matches(query, "Interface Design", "Choose the Ruytha or original Spicy Lyrics style for all extension windows and controls.");
   const smoothSceneTransitions = useStore($smoothSceneTransitions);
   const customFontEnabled = useStore($customFontEnabled);
   const customFont = useStore($customFont);
@@ -46,9 +52,9 @@ export default function AppearanceSection({ query, sectionFilter, showHidden = f
   const fpsCapEnabled = useStore($animationFpsCapEnabled);
   const fpsCap = useStore($animationFpsCap);
 
-  if (sectionFilter !== "All" && sectionFilter !== SECTION_NAME) return null;
+  if (!["All", SECTION_NAME, "Background"].includes(sectionFilter)) return null;
 
-  const visible = (id: string) => showHidden ? hiddenSettingIds.includes(id) : !allowHidingSettings || !hiddenSettingIds.includes(id) || Boolean(query.trim());
+  const visible = (id: string) => settingInSection(id, sectionFilter) && (id === revealedSetting || (showHidden ? hiddenSettingIds.includes(id) : !allowHidingSettings || !hiddenSettingIds.includes(id) || Boolean(query.trim())));
   const scene = visible("appearance-scene-transitions") && matches(query, "Smooth Track Transitions", "Fade lyrics and song information when tracks change, alongside the background transition.");
   const r1 = visible("appearance-custom-font") && matches(query, "Use Custom Font", "Use a custom font instead of the bundled Spicy Lyrics font.");
   const r2 = visible("appearance-custom-font") && matches(query, "Font Name Font Preset Font File", "Font family name file ttf otf woff to use for lyrics.");
@@ -60,12 +66,14 @@ export default function AppearanceSection({ query, sectionFilter, showHidden = f
   const r8 = visible("appearance-sliderbar-styling") && matches(query, "New SliderBar Styling", "New glass-like style for the SliderBar. Disable to revert back to the original one.");
   const r9 = visible("appearance-fps-limit") && matches(query, "Limit Animation Frame Rate", FPS_CAP_DESCRIPTION);
   const r10 = visible("appearance-fps-cap") && matches(query, "Animation Frame Rate", FPS_SLIDER_DESCRIPTION);
+  const cover = visible("appearance-cover-art-animation") && matches(query, "Cover Art Animation", "Animate cover art changes in the NowBar.");
 
-  if (!designMatches && !scene && !r1 && !r2 && !r3 && !r4 && !r6 && !r7 && !r8 && !r9 && !r10) return null;
+  if (!designMatches && !scene && !r1 && !r2 && !r3 && !r4 && !r6 && !r7 && !r8 && !r9 && !r10 && !cover) return null;
 
   return (
     <>
-      <SectionTitle>Appearance</SectionTitle>
+      <SectionTitle>{sectionFilter === "Background" ? "Background" : "Appearance"}</SectionTitle>
+      {cover && <Row settingId="appearance-cover-art-animation" label="Cover Art Animation" description="Animate cover art changes in the NowBar."><Toggle checked={coverArtAnimation} onChange={(value) => $coverArtAnimation.set(value)} /></Row>}
       {designMatches && <Row label="Interface Design" description="Choose the Ruytha or original Spicy Lyrics style for all extension windows and controls.">
         <Select value={settingsDesign} options={["ruytha", "original"]} labels={["Ruytha Fork", "Original Spicy Lyrics"]} onChange={value => $settingsDesign.set(value as "ruytha" | "original")} />
       </Row>}

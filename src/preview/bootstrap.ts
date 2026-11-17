@@ -6,7 +6,7 @@ Object.defineProperty(window,'localStorage',{configurable:true,value:previewStor
 const nativeOpen=indexedDB.open.bind(indexedDB),nativeDelete=indexedDB.deleteDatabase.bind(indexedDB);
 Object.defineProperty(indexedDB,'open',{configurable:true,value:(name:string,version?:number)=>nativeOpen(storagePrefix+name,version)});
 Object.defineProperty(indexedDB,'deleteDatabase',{configurable:true,value:(name:string)=>nativeDelete(storagePrefix+name)});
-if(new URL(location.href).searchParams.has('reset')){await Promise.all(['spicylyrics','SL_ForkFonts'].map(name=>new Promise<void>(resolve=>{const request=nativeDelete(storagePrefix+name);request.onsuccess=request.onerror=request.onblocked=()=>resolve();})));const url=new URL(location.href);url.searchParams.delete('reset');history.replaceState(null,'',url);}
+if(new URL(location.href).searchParams.has('reset')){await Promise.all(['spicylyrics','SL_ForkFonts'].map(name=>new Promise<void>(resolve=>{const request=nativeDelete(storagePrefix+name);request.onsuccess=request.onerror=request.onblocked=()=>resolve();})));const url=new URL(location.href);url.searchParams.delete('reset');window.history.replaceState(null,'',url);}
 
 const local={get:(key:string)=>nativeStorage.getItem(storagePrefix+key),set:(key:string,value:any)=>nativeStorage.setItem(storagePrefix+key,String(value)),remove:(key:string)=>nativeStorage.removeItem(storagePrefix+key)};
 const language=new URL(location.href).searchParams.get('lang')==='en'?'en':'ru';

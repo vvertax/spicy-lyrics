@@ -1,3 +1,4 @@
+import UpstreamSettings from "./UpstreamSettings.tsx";
 import { useStore } from "@nanostores/react";
 import React, { useEffect, useMemo, useState } from "react";
 import { $hiddenSettingIds } from "../../../utils/stores.ts";
@@ -7,10 +8,10 @@ import EffectsSection from "./EffectsSection.tsx";
 import InterfaceSection from "./InterfaceSection.tsx";
 import LyricsSection from "./LyricsSection.tsx";
 import SourcesSection from "./SourcesSection.tsx";
-import { FilterDropdown, HiddenSettingsContext, SearchBar } from "./components.tsx";
+import { NavigateSettingContext, FilterDropdown, HiddenSettingsContext, SearchBar } from "./components.tsx";
 import { SETTINGS, SETTING_SECTIONS } from "./hiddenSettings.ts";
 
-export default function HiddenSettingsPanel({ onBack }: { onBack: () => void }) {
+export default function HiddenSettingsPanel({ onBack, onNavigate }: { onBack: () => void; onNavigate?: (id: string) => void }) {
   const hiddenIds = useStore($hiddenSettingIds);
   const [query, setQuery] = useState("");
   const [sectionFilter, setSectionFilter] = useState("All");
@@ -24,13 +25,14 @@ export default function HiddenSettingsPanel({ onBack }: { onBack: () => void }) 
   return <div style={{ padding: "8px 0" }} className="slm w-40 sl-sp-hidden-settings">
     <div className="sl-sp-subheader"><button className="sl-sp-back-btn" onClick={onBack} aria-label="Back to Settings"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M8.5 2.5L4 7l4.5 4.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg>Settings</button></div>
     <div className="sl-sp-toolbar"><SearchBar value={query} onChange={setQuery} /><FilterDropdown sections={sections} value={sectionFilter} onChange={setSectionFilter} /></div>
-    {hiddenSettings.length === 0 ? <p className="sl-sp-empty">No hidden settings.</p> : <HiddenSettingsContext.Provider value>
+    {hiddenSettings.length === 0 ? <p className="sl-sp-empty">No hidden settings.</p> : <NavigateSettingContext.Provider value={(_label, id) => onNavigate?.(id)}><HiddenSettingsContext.Provider value>
+      <UpstreamSettings query={query} sectionFilter={sectionFilter === "All" ? "" : sectionFilter} />
       <AppearanceSection query={query} sectionFilter={sectionFilter} showHidden />
       <LyricsSection query={query} sectionFilter={sectionFilter} showHidden />
       <EffectsSection query={query} sectionFilter={sectionFilter} showHidden />
       <InterfaceSection query={query} sectionFilter={sectionFilter} showHidden />
       <SourcesSection query={query} sectionFilter={sectionFilter} showHidden />
       <DeveloperSection query={query} sectionFilter={sectionFilter} showHidden />
-    </HiddenSettingsContext.Provider>}
+    </HiddenSettingsContext.Provider></NavigateSettingContext.Provider>}
   </div>;
 }

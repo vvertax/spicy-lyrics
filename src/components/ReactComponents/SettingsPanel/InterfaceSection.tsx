@@ -1,3 +1,5 @@
+import { useContext as useRevealedContext } from "react";
+import { RevealedSettingContext } from "./components.tsx";
 import { useContext } from "react";
 import { FavoriteSettingsContext } from "./components.tsx";
 import { QUICK_CONTROLS, normalizeQuickControls } from "../../Utils/ControlLayout.ts";
@@ -19,6 +21,7 @@ import {
   $removeSpotifyLyricsButton,
   $viewControlsPosition,
   $showNoLyricsNotice,
+  $showQueueWhenNoLyrics,
 } from "../../../utils/stores.ts";
 import { $isGlobalNav } from "../../../utils/uiState.ts";
 import { matches, Row, Select, SectionTitle, Toggle } from "./components.tsx";
@@ -33,6 +36,7 @@ const escapeOptions = ["Default", "Exit Fullscreen", "Exit Fully"];
 interface Props { query: string; sectionFilter: string; showHidden?: boolean; }
 
 export default function InterfaceSection({ query, sectionFilter, showHidden = false }: Props) {
+  const revealedSetting = useRevealedContext(RevealedSettingContext);
   const favoritesOnly = useContext(FavoriteSettingsContext);
   const quickIds = normalizeQuickControls(useStore($quickControlIds));
   const lockedMediaBox = useStore($lockedMediaBox);
@@ -49,15 +53,17 @@ export default function InterfaceSection({ query, sectionFilter, showHidden = fa
   const disableNpvLyrics = useStore($disableNpvLyrics);
   const removeSpotifyLyricsButton = useStore($removeSpotifyLyricsButton);
   const showNoLyricsNotice = useStore($showNoLyricsNotice);
+  const showQueueWhenNoLyrics = useStore($showQueueWhenNoLyrics);
   const isGlobalNav = useStore($isGlobalNav);
   const hiddenSettingIds = useStore($hiddenSettingIds);
   if (sectionFilter !== "All" && sectionFilter !== SECTION_NAME) return null;
 
-  const ids = ["interface-lock-media-box", "interface-disable-popup", "interface-view-controls", "interface-always-fullscreen", "interface-fullscreen-volume", "interface-release-year", "interface-animate-close", "interface-escape-key", "interface-disable-npv", "interface-hide-empty-npv", "interface-open-profiles-browser", "interface-remove-spotify-lyrics"];
+  const ids = ["interface-lock-media-box", "interface-disable-popup", "interface-view-controls", "interface-always-fullscreen", "interface-fullscreen-volume", "interface-release-year", "interface-animate-close", "interface-escape-key", "interface-disable-npv", "interface-hide-empty-npv", "interface-open-profiles-browser", "interface-remove-spotify-lyrics", "interface-auto-queue"];
   const rows = [
     matches(query, "Lock Media Box Size in Compact Mode", "Prevent the media box from resizing when Forced Compact Mode is active."), matches(query, "Disable Popup Lyrics Window", "Show or hide the Popup Lyrics button in the playback bar."), matches(query, "Lyrics Controls Position", "Where the lyrics view controls (play, scroll, etc.) appear."), matches(query, "Always Show In Fullscreen", "Keep fullscreen time or controls visible."), matches(query, "Fullscreen Volume Slider", "Show a volume slider in fullscreen."), matches(query, "Release Year Position", "Show release year near track metadata."), matches(query, "Animate closing fullscreen", "Slide the lyrics page away when closing fullscreen."), matches(query, "Escape Key Function", "Choose how Escape behaves in lyrics fullscreen."), matches(query, "Disable NPV Lyrics", "Never show the lyrics card in the Now Playing sidebar."), matches(query, "Hide NPV Lyrics When No Lyrics Are Available", "Remove the lyrics card from the Now Playing sidebar while the current song has no lyrics, instead of showing a notice. It comes back on the next song that has them."), matches(query, "Open Profiles in Browser", "Open contributor profiles in your browser instead of inside Spotify."),
     matches(query, "Remove Spotify's Lyrics Button", "Hide Spotify's built-in lyrics button from the playback bar."),
-  ].map((matched, index) => matched && (showHidden ? hiddenSettingIds.includes(ids[index]) : !allowHidingSettings || !hiddenSettingIds.includes(ids[index]) || Boolean(query.trim())));
+    matches(query, "Show Queue When a Song Has No Lyrics", "In Fullscreen and Cinema View, open the queue in place of the lyrics. It closes again on the next song with lyrics."),
+  ].map((matched, index) => matched && (showHidden ? hiddenSettingIds.includes(ids[index]) : !allowHidingSettings || (ids[index] === revealedSetting || !hiddenSettingIds.includes(ids[index])) || Boolean(query.trim())));
   const notice = matches(query, "Detailed No Lyrics Notice", "Show the explanation and actions when lyrics are unavailable. Turn off for a minimal message. Loading errors always show full details.") && (showHidden ? hiddenSettingIds.includes("interface-no-lyrics-notice") : !allowHidingSettings || !hiddenSettingIds.includes("interface-no-lyrics-notice") || Boolean(query.trim()));
   const quick = !showHidden && matches(query, "Quick Controls", "Pin actions outside the lyrics menu " + QUICK_CONTROLS.map(([,label])=>label).join(" "));
   if (!rows.some(Boolean) && !notice && !quick) return null;
@@ -71,6 +77,7 @@ export default function InterfaceSection({ query, sectionFilter, showHidden = fa
       <div className="vv-quick-footer"><button type="button" className="sl-sp-btn" onClick={()=>$quickControlIds.set([])}>Move all to menu</button></div></div>
     </details>}
     {notice && <Row settingId="interface-no-lyrics-notice" label="Detailed No Lyrics Notice" description="Show the explanation and actions when lyrics are unavailable. Turn off for a minimal message. Loading errors always show full details."><Toggle checked={showNoLyricsNotice} onChange={(v) => $showNoLyricsNotice.set(v)} /></Row>}
+    {rows[12] && <Row settingId="interface-auto-queue" label="Show Queue When a Song Has No Lyrics" description="In Fullscreen and Cinema View, open the queue in place of the lyrics. It closes again on the next song with lyrics."><Toggle checked={showQueueWhenNoLyrics} onChange={(v) => $showQueueWhenNoLyrics.set(v)} /></Row>}
     {rows[0] && <Row settingId="interface-lock-media-box" label="Lock Media Box Size in Compact Mode" description="Prevent the media box from resizing when Forced Compact Mode is active."><Toggle checked={lockedMediaBox} onChange={(v) => $lockedMediaBox.set(v)} /></Row>}
     {rows[1] && <Row settingId="interface-disable-popup" label="Disable Popup Lyrics Window" description="Show or hide the Popup Lyrics button in the playback bar."><Toggle checked={!popupLyricsAllowed} onChange={(v) => $popupLyricsAllowed.set(!v)} /></Row>}
     {rows[2] && <Row settingId="interface-view-controls" label="View Controls Position" description="Where the view controls (play, scroll, etc.) appear." disabled={!isGlobalNav} disabledReason="Only available in Spotify's new navigation layout"><Select value={viewControlsPosition} options={vcPositionOptions} onChange={(v) => $viewControlsPosition.set(v)} /></Row>}

@@ -5,11 +5,12 @@ import { mountScenePresentation, unmountScenePresentation } from "../Utils/Scene
 import { RegisterFontFile, FONT_FILE_FAMILY } from "../../utils/fonts/FontFile.ts";
 import { BuildControlsMenu } from "../Utils/ControlsMenu.ts";
 import { createTooltip } from "../../utils/tooltip.ts";
-import fetchLyrics, { ShowQueueLoader } from "../../utils/Lyrics/fetchLyrics.ts";
+import fetchLyrics, { HoldsTemporaryUpload, ShowQueueLoader } from "../../utils/Lyrics/fetchLyrics.ts";
 import { ClearLyricsLoader } from "../../utils/Lyrics/LyricsLoader.ts";
 import { LyricsQueueRetry } from "../../utils/Lyrics/LyricsQueueRetry.ts";
 import { SkeletonMarkup } from "../../utils/Lyrics/LyricsSkeleton.ts";
 import { $forceCompactMode } from "../../utils/uiState.ts";
+import { $romanization } from "../../utils/uiState.ts";
 import { DestroyAllLyricsContainers } from "../../utils/Lyrics/Applyer/CreateLyricsContainer.ts";
 import ApplyLyrics, {
   ApplyLyricsIfCurrent,
@@ -51,6 +52,7 @@ import {
   $memeFormat,
   $lyricsContainerExists,
   $lyricsRendererPaused,
+  $lyricsSize,
   $minimalLyricsMode,
   $pinnedFooterMode,
   $rightAlignLyrics,
@@ -60,13 +62,17 @@ import {
   $lyricsCacheAction,
   $showLyricsCacheActionButton,
   $spaceGravityMode,
+  $rendererVisualStyle,
+  $skipSpicyFont,
+  $syllableMerge,
+  $syllablePace,
   $ttmlMakerMode,
   $viewControlsPosition,
 } from "../../utils/stores.ts";
 import Global from "../Global/Global.ts";
 import Session from "../Global/Session.ts";
 import { SpotifyPlayer } from "../Global/SpotifyPlayer.ts";
-import { Icons } from "../Styling/Icons.ts";
+import { Icons, KnockoutDisc } from "../Styling/Icons.ts";
 import {
   DisableCompactMode,
   EnableCompactMode,
@@ -86,6 +92,7 @@ import {
   OpenNowBar,
 } from "../Utils/NowBar.ts";
 import TransferElement from "../Utils/TransferElement.ts";
+import { SeatRomanizationToggle, SyncViewSwitch } from "../Utils/QueueView.ts";
 import { IsPIP, _IsPIP_after, ClosePopupLyrics } from "../Utils/PopupLyrics.ts";
 import { IsExternalCinemaLyrics, CloseExternalCinemaLyrics } from "../Utils/ExternalCinemaLyrics.ts";
 import { NPVCardOwnsPage, DeRenderNPVCard } from "../Utils/NPVLyrics.ts";
@@ -94,8 +101,10 @@ import { OpenLyricsDBPanel } from "../../utils/openLyricsDBPanel.tsx";
 import { openSettingsPanel } from "../../utils/settings.ts";
 import Logger from "../../utils/Logger.ts";
 import { setStockPlaybarPage } from "../../utils/themeMatcher.ts";
+import { CreateTextScroller, type TextScroller } from "../../utils/TextScroller.ts";
 import {
   ApplyExperimentClasses,
+  isExperimentEnabled,
   onExperimentChange,
   onExperimentDefinitionChange,
 } from "../../utils/experiments.ts";
@@ -106,6 +115,11 @@ import {
   normalizeLyricsCacheAction,
   RunLyricsCacheAction,
 } from "../../utils/LyricsCacheTools.ts";
+import {
+  lyricsSizeChanged,
+  romanizedRowsToggled,
+
+} from "../../utils/Lyrics/LyricsVirtualizer.ts";
 
 const pageLogger = new Logger("Page View");
 const controlsLogger = new Logger("View Controls");
@@ -186,6 +200,8 @@ function cancelPendingPageMount() {
 }
 
 let PageResizeListener: ResizeObserver | null = null;
+// Scrolls the title and artists when they are wider than the player.
+let MetadataScroller: TextScroller | null = null;
 export let PageContainer: HTMLElement | null = null;
 export let IsCardMode = false;
 
@@ -378,6 +394,7 @@ async function OpenPage(
   applyAnimatorPreset(elem);
   PageContainer = elem;
 
+  elem.style.setProperty("--SL-LyricsScale", String($lyricsSize.get() / 100));
   if (!$customFontEnabled.get()) {
     elem.classList.add("UseSpicyFont");
   }
@@ -385,8 +402,8 @@ async function OpenPage(
 
   elem.classList.toggle("GibberishLyricsMode", $memeFormat.get() === "Gibberish");
 
-  if ($simpleLyricsMode.get()) {
-    elem.classList.add("SimpleLyricsMode");
+  if ($rendererVisualStyle.get() === "bloom") {
+    elem.classList.add("BloomRenderer");
   }
 
   if ($minimalLyricsMode.get()) {
@@ -399,6 +416,11 @@ async function OpenPage(
 
   if ($duetLinePadding.get()) {
     elem.classList.add("DuetLinePadding");
+  }
+
+  // Opens the romanization rows under each line (Mixed.css).
+  if (isRomanized) {
+    elem.classList.add("RomanizedRowsShown");
   }
 
   if ($creditsFollowLastLine.get()) {
@@ -428,6 +450,13 @@ async function OpenPage(
 
   pageRoot.appendChild(elem);
   mountScenePresentation(elem);
+
+  // After the append, so a page opened in the popup observes with the popup's window.
+  // TextSliding / TextSettling drive the start-edge fade in Player Below the Cover (PlayerBelowCover.css).
+  MetadataScroller = CreateTextScroller(
+    [...elem.querySelectorAll<HTMLElement>(".NowBar .Header .Metadata :is(.SongName, .Artists)")],
+    { slidingClass: "TextSliding", settlingClass: "TextSettling" }
+  );
 
   addLinesEvListener();
   SetLyricsRendererWindow(targetDocument.defaultView);
@@ -567,6 +596,8 @@ async function DestroyPage() {
   CleanupScrollEvents();
   PageResizeListener?.disconnect(); // Disconnect the observer
   PageResizeListener = null;
+  MetadataScroller?.destroy();
+  MetadataScroller = null;
   $lyricsContainerExists.set(false);
   $lyricsRendererPaused.set(false);
   ClearRomanRows();
@@ -606,7 +637,12 @@ Global.Event.listen("lyrics:not-apply", () => {
 Global.Event.listen("lyrics:apply", ({ Type }: { Type: string }) => {
   CleanupScrollEvents();
 
-  if (!Type || Type === "Static") return;
+  if (!Type) return;
+  if (Type === "Static") {
+    // Unsynced lyrics only need to know about hand scrolls, so auto-scroll can let go.
+    if (ScrollSimplebar) InitializeScrollEvents(ScrollSimplebar);
+    return;
+  }
   if (ScrollSimplebar) {
     InitializeScrollEvents(ScrollSimplebar);
     //QueueForceScroll(); // Queue a force scroll instead of directly calling with true
@@ -617,10 +653,106 @@ Global.Event.listen("lyrics:apply", ({ Type }: { Type: string }) => {
   setTimeout(() => triggerRemeasureLV(), 1500);
 });
 
+// Player Below the Cover stacks the view controls in a column beside the cover
+// (PlayerBelowCover.css), where a tooltip above or below a button would sit on its
+// neighbour. There they open sideways, toward the lyrics. Decided on each show, since
+// the layout comes and goes with the experiment, compact mode and Canvas Stage.
+function ViewControlTooltipProps(): Record<string, unknown> {
+  const base = (Spicetify.TippyProps ?? {}) as Record<string, unknown> & {
+    placement?: string;
+    onShow?: (instance: any) => unknown;
+  };
+  return {
+    ...base,
+    onShow(instance: any) {
+      const page = PageContainer;
+      // Seated in the Lyrics / Queue switch (QueueView.ts), a toggle is in a row, not the column.
+      const column =
+        !!page &&
+        !instance.reference?.closest?.(".ViewSwitch") &&
+        page.classList.contains("Fullscreen") &&
+        page.classList.contains("Exp_PlayerBelowCover") &&
+        !page.classList.contains("CanvasImmersive") &&
+        !page.classList.contains("CompactMode") &&
+        !page.classList.contains("ForcedCompactMode");
+      const placement = column
+        ? page.classList.contains("NowBarSide__Right")
+          ? "left"
+          : "right"
+        : (base.placement ?? "top");
+      if (instance.props?.placement !== placement) instance.setProps({ placement });
+      return base.onShow?.(instance);
+    },
+  };
+}
+
+// A toggle whose click swaps its own glyph gets that glyph eased in (SL_IconSwapIn, default.css).
+// The controls are rebuilt whole, and one click can rebuild them more than once, so the swap is
+// armed by the click and carried across rebuilds: the first starts the animation, a later one
+// picks it up where it had got to instead of starting it over.
+// A grouped toggle keeps its glyph, so its disc fills in or clears instead (SL_ToggleSwap).
+const ICON_SWAP_MS = 200;
+const TOGGLE_SWAP_MS = 320;
+const ICON_SWAP_ARM_MS = 3000;
+let IconSwap: { id: string; armedAt: number; startedAt: number | null } | null = null;
+
+function ArmIconSwap(id: string) {
+  IconSwap = { id, armedAt: performance.now(), startedAt: null };
+}
+
+// A grouped toggle answers the click itself: its disc starts filling or clearing at once, and the
+// rebuild that follows picks the motion up where it has got to (ApplyIconSwap).
+function PressToggle(button: Element) {
+  if (!button.classList.contains("ViewToggle")) return;
+  const now = performance.now();
+  // A button rebuilt after an earlier flip still carries that replay; this flip is a transition.
+  // The style has to settle without the replay first, or the flip lands in the same style change
+  // and the disc snaps instead of transitioning.
+  if (button.classList.contains("SL_ToggleSwap")) {
+    button.classList.remove("SL_ToggleSwap");
+    (button as HTMLElement).style.removeProperty("--ToggleSwapDelay");
+    void getComputedStyle(button.querySelector(".SL_KnockoutDisc") ?? button).opacity;
+  }
+  button.setAttribute("aria-pressed", String(button.getAttribute("aria-pressed") !== "true"));
+  IconSwap = { id: button.id, armedAt: now, startedAt: now };
+}
+
+function ApplyIconSwap(controls: HTMLElement) {
+  if (!IconSwap) return;
+  const now = performance.now();
+  const button = controls.querySelector<HTMLElement>(`#${IconSwap.id}`);
+  const isToggle = button?.classList.contains("ViewToggle") ?? false;
+  const elapsed = IconSwap.startedAt === null ? 0 : now - IconSwap.startedAt;
+  if (
+    elapsed >= (isToggle ? TOGGLE_SWAP_MS : ICON_SWAP_MS) ||
+    now - IconSwap.armedAt > ICON_SWAP_ARM_MS
+  ) {
+    IconSwap = null;
+    return;
+  }
+  if (isToggle && button) {
+    IconSwap.startedAt ??= now;
+    button.classList.add("SL_ToggleSwap");
+    if (elapsed > 0) button.style.setProperty("--ToggleSwapDelay", `-${Math.round(elapsed)}ms`);
+    return;
+  }
+  const svg = button?.querySelector<SVGElement>("svg");
+  if (!svg) return;
+  IconSwap.startedAt ??= now;
+  svg.classList.add("SL_IconSwapIn");
+  if (elapsed > 0) svg.style.animationDelay = `-${Math.round(elapsed)}ms`;
+}
+
+// Which markup the controls were last built with, so a remote override that flips the grouped
+// layout without touching the stored value still gets them rebuilt.
+let RenderedGroupedControls: boolean | null = null;
+
 function AppendViewControls(ReAppend: boolean = false) {
   if (IsCardMode) return;
   if (!PageContainer) return;
   controlsLogger.debug("Append view controls");
+  // The Lyrics / Queue switch lives in its own corner but comes and goes with the same views.
+  SyncViewSwitch();
   const elem = PageContainer.querySelector<HTMLElement>(
     ".ContentBox .ViewControls"
   );
@@ -641,6 +773,14 @@ function AppendViewControls(ReAppend: boolean = false) {
   const isTTMLMakerMode = $ttmlMakerMode.get();
   const cacheAction = normalizeLyricsCacheAction($lyricsCacheAction.get());
   const showCacheActionButton = $showLyricsCacheActionButton.get() && !IsPIP;
+  const grouped = isExperimentEnabled("groupedViewControls");
+  RenderedGroupedControls = grouped;
+  // Grouped, a toggle keeps one glyph and shows its state as a filled disc; otherwise the glyph
+  // itself changes with the state.
+  const toggle = (id: string, pressed: boolean, groupedIcon: string, legacyIcon: string) =>
+    grouped
+      ? `<button id="${id}" class="ViewControl ViewToggle" aria-pressed="${pressed}">${groupedIcon}${KnockoutDisc(groupedIcon, `SL_Knockout_${id}`)}</button>`
+      : `<button id="${id}" class="ViewControl">${legacyIcon}</button>`;
   elem.innerHTML = `
         ${
           Fullscreen.IsOpen || Fullscreen.CinemaViewOpen
@@ -649,24 +789,25 @@ function AppendViewControls(ReAppend: boolean = false) {
         }
         ${
           Fullscreen.IsOpen || Fullscreen.CinemaViewOpen || NowBarObj.Open
-            ? IsPIP ? "" : `<button id="CompactModeToggle" class="ViewControl">${
-                IsCompactMode()
-                  ? Icons.DisableCompactModeIcon
-                  : Icons.EnableCompactModeIcon
-              }</button>`
+            ? IsPIP ? "" : toggle("CompactModeToggle", IsCompactMode(), Icons.EnableCompactModeIcon,
+                IsCompactMode() ? Icons.DisableCompactModeIcon : Icons.EnableCompactModeIcon)
             : ""
         }
-        <button id="RomanizationToggle" class="ViewControl">
-          ${
-            isRomanized
-              ? Icons.DisableRomanization
-              : Icons.EnableRomanization
-          }
-        </button>
+        ${toggle(
+          "RomanizationToggle",
+          isRomanized,
+          Icons.EnableRomanization,
+          isRomanized ? Icons.DisableRomanization : Icons.EnableRomanization
+        )}
         ${
           !Fullscreen.IsOpen &&
           !Fullscreen.CinemaViewOpen
-            ? IsPIP ? "" : `<button id="NowBarToggle" class="ViewControl">${Icons.NowBar}</button>`
+            ? IsPIP ? "" : toggle(
+                "NowBarToggle",
+                PageContainer.classList.contains("NowBarStatus__Open"),
+                Icons.NowBar,
+                Icons.NowBar
+              )
             : ""
         }
         ${
@@ -676,11 +817,14 @@ function AppendViewControls(ReAppend: boolean = false) {
         }
         ${
           Fullscreen.IsOpen
-            ? (IsPIP ? "" : `<button id="FullscreenToggle" class="ViewControl">${
+            ? (IsPIP ? "" : toggle(
+                "FullscreenToggle",
+                !Fullscreen.CinemaViewOpen,
+                Icons.Fullscreen,
                 Fullscreen.CinemaViewOpen
                   ? Icons.Fullscreen
                   : Icons.CloseFullscreen
-              }</button>`)
+              ))
             : ""
         }
         ${
@@ -698,6 +842,7 @@ function AppendViewControls(ReAppend: boolean = false) {
         ${IsPIP ? "" : `<button id="SettingsToggle" class="ViewControl">${Icons.Settings}</button>`}
         <button id="Close" class="ViewControl">${Icons.Close}</button>
     `;
+  ApplyIconSwap(elem);
 
   let targetElem: HTMLElement | null = elem;
   if (Fullscreen.IsOpen) {
@@ -728,10 +873,12 @@ function AppendViewControls(ReAppend: boolean = false) {
     SetupTippy(targetElem);
     if (!IsPIP) BuildControlsMenu(targetElem, PageContainer);
   }
+  // Wired up, the romanization toggle moves into the Lyrics / Queue switch where there is one.
+  SeatRomanizationToggle();
 
   function SetupTippy(elem: HTMLElement) {
     // PiP cannot host Spotify Tippy instances, but Cinema can use its own document.
-    const tippyProps = (target: HTMLElement) => ({
+    const tippyProps = (target: Element) => ({
       ...Spicetify.TippyProps,
       ...(target.ownerDocument === document
         ? {}
@@ -779,6 +926,8 @@ function AppendViewControls(ReAppend: boolean = false) {
           });
         }
         compactModeToggle.addEventListener("click", () => {
+          if (grouped) PressToggle(compactModeToggle);
+          else ArmIconSwap("CompactModeToggle");
           // Use PageContainer instead of document.querySelector
           const SpicyLyricsPage = PageContainer;
           if (Fullscreen.IsOpen || Fullscreen.CinemaViewOpen) {
@@ -856,7 +1005,10 @@ function AppendViewControls(ReAppend: boolean = false) {
               content: `NowBar`,
             });
           }
-          nowBarButton.addEventListener("click", () => ToggleNowBar());
+          nowBarButton.addEventListener("click", () => {
+            if (grouped) PressToggle(nowBarButton);
+            ToggleNowBar();
+          });
         } catch (err) {
           controlsLogger.warn("Failed to setup NowBar tooltip", err);
         }
@@ -876,6 +1028,7 @@ function AppendViewControls(ReAppend: boolean = false) {
           });
         }
         fullscreenBtn.addEventListener("click", async () => {
+          if (grouped) PressToggle(fullscreenBtn);
           // If we're in cinema view, go to full fullscreen
           if (Fullscreen.CinemaViewOpen) {
             Fullscreen.CinemaViewOpen = false;
@@ -1021,18 +1174,27 @@ function RefreshRightAlignedLyrics() {
 
 $simpleLyricsMode.listen((v) => {
   if (!PageContainer) return;
-  PageContainer.classList.toggle("SimpleLyricsMode", v);
+  PageContainer.classList.toggle("SimpleLyricsMode", v && $rendererVisualStyle.get() !== "bloom");
   const uri = SpotifyPlayer.GetUri();
-  $currentLyricsData.set("");
+  if (!HoldsTemporaryUpload(uri)) $currentLyricsData.set("");
   if (uri) fetchLyrics(uri).then(ApplyLyrics);
+});
+
+function rebuildLyrics() { ReapplyCurrentLyrics(); }
+
+// The letter split, word springs and line timing are fixed when the lyrics are
+// built, so a style change rebuilds them.
+$rendererVisualStyle.listen((v) => {
+  if (!PageContainer) return;
+  PageContainer.classList.toggle("BloomRenderer", v === "bloom" && !$spaceGravityMode.get());
+  PageContainer.classList.toggle("SimpleLyricsMode", v !== "bloom" && $simpleLyricsMode.get());
+  rebuildLyrics();
 });
 
 $minimalLyricsMode.listen((v) => {
   if (!PageContainer) return;
   PageContainer.classList.toggle("MinimalLyricsMode", v);
-  const uri = SpotifyPlayer.GetUri();
-  $currentLyricsData.set("");
-  if (uri) fetchLyrics(uri).then(ApplyLyrics);
+  rebuildLyrics();
 });
 
 $enableExperimentalWordSync.listen(() => {
@@ -1069,6 +1231,11 @@ $lineHoverBackground.listen((v) => {
 
 $spaceGravityMode.listen((v) => {
   if (!PageContainer) return;
+  if ($rendererVisualStyle.get() === "bloom") {
+    PageContainer.classList.toggle("BloomRenderer", !v);
+    ReapplyCurrentLyrics();
+    return;
+  }
   if (ShouldReapplyRenderedLyricsForSpaceGravity(v)) {
     ReapplyCurrentLyrics();
     return;
@@ -1125,6 +1292,13 @@ onExperimentChange((experiment) => {
   if (!PageContainer) return;
   ApplyExperimentClasses(PageContainer);
   if (experiment.rebuildsLyrics || (experiment.id === "refreshedSimpleLyrics" && $simpleLyricsMode.get())) ReapplyCurrentLyrics();
+  if (experiment.id === "groupedViewControls") AppendViewControls(true);
+  // Romaji is made when the lyrics are fetched, so rebuild them.
+  if (experiment.id === "romajiAsWritten") {
+    const uri = SpotifyPlayer.GetUri();
+    $currentLyricsData.set("");
+    if (uri) void fetchLyrics(uri).then(ApplyLyrics);
+  }
 });
 
 onExperimentDefinitionChange(() => {
@@ -1135,6 +1309,13 @@ $pinnedFooterMode.listen(() => {
   if (!PageContainer) return;
   applyPinnedFooterMode(PageContainer);
   ReapplyCurrentLyrics();
+  ApplyExperimentClasses(PageContainer);
+  if (
+    RenderedGroupedControls !== null &&
+    RenderedGroupedControls !== isExperimentEnabled("groupedViewControls")
+  ) {
+    AppendViewControls(true);
+  }
 });
 
 $viewControlsPosition.listen((v) => {
@@ -1164,3 +1345,10 @@ $lyricsCacheAction.listen(() => {
 });
 
 export default PageView;
+
+$syllableMerge.listen(ReapplyCurrentLyrics);
+$syllablePace.listen(ReapplyCurrentLyrics);
+$lyricsSize.listen((size, previous) => {
+  PageContainer?.style.setProperty("--SL-LyricsScale", String(size / 100));
+  lyricsSizeChanged(previous ? size / previous : 1);
+});

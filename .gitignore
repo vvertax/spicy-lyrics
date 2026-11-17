@@ -38,3 +38,7 @@ Desktop.ini
 
 # Local-only online counter: client, Worker, configuration and deployment files
 /local-online/
+
+# Private release targets, server notes and local-only tooling
+/.local/
+*.local.json

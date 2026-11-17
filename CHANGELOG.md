@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.11.1
+
+- Port Spicy Lyrics 6.5.0 features and 6.5.10 updates while preserving vvertax Edition functionality.
+- Move Ctrl + wheel zoom into Lyrics settings, synchronize it with Lyrics Size, and refresh the scale reset badge.
+- Expand diagnostics with a readable, editable report, copy actions, and the fork’s issue-tracker link.
+- Add localized New badges for features introduced from 1.10.0 onward.
+- Default increased Spring line spacing to Off without resetting saved choices.
+- Fix fullscreen volume placement with Canvas and either cover position.
+- Restore the 1.11.0 controls-menu appearance and fix clipped buttons, shared backdrops, and duplicate icons.
+- Make related-setting links open the correct section, expand its group, and focus the target control.
+- Fix settings navigation wrapping into clipped columns.
+- Fix official Stable / Beta loading through the upstream loader.
+- Keep the production channel pinned to its production host, separate from alternate release channels.
+- Update Russian translations.
+
 ## 1.11.0
 
 - Restore Popup typography by excluding PiP from full-page automatic compact sizing; restore the single original SimpleBar fade and unpinned credits. Isolate Ruytha settings styles from original mode and add a real-renderer popup preview.

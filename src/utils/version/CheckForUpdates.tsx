@@ -26,6 +26,9 @@ function showUpdateDismissWarning(currentVersion: any) {
     className: "sl-update-toast",
     description: "Some lyrics sources and features need the latest version. Updating reloads Spotify.",
     duration: 9000,
+    // Its timer pauses while hovered or while Spotify is in the background, so without
+    // an X it could sit there with no way to close it short of updating.
+    closeButton: true,
     action: {
       label: "Update",
       onClick: startUpdate,

@@ -6,7 +6,7 @@ import Defaults, { isDev } from "../../components/Global/Defaults.ts";
 import { $currentLyricsData, $currentLyricsType, $currentlyFetching } from "../stores.ts";
 import { SpotifyPlayer } from "../../components/Global/SpotifyPlayer.ts";
 import PageView, { PageContainer } from "../../components/Pages/PageView.ts";
-import { ProcessLyrics } from "./ProcessLyrics.ts";
+import { JapaneseRomajiIsCurrent, ProcessLyrics } from "./ProcessLyrics.ts";
 import { IsEmptyLyrics } from "./EmptyLines.ts";
 import Logger from "../Logger.ts";
 import { LocalLyricsManager } from "./manager/index.ts";
@@ -105,6 +105,7 @@ export function getActiveLyricsSourceOrder(): LyricsSourceProviderId[] {
 export function getLyricsSourceCacheSignature(): string {
   return JSON.stringify({
     version: LYRICS_SOURCE_CACHE_VERSION,
+    writtenRomaji: JapaneseRomajiIsCurrent({ Language: "jpn", JapaneseRomaji: "written2" }),
     order: normalizeLyricsSourceOrder(Defaults.LyricsSourceOrder),
     disabled: Defaults.DisabledLyricsSourceIds,
     ignoreMusixmatchWordSync: Defaults.IgnoreMusixmatchWordSync,
@@ -127,10 +128,42 @@ function attachLyricsSourceCacheMetadata(lyrics: any): any {
     LyricsSourceCacheSignature: getLyricsSourceCacheSignature(),
   };
 }
+/** Which stage last served lyrics, for the bug report: a cached copy is the usual suspect. */
+let lastAnswer: { uri: string; from: "already loaded" | "Local DB" | "cache" | "API" } | null = null;
+
+/** Where `uri`'s lyrics came from, or `null` if it hasn't been served lyrics. */
+export function GetLyricsAnsweredFrom(uri: string | undefined): string | null {
+  return uri && lastAnswer?.uri === uri ? lastAnswer.from : null;
+}
+
+/**
+ * Whether `uri` is showing a "Just once" TTML upload. It exists only in
+ * `$currentLyricsData`, so clearing that to refetch would replace it with the
+ * song's normal lyrics.
+ */
+export function HoldsTemporaryUpload(uri: string | undefined): boolean {
+  const saved = $currentLyricsData.get();
+  if (uri && SessionTTMLStore.has(getSongKey(uri))) return true;
+  if (!uri || !saved.startsWith("{")) return false;
+  try {
+    const data = JSON.parse(saved);
+    return data?.temporaryUpload === true && data.uri === uri;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The uri of the most recent fetch request. Unlike `inFlightUri` this is never
+ * cleared, so a fetch that finishes *after* the one that superseded it still
+ * sees that it lost the race.
+ */
+let latestRequestedUri: string | null = null;
 
 function isLyricsCacheCompatible(data: any): boolean {
+  if (!JapaneseRomajiIsCurrent(data)) return false;
   if (!isProviderFetchedLyricsCache(data)) return true;
-  return data.LyricsSourceCacheSignature === getLyricsSourceCacheSignature();
+  return JapaneseRomajiIsCurrent(data) && data.LyricsSourceCacheSignature === getLyricsSourceCacheSignature();
 }
 
 function setRomanizationClass(hasTransliterations: boolean | undefined): void {
@@ -163,7 +196,8 @@ async function presentStoredLyrics(
 ): Promise<[object, number]> {
   const preparedLyrics = await prepareLyricsForPresentation(lyricsData, signal);
   if (isCurrentTrack(uri)) $currentLyricsData.set(JSON.stringify(preparedLyrics));
-  await presentLyrics(uri, preparedLyrics);
+  lastAnswer = { uri, from: "already loaded" };
+          await presentLyrics(uri, preparedLyrics);
   return [preparedLyrics, 200];
 }
 
@@ -224,6 +258,12 @@ async function fetchLyricsInternal(
     return ["dj", 400];
   }
 
+  // Ads (music ads, podcast pre-rolls) can be audio or video, so this goes before the media checks.
+  if (SpotifyPlayer.GetContentType() === "ad") {
+    $currentlyFetching.set(false);
+    return ["ad", 400];
+  }
+
   const mediaType = SpotifyPlayer.GetMediaType();
 
   if (mediaType && mediaType !== "audio") {
@@ -261,13 +301,15 @@ async function fetchLyricsInternal(
   // Check if there's already data in localStorage
   const savedLyricsData = $currentLyricsData.get();
 
-  if (savedLyricsData && !isDev) {
+  // Dev builds always refetch, except for an upload that nothing could refetch.
+  if (savedLyricsData && (!isDev || HoldsTemporaryUpload(uri))) {
     try {
       if (!savedLyricsData.startsWith("NO_LYRICS:")) {
         const lyricsData = JSON.parse(savedLyricsData);
         // Return the stored lyrics if the ID matches the track ID
         if ((lyricsData?.id === trackId || lyricsData?.uri === uri) && isLyricsCacheCompatible(lyricsData)) {
           const preparedLyrics = await prepareLyricsForPresentation(lyricsData, options.signal);
+          lastAnswer = { uri, from: "already loaded" };
           await presentLyrics(uri, preparedLyrics);
           return [preparedLyrics, 200];
         }
@@ -288,6 +330,7 @@ async function fetchLyricsInternal(
   const localLyric = await LocalLyricsManager.get(uri);
   checkRequest(options.signal);
   if (localLyric) {
+    lastAnswer = { uri, from: "Local DB" };
     return presentStoredLyrics(uri, { ...localLyric, id: trackId, fromLocal: true }, options.signal);
   }
 
@@ -313,6 +356,7 @@ async function fetchLyricsInternal(
           return ["lyrics-not-found", 404];
         }
         if (isLyricsCacheCompatible(lyricsFromCache)) {
+          lastAnswer = { uri, from: "cache" };
           return await presentStoredLyrics(uri, { ...lyricsFromCache, fromCache: true }, options.signal);
         }
         void LyricsStore.RemoveItem(trackId).catch(() => {});
@@ -361,7 +405,7 @@ async function fetchLyricsInternal(
       return ["lyrics-not-found", 404];
     }
 
-    await ProcessLyrics(lyrics);
+    const romanizedInFull = await ProcessLyrics(lyrics);
     checkRequest(options.signal);
 
     if (IsEmptyLyrics(lyrics)) {
@@ -372,10 +416,14 @@ async function fetchLyricsInternal(
       return ["lyrics-not-found", 404];
     }
 
-    const lyricsWithId = attachLyricsSourceCacheMetadata({ ...lyrics, id: trackId }, options.signal);
+    const lyricsWithId = attachLyricsSourceCacheMetadata({ ...lyrics, id: trackId });
     if (isCurrentTrack(uri)) $currentLyricsData.set(JSON.stringify(lyricsWithId));
 
-    if (LyricsStore) {
+    // The request already completed, so cache it either way — even if the user
+    // has skipped on, the next play of this track gets a cache hit. Lyrics whose
+    // romanization was cut short (the Japanese dictionary still loading, say)
+    // aren't cached, so the next play romanizes them in full.
+    if (LyricsStore && romanizedInFull) {
       try {
         await LyricsStore.SetItem(trackId, lyricsWithId);
       } catch (error) {
@@ -383,6 +431,7 @@ async function fetchLyricsInternal(
       }
     }
 
+    lastAnswer = { uri, from: "API" };
     await presentLyrics(uri, lyricsWithId);
     return [{ ...lyricsWithId, fromCache: false }, 200];
   } catch (error) {

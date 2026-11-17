@@ -1,7 +1,6 @@
 import { GetPageLyricsFooter, PinFooterDetailWithoutWriters, UnregisterLyricsFooterDetail } from "../../utils/Lyrics/Applyer/Credits/CreateLyricsFooter.ts";
 import { toast } from "sonner";
-import { $showLyricsSourceInfo, $showScrollResumeIndicator, $currentLyricsData, $uiLanguage } from "../../utils/stores.ts";
-import { $experiment } from "../../utils/experiments.ts";
+import { $ctrlWheelLyricsZoom, $lyricsSize, $showLyricsSourceInfo, $showScrollResumeIndicator, $currentLyricsData, $uiLanguage } from "../../utils/stores.ts";
 import { visibleInterval } from "../../utils/WindowActivity.ts";
 import { getDisplayedLyrics } from "../../utils/Lyrics/DisplayedLyrics.ts";
 import { getSongKey, LyricsStore, SessionTTMLStore } from "../../utils/Lyrics/fetchLyrics.ts";
@@ -9,10 +8,11 @@ import fetchLyrics from "../../utils/Lyrics/fetchLyrics.ts";
 import { ApplyLyricsIfCurrent } from "../../utils/Lyrics/Global/Applyer.ts";
 import { SpotifyPlayer } from "../Global/SpotifyPlayer.ts";
 import { getScrollResumeState } from "../../utils/Scrolling/ScrollToActiveLine.ts";
-import { triggerRemeasureLV } from "../../utils/Lyrics/LyricsVirtualizer.ts";
 import { translateUi } from "../../utils/i18n/translate.ts";
 export function bindLyricsExtras(page: HTMLElement) {
   const doc = page.ownerDocument, win = doc.defaultView!;
+  // Remove the former per-page multiplier; text size has one persisted source.
+  page.style.removeProperty("--vv-lyrics-zoom");
   const t = (s: string) => translateUi(s, $uiLanguage.get());
   const card = doc.createElement("div"); card.className = "LyricsProvider vv-source-info"; card.hidden = true;
   const info = doc.createElement("span"); info.setAttribute("data-i18n-ignore", "");
@@ -31,18 +31,37 @@ export function bindLyricsExtras(page: HTMLElement) {
   const resume = doc.createElement("span"); resume.className = "vv-resume-indicator"; resume.hidden = true;
   resume.setAttribute("aria-hidden", "true"); resume.setAttribute("data-i18n-ignore", "");
   const zoom = doc.createElement("button"); zoom.type = "button"; zoom.className = "vv-zoom-badge"; zoom.hidden = true;
-  page.append(zoom); let scale = 1, timer: number | undefined;
-  const applyScale = () => { page.style.setProperty("--vv-lyrics-zoom", String(scale)); triggerRemeasureLV(); zoom.textContent = `${Math.round(scale * 100)}% · ${t("Reset")}`; };
-  zoom.onclick = () => { scale = 1; applyScale(); zoom.hidden = true; };
+  zoom.setAttribute("data-i18n-ignore", "");
+  const zoomLabel = doc.createElement("span"); zoomLabel.className = "vv-zoom-label";
+  const zoomValue = doc.createElement("strong"); zoomValue.className = "vv-zoom-value";
+  const zoomReset = doc.createElement("span"); zoomReset.className = "vv-zoom-reset";
+  zoom.append(zoomLabel, zoomValue, zoomReset);
+  (page.querySelector<HTMLElement>(".LyricsContainer") ?? page).append(zoom);
+  let timer: number | undefined;
+  const renderZoom = () => {
+    zoomLabel.textContent = t("Text size"); zoomValue.textContent = `${Math.round($lyricsSize.get())}%`;
+    zoomReset.textContent = `↺ ${t("Reset")}`;
+    zoom.setAttribute("aria-label", `${t("Text size")}: ${Math.round($lyricsSize.get())}%. ${t("Reset to 100%")}`);
+    zoom.title = t("Reset to 100%");
+  };
+  const dismissZoom = () => { win.clearTimeout(timer); timer = win.setTimeout(() => { if (doc.activeElement !== zoom) zoom.hidden = true; }, 2800); };
+  renderZoom();
+  zoom.onclick = () => { $lyricsSize.set(100); renderZoom(); dismissZoom(); };
+  zoom.addEventListener("mouseenter", () => win.clearTimeout(timer));
+  zoom.addEventListener("mouseleave", dismissZoom);
+  zoom.addEventListener("focus", () => win.clearTimeout(timer));
+  zoom.addEventListener("blur", dismissZoom);
   const wheel = (e: WheelEvent) => {
-    if (!e.ctrlKey || e.metaKey || !$experiment("ctrlWheelLyricsZoom").get() ||
-      !(e.target as Element)?.closest(".LyricsContainer") || (e.target as Element)?.closest("input,textarea,select,[contenteditable]")) return;
+    if (!e.ctrlKey || e.metaKey || !e.deltaY || !$ctrlWheelLyricsZoom.get() ||
+      (e.target as Element)?.closest("input,textarea,select,[contenteditable],.sl-fork-menu,[role=dialog]")) return;
     e.preventDefault(); e.stopPropagation();
-    scale = Math.round(Math.max(.6, Math.min(1.8, scale + (e.deltaY < 0 ? .05 : e.deltaY > 0 ? -.05 : 0))) * 100) / 100;
-    applyScale(); zoom.hidden = false; win.clearTimeout(timer); timer = win.setTimeout(() => { zoom.hidden = true; }, 2000);
+    $lyricsSize.set(Math.max(50, Math.min(200, Math.round(($lyricsSize.get() + (e.deltaY < 0 ? 5 : -5)) / 5) * 5)));
+    renderZoom(); zoom.hidden = false; dismissZoom();
   };
   page.addEventListener("wheel", wheel, { passive: false, capture: true });
-  const stopZoom = $experiment("ctrlWheelLyricsZoom").listen(enabled => { if (!enabled) { scale = 1; applyScale(); zoom.hidden = true; } });
+  const stopZoom = $ctrlWheelLyricsZoom.listen(enabled => { if (!enabled) { zoom.hidden = true; win.clearTimeout(timer); } });
+  const stopSize = $lyricsSize.listen(() => { renderZoom(); zoom.hidden = false; dismissZoom(); });
+  const stopLanguage = $uiLanguage.listen(renderZoom);
   const setHidden = (element: HTMLElement, hidden: boolean) => { if (element.hidden !== hidden) element.hidden = hidden; };
   let signature = "";
   const stopTick = visibleInterval(win, () => {
@@ -72,5 +91,5 @@ export function bindLyricsExtras(page: HTMLElement) {
       if (resume.textContent !== value) resume.textContent = value;
     }
   }, 100);
-  return () => { stopTick(); stopZoom(); win.clearTimeout(timer); page.removeEventListener("wheel", wheel, true); if (sourceFooter) UnregisterLyricsFooterDetail(card, sourceFooter); card.remove(); resume.remove(); zoom.remove(); page.style.removeProperty("--vv-lyrics-zoom"); };
+  return () => { stopTick(); stopZoom(); stopSize(); stopLanguage(); win.clearTimeout(timer); page.removeEventListener("wheel", wheel, true); if (sourceFooter) UnregisterLyricsFooterDetail(card, sourceFooter); card.remove(); resume.remove(); zoom.remove(); };
 }

@@ -1,3 +1,4 @@
+import { SetNoLyricsSong } from "../../../components/Utils/QueueView.ts";
 import { ApplyRomanRows, ClearRomanRows } from "../Applyer/Utils/RomanLine.ts";
 import { $romanizationBelow } from "../../stores.ts";
 import { waitForWindowVisible } from "../../WindowActivity.ts";
@@ -20,7 +21,7 @@ import {
 } from "../ExperimentalWordSync.ts";
 import { getDynamicAudioAnalysis } from "../../audioAnalysis.ts";
 import fetchLyrics, { ClearLyricsPageContainer, getSongKey } from "../fetchLyrics.ts";
-import { BuildLyricsNotice, HasNotice, SetShownNotice, SyncNoLyricsLayout } from "../LyricsNotice.ts";
+import { BuildLyricsNotice, HasNotice, IsNoLyricsNotice, SetShownNotice, SyncNoLyricsLayout } from "../LyricsNotice.ts";
 import { ClearLyricsContentArrays, isRomanized, LyricsObject, setRomanizedStatus } from "../lyrics.ts";
 import { HideLoaderContainer, PaintLyricsLoader, ShowQueueLoader } from "../LyricsLoader.ts";
 import { PageContainer } from "../../../components/Pages/PageView.ts";
@@ -120,6 +121,11 @@ export function ShouldReapplyRenderedLyricsForSpaceGravity(enabled: boolean): bo
 export function UpdateRenderedRomanization(useRomanized: boolean): boolean {
   if (!renderedLyrics) return false;
 
+  if (renderedLyrics.Type === "Syllable" && PageContainer?.classList.contains("BloomRenderer")) {
+    setRomanizedStatus(useRomanized);
+    void ApplyLyrics([renderedLyrics, 200]);
+    return true;
+  }
   const inPlace = useRomanized && !$romanizationBelow.get();
   ClearRomanRows();
   if (renderedLyrics.Type === "Syllable") {
@@ -336,6 +342,7 @@ export default async function ApplyLyrics(lyricsContent: [object | string, numbe
     );
 
     SetShownNotice(descriptor);
+    SetNoLyricsSong(IsNoLyricsNotice(descriptor) ? (noticeUri ?? null) : null);
     SyncNoLyricsLayout();
 
     EmitApply("None", null)
@@ -362,6 +369,7 @@ export default async function ApplyLyrics(lyricsContent: [object | string, numbe
   // Lyrics replace any notice, whichever path applied them (a TTML upload re-applies
   // without going through fetchLyrics), so a later layout sync can't hide them.
   SetShownNotice(null);
+  SetNoLyricsSong(null);
   SyncNoLyricsLayout();
 
   const romanize = isRomanized;
