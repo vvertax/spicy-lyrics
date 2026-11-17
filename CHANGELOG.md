@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.11.2
+
+- Match the Background and Effects expand/collapse controls to Quick Controls, with circular arrow buttons and matching hints.
+
 ## 1.11.1
 
 - Port Spicy Lyrics 6.5.0 features and 6.5.10 updates while preserving vvertax Edition functionality.

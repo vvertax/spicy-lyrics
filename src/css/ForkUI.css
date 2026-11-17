@@ -290,14 +290,14 @@
 .vv-quick-settings > summary { padding:13px 14px; margin:12px 0; border:1px solid #c4a8eb38; border-radius:12px; background:#c4a8eb0b; transition:background-color .16s,border-color .16s; }
 .vv-quick-settings > summary:hover { background:#c4a8eb1a; border-color:#c4a8eb65; }
 .vv-quick-summary-text { display:flex; flex-direction:column; gap:5px; }
-.vv-quick-settings .vv-quick-hint { color:var(--color-text-secondary,#bdb0cf); font-size:12px; font-weight:400; line-height:1.4; }
-.vv-quick-settings:not([open]) .vv-quick-hint--open, .vv-quick-settings[open] .vv-quick-hint--closed { display:none; }
-.vv-quick-settings > summary::after {
+:is(.vv-quick-settings,.sl-sp-settings-group--quick) .vv-quick-hint { color:var(--color-text-secondary,#bdb0cf); font-size:12px; font-weight:400; line-height:1.4; }
+:is(.vv-quick-settings,.sl-sp-settings-group--quick):not([open]) .vv-quick-hint--open, :is(.vv-quick-settings,.sl-sp-settings-group--quick)[open] .vv-quick-hint--closed { display:none; }
+:is(.vv-quick-settings,.sl-sp-settings-group--quick) > summary::after {
   content:''; box-sizing:border-box; flex:none; width:30px; height:30px; margin:0;
   border:1px solid #c4a8eb40; border-radius:50%; opacity:1; transform:none;
   background:#c4a8eb15 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m7 10 5 5 5-5' fill='none' stroke='%23d0bcf2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/18px no-repeat;
 }
-.vv-quick-settings[open] > summary::after { transform:rotate(180deg); }
+:is(.vv-quick-settings,.sl-sp-settings-group--quick)[open] > summary::after { transform:rotate(180deg); }
 @media(prefers-reduced-motion:reduce) {
   .vv-quote-dialog input[type="checkbox"], .vv-quote-option input[type="checkbox"]::before,
   .vv-quick-settings > summary { transition:none; }
@@ -730,3 +730,5 @@ sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings .sl-sp-tabs > .sl-sp-ta
 
 .sl-sp-new-badge { display:inline-flex; align-items:center; flex:none; padding:2px 7px; border:1px solid #bba0f54a; border-radius:6px; background:#bba0f51a; color:#ddccff; font-size:10px !important; font-weight:600; line-height:1.4; white-space:nowrap; vertical-align:middle; }
 .sl-sp-settings-group-label { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+
+.sl-sp-settings-group--quick > summary { padding:14px 16px; }
