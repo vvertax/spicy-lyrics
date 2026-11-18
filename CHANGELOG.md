@@ -2,12 +2,19 @@
 
 ## 1.12.0
 
-- Show the active update channel in About.
-- Select the currently playing line when opening the quote editor.
-- Import and save TTML or LRC per track, and back up or restore your local lyrics library.
-- Export up to 24 timed lyric lines within a 60-second range as MP4 or WebM, with animated dots between separated lines and optional audio.
-- Keep open quote drafts when playback moves to another track.
-- Add an opt-in badge for tracks with known synced Spicy Lyrics community lyrics.
+- Add vvertax You, a Material Design 3 theme with Gray, Lavender, Green, and White palettes and a custom palette generated from one HEX color.
+- Export animated lyrics quotes in MP4 or WebM with up to 24 timed lines over 60 seconds, animated dots during pauses, and optional Spotify audio capture or a local audio file.
+- Trim video quotes with start and end markers and loop the preview with audio. The editor starts on the current lyric and keeps the draft when the song changes.
+- Export video quotes in 9:16, 1:1, or 16:9. Choose a composition, move the cover, song details, and lyrics, and show safe zones in the vertical preview.
+- Improve video export smoothness and support gradient backgrounds and the Spicy Lyrics watermark in video quotes.
+- Import TTML or LRC by drag and drop, save lyrics per track, and back up or restore the local lyrics library.
+- Add optional badges for playlist and album tracks with known synced Spicy Lyrics community lyrics. Badges survive lyrics cache eviction.
+- Move subtitles out of Experiments and redesign their settings, close, and drag controls. Give subtitles and quote cards distinct icons.
+- Reorder pinned quick controls by dragging them. Close the actions menu when opening Settings.
+- Show Background and Effects as regular settings categories and fix the hidden settings list and its visibility icons.
+- Keep syllable group growth centered and reduce layout work in Spring and Bloom while split-word spacing is enabled.
+- Show the active update channel and installed hotfix in About. Deliver hotfixes without changing the version number, theme update dialogs, and confirm installation after restart.
+- Add the missing colon after the songwriter credit label.
 
 ## 1.11.3
 
