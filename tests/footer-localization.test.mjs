@@ -17,7 +17,7 @@ function element(className,text,parent=null){
 }
 test('footer labels switch languages while names, provider values and next-track text stay unchanged',()=>{
   const info=element('SongInfo');
-  const captions=[element('CreditsLabel','Written by'),element('CreditsLabel','Provided by'),element('SongInfoLead','Community lyrics',info),element('SongInfoRole','Made by',info),element('SongInfoRole','Uploaded by',info),element('NextUpLabel','Up Next')];
+  const captions=[element('CreditsLabel','Written by:'),element('CreditsLabel','Provided by'),element('SongInfoLead','Community lyrics',info),element('SongInfoRole','Made by',info),element('SongInfoRole','Uploaded by',info),element('NextUpLabel','Up Next')];
   const names=[element('CreditsValue','New'),element('SongInfoName','Settings',info),element('NextUpTrack','New'),element('NextUpTrack','july')];
   // Put metadata under a regular UI scope too: explicit exclusions must win.
   const outer=element('slm');for(const node of [...captions,...names])if(!node.parentElement)node.parentElement=outer;
@@ -26,8 +26,8 @@ test('footer labels switch languages while names, provider values and next-track
   localizeDocument(doc);
   const values=nodes=>nodes.map(n=>n.children[0].nodeValue);
   language='ru';refresh();
-  assert.deepEqual(values(captions),['Авторы песни','Источник','Текст сообщества','Синхронизация','Загрузил','Далее']);
+  assert.deepEqual(values(captions),['Авторы песни:','Источник','Текст сообщества','Синхронизация','Загрузил','Далее']);
   assert.deepEqual(values(names),['New','Settings','New','july']);
   language='en';refresh();
-  assert.deepEqual(values(captions),['Written by','Provided by','Community lyrics','Made by','Uploaded by','Up Next']);
+  assert.deepEqual(values(captions),['Written by:','Provided by','Community lyrics','Made by','Uploaded by','Up Next']);
 });

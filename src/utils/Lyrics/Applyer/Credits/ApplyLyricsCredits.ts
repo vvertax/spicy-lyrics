@@ -24,7 +24,7 @@ export function ApplyLyricsCredits(data: LyricsData, LyricsContainer: HTMLElemen
   const CreditsElement = document.createElement("div");
   CreditsElement.classList.add("Credits");
 
-  CreditsRow(CreditsElement, "Written by", data.SongWriters.join(", "));
+  CreditsRow(CreditsElement, "Written by:", data.SongWriters.join(", "));
   LyricsContainer.appendChild(CreditsElement);
   RegisterLyricsFooterDetail(CreditsElement, LyricsContainer);
 }

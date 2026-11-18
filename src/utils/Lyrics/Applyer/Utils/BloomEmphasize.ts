@@ -2,7 +2,7 @@ import { isBloomRenderer } from "../../../../utils/stores.ts";
 import { ArabicPersianRegex } from "../../../Addons.ts";
 import { getIdleEmphasisLyricsScale } from "../../Animator/Shared.ts";
 import { ConvertTime } from "../../ConvertTime.ts";
-import { CurrentLineLyricsObject, LyricsObject } from "../../lyrics.ts";
+import { CurrentLineLyricsObject, LyricsObject, type SyllableLead } from "../../lyrics.ts";
 
 // Read when the lyrics are built, so a style change applies on the rebuild.
 const getSubstractions = () => ({
@@ -89,7 +89,8 @@ export default function Emphasize(
   lead: any,
   isBgWord: boolean = false,
   parts?: SyllablePart[],
-  flameGroup: FlameGroup | null = null
+  flameGroup: FlameGroup | null = null,
+  target?: SyllableLead[]
 ) {
   const Substractions = getSubstractions();
   const StartTime = ConvertTime(lead.StartTime) - Substractions.StartTime;
@@ -169,12 +170,9 @@ export default function Emphasize(
       }
     : {};
 
-  // Make sure CurrentLineLyricsObject is valid and Syllables.Lead exists
-  if (
-    CurrentLineLyricsObject >= 0 &&
-    LyricsObject.Types.Syllable.Lines?.[CurrentLineLyricsObject].Syllables
-  ) {
-    LyricsObject.Types.Syllable.Lines[CurrentLineLyricsObject].Syllables.Lead.push({
+  const destination = target ?? LyricsObject.Types.Syllable.Lines[CurrentLineLyricsObject]?.Syllables?.Lead;
+  if (destination) {
+    destination.push({
       HTMLElement: word,
       StartTime: StartTime,
       EndTime: EndTime,

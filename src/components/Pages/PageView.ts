@@ -770,7 +770,6 @@ function AppendViewControls(ReAppend: boolean = false) {
   if (ReAppend) elem.innerHTML = "";
   const isNoLyrics =
     $currentLyricsData.get() === `NO_LYRICS:${SpotifyPlayer.GetUri()}`;
-  const isTTMLMakerMode = $ttmlMakerMode.get();
   const cacheAction = normalizeLyricsCacheAction($lyricsCacheAction.get());
   const showCacheActionButton = $showLyricsCacheActionButton.get() && !IsPIP;
   const grouped = isExperimentEnabled("groupedViewControls");
@@ -828,7 +827,7 @@ function AppendViewControls(ReAppend: boolean = false) {
             : ""
         }
         ${
-          isTTMLMakerMode && !IsPIP
+          !IsPIP
             ? `<button id="LyricsManager" class="ViewControl">${Icons.LyricsManager}</button>`
             : ""
         }
@@ -1130,12 +1129,12 @@ function AppendViewControls(ReAppend: boolean = false) {
     }
 
     const lyricsManagerButton = elem.querySelector("#LyricsManager");
-    if (lyricsManagerButton && isTTMLMakerMode) {
+    if (lyricsManagerButton) {
       try {
         if (!IsPIP) {
           Tooltips.LyricsManager = createTooltip(lyricsManagerButton, {
             ...tippyProps(lyricsManagerButton),
-            content: `Load TTML`,
+            content: `Load TTML or LRC`,
           });
         }
         lyricsManagerButton.addEventListener("click", () => {

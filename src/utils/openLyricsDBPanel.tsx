@@ -15,7 +15,7 @@ export function OpenTTMLDatabasePanel() {
   }
 
   PopupModal.display({
-    title: "TTML Database",
+    title: "Local Lyrics Library",
     ...createReactModalContent(<LyricsDBPanel onBack={() => _openUpload()} />),
     isLarge: true,
   });
@@ -30,7 +30,7 @@ export async function OpenTTMLDatabasePanelFromSettings() {
 
 function _openDB(onBack = _openUpload, modalId: string | null = null) {
   PopupModal.transition({
-    title: "TTML Database",
+    title: "Local Lyrics Library",
     ...createReactModalContent(<LyricsDBPanel onBack={() => onBack()} />),
     isLarge: true,
     modalId,
@@ -39,7 +39,7 @@ function _openDB(onBack = _openUpload, modalId: string | null = null) {
 
 function _openUpload(targetDocument: Document = PopupModal.ownerDocument) {
   const options = {
-    title: "Load TTML",
+    title: "Load TTML or LRC",
     modalId: "loadTTML",
     ...createReactModalContent(
       <UploadTTMLModal onOpenDB={() => _openDB()} onDone={() => PopupModal.hide()} />,

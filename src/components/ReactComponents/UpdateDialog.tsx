@@ -93,6 +93,28 @@ function PatchNotes({ fromVersion, toVersion, style }: { fromVersion: string; to
 
 export const releaseNotesUrl = (_version: string) => PATCH_NOTES_PAGE_URL;
 
+type InstalledRelease = { version: string; hotfix: number; host?: string };
+
+export function showInstalledUpdate(previousVersion: string, previous: InstalledRelease | null, installed: InstalledRelease): boolean {
+  if (!previousVersion || !installed.version) return false;
+  if (previousVersion !== installed.version) {
+    showUpdatedDialog(previousVersion, installed.version);
+    return true;
+  }
+  const matchingPrevious = previous?.version === previousVersion ? previous : null;
+  if (matchingPrevious?.host && installed.host && matchingPrevious.host !== installed.host) return false;
+  if (installed.hotfix <= (matchingPrevious?.hotfix ?? 0)) return false;
+
+  showNotice({
+    title: "Update installed",
+    content: [
+      <p className="sl-notice-text">{`Fix #${installed.hotfix} for ${installed.version} is now installed.`}</p>,
+    ],
+    primary: { label: "Close", onClick: () => {} },
+  });
+  return true;
+}
+
 export function showUpdatedDialog(fromVersion: string, toVersion: string) {
   const downgraded = isDowngrade(fromVersion, toVersion);
   const content: React.ReactElement<{ style?: React.CSSProperties }>[] = [

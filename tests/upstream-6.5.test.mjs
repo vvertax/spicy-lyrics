@@ -41,7 +41,7 @@ const storage=new Map();let refuseBackup=false;
 globalThis.Spicetify={LocalStorage:{get:k=>storage.get(k)??null,set:(k,v)=>{if(refuseBackup&&k==='SL:ttmlReviewer')throw new Error('quota');storage.set(k,v);},remove:k=>storage.delete(k)}};
 globalThis.window={};
 const stores=await bundle('src/utils/stores.ts',{
-  'InterfaceDesign.ts':'export const registerDesignDocument=()=>{};export const setInterfaceDesign=()=>{};',
+  'InterfaceDesign.ts':'export const registerDesignDocument=()=>{};export const setInterfaceDesign=()=>{};export const setVvertaxYouPalette=()=>{};export const setVvertaxYouCustomColor=()=>{};',
   'SettingsHistory.ts':'export const settingsHistory={register(){},capture(){},previewing:false};',
   'hiddenSettings.ts':'export const SETTING_IDS=[];',
 });
@@ -86,7 +86,7 @@ test('stable Ctrl wheel zoom carries a saved experimental opt-out into the norma
   const values=new Map([["SL:settings",JSON.stringify({"experiment:ctrlWheelLyricsZoom":false})]]);
   globalThis.Spicetify.LocalStorage={get:k=>values.get(k)??null,set:(k,v)=>values.set(k,v),remove:k=>values.delete(k)};
   const migrated=await bundle('src/utils/stores.ts',{
-    'InterfaceDesign.ts':'export const registerDesignDocument=()=>{};export const setInterfaceDesign=()=>{};',
+    'InterfaceDesign.ts':'export const registerDesignDocument=()=>{};export const setInterfaceDesign=()=>{};export const setVvertaxYouPalette=()=>{};export const setVvertaxYouCustomColor=()=>{};',
     'SettingsHistory.ts':'export const settingsHistory={register(){},capture(){},previewing:false};',
     'hiddenSettings.ts':'export const SETTING_IDS=new Set();',
   });
@@ -99,11 +99,36 @@ test('6.5.10 merge default is Off without overwriting saved or legacy split-word
     const values=new Map([['SL:settings',JSON.stringify(saved)]]);
     globalThis.Spicetify.LocalStorage={get:k=>values.get(k)??null,set:(k,v)=>values.set(k,v),remove:k=>values.delete(k)};
     const stores=await bundle('src/utils/stores.ts',{
-      'InterfaceDesign.ts':'export const registerDesignDocument=()=>{};export const setInterfaceDesign=()=>{};',
+      'InterfaceDesign.ts':'export const registerDesignDocument=()=>{};export const setInterfaceDesign=()=>{};export const setVvertaxYouPalette=()=>{};export const setVvertaxYouCustomColor=()=>{};',
       'SettingsHistory.ts':'export const settingsHistory={register(){},capture(){},previewing:false};',
       'hiddenSettings.ts':'export const SETTING_IDS=new Set();',
     });
     assert.equal(stores.$syllableMerge.get(),expected);assert.equal(stores.$showQueueWhenNoLyrics.get(),false);
     stores.$showQueueWhenNoLyrics.set(true);assert.equal(JSON.parse(values.get('SL:settings')).showQueueWhenNoLyrics,true);
+  }
+});
+
+test("graduated subtitles preserve the effective old state and saved layout", async () => {
+  const position = { anchor: "top", x: .4, y: .2, width: 670 };
+  const cases = [
+    [{}, false],
+    [{ "experiment:subtitleBar": true }, true],
+    [{ "experiment:subtitleBar": true, subtitlePanelVisible: false }, false],
+    [{ "experiment:subtitleBar": false, subtitlePanelVisible: true }, false],
+    [{ "experiment:subtitleBar": false, subtitlesEnabled: true }, true],
+  ];
+  for (const [saved, enabled] of cases) {
+    const values = new Map([["SL:settings", JSON.stringify({ ...saved, subtitleLayout: position })]]);
+    globalThis.Spicetify.LocalStorage = { get: k => values.get(k) ?? null, set: (k, v) => values.set(k, v), remove: k => values.delete(k) };
+    const migrated = await bundle("src/utils/stores.ts", {
+      "InterfaceDesign.ts": "export const registerDesignDocument=()=>{};export const setInterfaceDesign=()=>{};export const setVvertaxYouPalette=()=>{};export const setVvertaxYouCustomColor=()=>{};",
+      "SettingsHistory.ts": "export const settingsHistory={register(){},capture(){},previewing:false};",
+      "hiddenSettings.ts": "export const SETTING_IDS=new Set();",
+    });
+    assert.equal(migrated.$subtitlesEnabled.get(), enabled);
+    assert.deepEqual(migrated.$subtitleLayout.get(), position);
+    const persisted = JSON.parse(values.get("SL:settings"));
+    assert.equal("experiment:subtitleBar" in persisted, false);
+    assert.equal("subtitlePanelVisible" in persisted, false);
   }
 });

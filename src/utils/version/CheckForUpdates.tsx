@@ -8,6 +8,10 @@ import { releaseNotesUrl } from "../../components/ReactComponents/UpdateDialog.t
 let shownUpdateVersion: string | null = null;
 let WarningInFlight = false;
 
+function availableFix(current: { Text?: string }, latest: { Text?: string; Hotfix?: number }) {
+  return latest?.Hotfix > 0 && current?.Text === latest.Text ? latest.Hotfix : undefined;
+}
+
 function startUpdate() {
   window.location.reload();
 }
@@ -41,10 +45,11 @@ function showUpdateDismissWarning(currentVersion: any) {
 
 function presentUpdateAvailable(currentVersion: any, latestVersion: any) {
   let viewClicked = false;
+  const fix = availableFix(currentVersion, latestVersion);
 
-  toast(latestVersion?.Text ? `Spicy Lyrics ${latestVersion.Text} is out` : "A Spicy Lyrics update is out", {
+  toast(fix ? `Update available for ${latestVersion.Text}` : (latestVersion?.Text ? `Spicy Lyrics ${latestVersion.Text} is out` : "A Spicy Lyrics update is out"), {
     className: "sl-update-toast",
-    description: currentVersion?.Text ? `You're on ${currentVersion.Text}.` : undefined,
+    description: fix ? `Fix #${fix}` : currentVersion?.Text ? `You're on ${currentVersion.Text}.` : undefined,
     duration: Infinity,
     closeButton: true,
     action: {
@@ -69,9 +74,10 @@ function presentUpdateAvailable(currentVersion: any, latestVersion: any) {
 function showUpdateModal(currentVersion: any, latestVersion: any, origin?: DOMRect) {
   const current = currentVersion?.Text;
   const latest = latestVersion?.Text;
+  const fix = availableFix(currentVersion, latestVersion);
   const content = [
     <p className="sl-notice-text">
-      {current && (
+      {fix ? <><span className="sl-notice-version">{`Fix #${fix}`}</span>.{" "}</> : current && (
         <>
           You're on <span className="sl-notice-version">{current}</span>.{" "}
         </>
@@ -79,7 +85,7 @@ function showUpdateModal(currentVersion: any, latestVersion: any, origin?: DOMRe
       Updating reloads Spotify, which takes a few seconds.
     </p>,
   ];
-  if (latest) {
+  if (latest && !fix) {
     content.push(
       <p className="sl-notice-text sl-notice-text--quiet">
         See what changed in the <NoticeLink href={releaseNotesUrl(latest)}>patch notes</NoticeLink>.
@@ -88,7 +94,7 @@ function showUpdateModal(currentVersion: any, latestVersion: any, origin?: DOMRe
   }
 
   showNotice({
-    title: latest ? `Version ${latest} is out` : "An update is out",
+    title: fix ? `Update available for ${latest}` : (latest ? `Version ${latest} is out` : "An update is out"),
     content,
     primary: { label: "Update and reload", onClick: startUpdate },
     secondaryLabel: "Not now",
@@ -102,10 +108,11 @@ export async function CheckForUpdates(force: boolean = false) {
   const latestVersion = await Session.SpicyLyrics.GetLatestVersion();
   const currentVersion = Session.SpicyLyrics.GetCurrentVersion();
   if (!Session.SpicyLyrics.IsBehind(currentVersion, latestVersion)) return;
-  if (!force && shownUpdateVersion === latestVersion?.Text) return;
+  const releaseKey = JSON.stringify([latestVersion?.Host, latestVersion?.Text, latestVersion?.Hotfix]);
+  if (!force && shownUpdateVersion === releaseKey) return;
 
   presentUpdateAvailable(currentVersion, latestVersion);
-  shownUpdateVersion = latestVersion!.Text;
+  shownUpdateVersion = releaseKey;
 }
 
 // ---- dev stuff ------

@@ -1,3 +1,54 @@
+sl-generic-modal.SpicyLyricsModal .sl-modal-overlay :is(.sl-ldb-root, .sl-ldb-upload-root) {
+  .sl-ldb-upload-actions {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+
+  .sl-ldb-database-link {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: var(--accent-tint-bg);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    font-size: var(--text-caption-size) !important;
+    font-weight: var(--w-medium);
+    transition:
+      background 0.18s var(--ease-standard),
+      box-shadow 0.18s var(--ease-standard),
+      transform 0.12s ease;
+
+    &:hover:not(:disabled) {
+      background: var(--accent-tint-bg-hover);
+      box-shadow: inset 0 0 0 1px var(--hairline-strong);
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.99);
+    }
+
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      cursor: wait;
+      opacity: 0.62;
+    }
+  }
+}
+
 /* ── Local Lyrics Database Panel ────────────────────────────── */
 sl-generic-modal.SpicyLyricsModal .sl-modal-overlay .sl-ldb-root {
   display: flex;
@@ -14,6 +65,10 @@ sl-generic-modal.SpicyLyricsModal .sl-modal-overlay .sl-ldb-root {
     gap: var(--space-2);
     margin-bottom: var(--space-4);
     flex-shrink: 0;
+  }
+
+  .sl-ldb-upload-actions {
+    margin-bottom: var(--space-3);
   }
 
   /* ── List ────────────────────────────────────────────────── */
@@ -269,13 +324,13 @@ sl-generic-modal.SpicyLyricsModal .sl-modal-overlay .sl-ldb-upload-root {
 
   .sl-ldb-upload-header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: flex-start;
     gap: var(--space-3);
 
     .sl-ldb-upload-subtitle {
       margin: 0;
-      min-width: 0;
+      max-width: 100%;
       font-size: var(--text-body-size) !important;
       color: var(--color-text-secondary);
       overflow: hidden;
@@ -283,48 +338,14 @@ sl-generic-modal.SpicyLyricsModal .sl-modal-overlay .sl-ldb-upload-root {
       white-space: nowrap;
     }
 
-    .sl-ldb-upload-actions {
-      flex: 0 0 auto;
-      display: inline-flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: var(--space-2);
-      min-width: 0;
-    }
-
+    .sl-ldb-upload-actions { max-width: 100%; }
     .sl-ldb-database-link {
-      flex: 0 0 auto;
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-2);
-      height: 32px;
-      padding: 0 12px;
-      border: 0;
-      border-radius: var(--radius-sm);
-      background: var(--accent-tint-bg);
-      box-shadow: inset 0 0 0 1px var(--hairline);
-      color: var(--color-text-primary);
-      cursor: pointer;
-      font-size: var(--text-caption-size) !important;
-      font-weight: var(--w-medium);
-      transition:
-        background 0.18s var(--ease-standard),
-        box-shadow 0.18s var(--ease-standard),
-        transform 0.12s ease;
-
-      &:hover {
-        background: var(--accent-tint-bg-hover);
-        box-shadow: inset 0 0 0 1px var(--hairline-strong);
-      }
-
-      &:active {
-        transform: scale(0.99);
-      }
-
-      &:disabled {
-        cursor: wait;
-        opacity: 0.62;
-      }
+      max-width: 100%;
+      min-height: 32px;
+      height: auto;
+      padding-block: 6px;
+      white-space: normal;
+      overflow-wrap: anywhere;
     }
   }
 
@@ -337,12 +358,27 @@ sl-generic-modal.SpicyLyricsModal .sl-modal-overlay .sl-ldb-upload-root {
   }
 
   .sl-ldb-upload-mode-section {
-    display: flex;
+    display: grid;
     gap: var(--space-3);
-    align-items: stretch;
+
+    .sl-ldb-drop-hint {
+      margin: 0;
+      padding: 12px 16px;
+      border: 1px dashed var(--hairline-strong);
+      border-radius: var(--radius-md);
+      color: var(--color-text-secondary);
+      font-size: var(--text-body-size);
+      line-height: 1.45;
+    }
+
+    .sl-ldb-upload-modes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 174px), 1fr));
+      gap: var(--space-3);
+    }
 
     .sl-ldb-upload-mode-card {
-      flex: 1;
+      min-width: 0;
       display: grid;
       grid-template-columns: 28px minmax(0, 1fr);
       align-items: start;
@@ -353,6 +389,7 @@ sl-generic-modal.SpicyLyricsModal .sl-modal-overlay .sl-ldb-upload-root {
       box-shadow: inset 0 0 0 1px var(--hairline);
       cursor: pointer;
       text-align: left;
+      white-space: normal;
       transition:
         background 0.18s var(--ease-standard),
         box-shadow 0.18s var(--ease-standard),
@@ -387,6 +424,7 @@ sl-generic-modal.SpicyLyricsModal .sl-modal-overlay .sl-ldb-upload-root {
 
       .sl-ldb-upload-mode-copy {
         min-width: 0;
+        overflow-wrap: anywhere;
         display: flex;
         flex-direction: column;
         gap: 6px;

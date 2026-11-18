@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
 import {join} from 'node:path';
 import vm from 'node:vm';
-const source=readFileSync('builds/main/entrypoint.mjs','utf8');
+const source=readFileSync('builds/main/entrypoint.mjs','utf8').replace(/^import .*"\.\/release-hotfix\.mjs";\s*$/m, "");
 function loader(saved,system='en-US') {
  const document={createElement:tag=>({tag,attributes:{},children:[],setAttribute(k,v){this.attributes[k]=v;},append(...nodes){this.children.push(...nodes);}})};
  const context=vm.createContext({Spicetify:{LocalStorage:{get:()=>saved}},navigator:{language:system},document,usesOfficialStatus:()=>false});

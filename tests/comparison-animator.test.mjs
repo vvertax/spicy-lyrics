@@ -77,10 +77,15 @@ test('joined-syllable motion is identical in normal lyrics and both comparison s
   now+=16;Animate(position);sessionA.animate(position);sessionB.animate(position);
   const offsets=rows=>rows[0].Syllables.Lead.map(word=>word.HTMLElement.style.translate);
   assert.deepEqual(offsets(a),offsets(main));assert.deepEqual(offsets(b),offsets(main));
+  assert.ok(offsets(main).every(offset=>/^-?\d+\.\d+px 0$/.test(offset)));
  }
  globalThis.__comparisonAnimatorTest.motionStore.set(false);
  now+=16;Animate(400);sessionA.animate(400);sessionB.animate(400);
- for(const rows of [main,a,b])for(const word of rows[0].Syllables.Lead)if(word.HTMLElement.parentElement)assert.equal(word.HTMLElement.style.translate,'0.000px 0');
+ for(const rows of [main,a,b]){
+  const [first,second]=rows[0].Syllables.Lead;
+  assert.match(first.HTMLElement.style.translate,/^-0\.\d+em/);
+  assert.match(second.HTMLElement.style.translate,/^0\.\d+em/);
+ }
  globalThis.__comparisonAnimatorTest.motionStore.set(true);
  sessionA.destroy();sessionB.destroy();
 });

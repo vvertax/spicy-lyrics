@@ -31,6 +31,15 @@ export function quoteGeometry(template: QuoteTemplate, height: number, includeCo
 
 const backgrounds = new WeakMap<HTMLCanvasElement, { image: HTMLImageElement; blur: number; height: number; canvas: HTMLCanvasElement }>();
 
+export function quoteBackgroundFill(ctx: CanvasRenderingContext2D, height: number, options: Pick<QuoteCardOptions, "gradient" | "usePalette" | "palette">) {
+  const top = options.usePalette ? options.palette[0] : "#382052";
+  if (!options.gradient) return top;
+  const gradient = ctx.createLinearGradient(0, 0, 0, height);
+  gradient.addColorStop(0, top);
+  gradient.addColorStop(1, options.usePalette ? options.palette[1] : "#211735");
+  return gradient;
+}
+
 /** Same renderer for the live preview, downloaded PNG, and clipboard PNG. */
 export function renderQuoteCard(ctx: CanvasRenderingContext2D, options: QuoteCardOptions): boolean {
   const { template, cover } = options;
@@ -55,13 +64,7 @@ export function renderQuoteCard(ctx: CanvasRenderingContext2D, options: QuoteCar
   // Reset the bitmap as well as drawing state, so disabling artwork also clears any export taint.
   ctx.canvas.height = height;
   ctx.clearRect(0, 0, 1080, height);
-  const top = options.usePalette ? options.palette[0] : "#382052";
-  ctx.fillStyle = top;
-  if (options.gradient) {
-    const gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, top); gradient.addColorStop(1, options.usePalette ? options.palette[1] : "#211735");
-    ctx.fillStyle = gradient;
-  }
+  ctx.fillStyle = quoteBackgroundFill(ctx, height, options);
   ctx.fillRect(0, 0, 1080, height);
   const artwork = options.artworkBackground && cover;
   if (artwork) {

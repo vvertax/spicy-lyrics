@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import { LocalLyricsManager } from "../../../utils/Lyrics/manager";
+import { refreshLocalLyrics } from "./utils/refreshLocalLyrics.ts";
+import { translateUi } from "../../../utils/i18n/translate.ts";
+import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLyricsDB } from "./hooks/useLyricsDB";
 import { useTracks } from "./hooks/useTracks";
@@ -6,11 +9,11 @@ import { useCurrentUri } from "./hooks/useCurrentUri";
 import { SearchBar } from "./components/SearchBar";
 import { TrackRow } from "./components/TrackRow";
 import { IconButton } from "./components/IconButton";
-import { ArrowLeftIcon, ResetIcon } from "./components/Icons";
+import { ArrowLeftIcon, DownloadIcon, ResetIcon, UploadIcon } from "./components/Icons";
 import { SpotifyPlayer } from "../../Global/SpotifyPlayer";
 import fetchLyrics, { getSongKey, SessionTTMLStore } from "../../../utils/Lyrics/fetchLyrics";
 import { ApplyLyricsIfCurrent } from "../../../utils/Lyrics/Global/Applyer";
-import { $currentLyricsData } from "../../../utils/stores";
+import { $currentLyricsData, $uiLanguage } from "../../../utils/stores";
 import { $lastFetchedUri } from "../../../utils/uiState";
 
 function sanitizeFilename(name: string): string {
@@ -23,7 +26,9 @@ type LyricsDBPanelProps = {
 
 export default function LyricsDBPanel({ onBack }: LyricsDBPanelProps) {
   const [query, setQuery] = useState("");
-  const { uris, loading: dbLoading, remove, getRaw } = useLyricsDB();
+  const { uris, loading: dbLoading, refresh, remove } = useLyricsDB();
+  const [backupBusy, setBackupBusy] = useState(false);
+  const restoreInput = useRef<HTMLInputElement>(null);
   const { tracksByUri, loading: tracksLoading } = useTracks(uris);
   const currentUri = useCurrentUri();
 
@@ -48,25 +53,44 @@ export default function LyricsDBPanel({ onBack }: LyricsDBPanelProps) {
     filtered.unshift(filtered.splice(currentIndex, 1)[0]);
   }
 
-  async function handleDownload(uri: string) {
-    const ttml = await getRaw(uri);
-    if (!ttml) {
-      toast.error("Could not retrieve TTML for this track.", { duration: 4000 });
-      return;
-    }
-    const track = tracksByUri.get(uri);
-    const filename = track
-      ? `${sanitizeFilename(track.name)}.ttml`
-      : `${sanitizeFilename(uri)}.ttml`;
-    const blob = new Blob([ttml], { type: "application/ttml+xml" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+  function download(doc: Document, name: string, text: string, type: string) {
+    const url = URL.createObjectURL(new Blob([text], { type }));
+    const link = doc.createElement("a");
+    link.href = url;
+    link.download = name;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
   }
 
+  async function handleDownload(uri: string) {
+    try {
+      const file = await LocalLyricsManager.getFile(uri);
+      if (!file) throw new Error("Missing file");
+      const name = sanitizeFilename(tracksByUri.get(uri)?.name ?? uri);
+      download(restoreInput.current?.ownerDocument ?? document, name + "." + file.format, file.text, "text/plain");
+    } catch { toast.error("Could not retrieve the saved lyrics."); }
+  }
+
+  async function exportBackup(doc: Document) {
+    setBackupBusy(true);
+    try {
+      download(doc, "spicy-lyrics-library.json", await LocalLyricsManager.exportBackup(), "application/json");
+    } catch { toast.error("Could not export the lyrics backup."); }
+    finally { setBackupBusy(false); }
+  }
+
+  async function restoreBackup(file: File) {
+    setBackupBusy(true);
+    try {
+      const { restored, skipped } = await LocalLyricsManager.restoreBackup(await file.text());
+      await refresh();
+      const uri = SpotifyPlayer.GetUri();
+      if (uri && restored.includes(uri)) void refreshLocalLyrics(uri).catch(console.error);
+      const label = translateUi("Restored: {restored} · Skipped: {skipped}", $uiLanguage.get());
+      toast.success(label.replace("{restored}", String(restored.length)).replace("{skipped}", String(skipped)));
+    } catch { toast.error("Could not restore the lyrics backup."); }
+    finally { setBackupBusy(false); }
+  }
   async function handleDelete(uri: string) {
     try {
       await remove(uri);
@@ -109,7 +133,7 @@ export default function LyricsDBPanel({ onBack }: LyricsDBPanelProps) {
           label="Back"
           variant="default"
           onClick={onBack}
-          title="Back to Load TTML"
+          title="Back to lyrics upload"
         />
         <SearchBar value={query} onChange={setQuery} placeholder="Search saved lyrics…" />
         <IconButton
@@ -121,6 +145,15 @@ export default function LyricsDBPanel({ onBack }: LyricsDBPanelProps) {
         />
       </div>
 
+      <div className="sl-ldb-upload-actions">
+        <button type="button" className="sl-ldb-database-link" disabled={backupBusy} onClick={event => void exportBackup(event.currentTarget.ownerDocument)}><DownloadIcon size={14} /><span>Export backup</span></button>
+        <button type="button" className="sl-ldb-database-link" disabled={backupBusy} onClick={() => restoreInput.current?.click()}><UploadIcon size={14} /><span>Restore backup</span></button>
+        <input ref={restoreInput} type="file" accept=".json" hidden onChange={event => {
+          const file = event.currentTarget.files?.[0];
+          event.currentTarget.value = "";
+          if (file) void restoreBackup(file);
+        }} />
+      </div>
       <div className="sl-ldb-list">
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => (

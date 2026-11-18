@@ -1,5 +1,9 @@
 export const SETTING_LABELS:Record<string,string>={
   "settingsDesign": "Interface Design",
+  "vvertaxYouPalette": "Color Palette",
+  "vvertaxYouCustomColor": "Palette color",
+  "subtitlesEnabled": "Bottom Lyrics Subtitles",
+  "quickControlOrder": "Quick Controls",
   "romanizationBelow": "Romanization Under the Lyrics",
   "smoothSceneTransitions": "Smooth Track Transitions",
   "staticBackgroundMode": "Background Type",

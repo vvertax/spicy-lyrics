@@ -10,7 +10,7 @@ const stubs={
 'ScenePresentation.ts':'export const beginSceneTrackChange=()=>{};',
 'Defaults.ts':'export const isDev=false;export default {LyricsSourceOrder:[],DisabledLyricsSourceIds:[]};',
 'stores.ts':'const f=globalThis.__visibilityFixture;export const $currentLyricsData=f.data,$currentLyricsType=f.type,$currentlyFetching=f.fetching;',
-'SpotifyPlayer.ts':'const f=globalThis.__visibilityFixture;export const SpotifyPlayer={GetUri:()=>f.uri,IsDJ:()=>false,GetMediaType:()=>"audio",GetContentType:()=>"track"};',
+'SpotifyPlayer.ts':'const f=globalThis.__visibilityFixture;export const SpotifyPlayer={GetDuration:()=>180000,GetUri:()=>f.uri,IsDJ:()=>false,GetMediaType:()=>"audio",GetContentType:()=>"track"};',
 'PageView.ts':'export const PageContainer=null;export default {AppendViewControls(){globalThis.__visibilityFixture.presented++}};',
 'ProcessLyrics.ts':'export const JapaneseRomajiIsCurrent=()=>true;export const ProcessLyrics=async()=>{globalThis.__visibilityFixture.processed++};',
 'EmptyLines.ts':'export const IsEmptyLyrics=()=>false;',

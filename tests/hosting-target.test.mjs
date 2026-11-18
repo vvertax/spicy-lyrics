@@ -23,7 +23,7 @@ test('alternate channel manager renders Russian labels and the canonical fork na
   const storage=new Map([['SL:settings','{"uiLanguage":"ru"}'],['SpicyLyrics-buildChannel','SL'],['SpicyLyrics-customChannels',JSON.stringify({'vvertax Edition':['preview.example','preview.example'],SL:['preview.example','preview.example']})]]);
   const context=vm.createContext({document,navigator:{language:'en-US'},window:{innerWidth:1280,innerHeight:900,addEventListener(){},dispatchEvent(){}},
     Spicetify:{LocalStorage:{get:key=>storage.get(key)??null}},MutationObserver:class{observe(){}},setTimeout});
-  const source=targetLoader(read('builds/main/entrypoint.mjs'),'preview.example');
+  const source=targetLoader(read('builds/main/entrypoint.mjs'),'preview.example').replace(/^import .*"\.\/release-hotfix\.mjs";\s*$/m, "");
   vm.runInContext(source.slice(0,source.indexOf('// ─── Stable Settings Injection'))+'\nshowChannelManager();',context);
   const texts=[];function collect(node){if(node.textContent)texts.push(node.textContent);for(const child of node.children??[])collect(child);}nodes.forEach(collect);
   for(const label of ['Управление каналами','vvertax Edition','Выбран','Переключить','Добавить канал','lrc.vvrtx.lol / lrc.vvrtx.lol'])assert.ok(texts.includes(label),label);

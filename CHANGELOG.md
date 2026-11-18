@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.12.0
+
+- Show the active update channel in About.
+- Select the currently playing line when opening the quote editor.
+- Import and save TTML or LRC per track, and back up or restore your local lyrics library.
+- Export up to 24 timed lyric lines within a 60-second range as MP4 or WebM, with animated dots between separated lines and optional audio.
+- Keep open quote drafts when playback moves to another track.
+- Add an opt-in badge for tracks with known synced Spicy Lyrics community lyrics.
+
 ## 1.11.3
 
 - Make the About Update button show the update notification instead of opening the build-channel selector.

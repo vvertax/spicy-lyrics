@@ -1,13 +1,12 @@
 import { prepareMenuButton, controlMenuPlacement } from "./ControlPresentation.ts";
 import { bindLyricsExtras } from "./LyricsExtras.ts";
-import { $experiment } from "../../utils/experiments.ts";
-import { $subtitlePanelVisible } from "../../utils/stores.ts";
+import { $subtitlesEnabled } from "../../utils/stores.ts";
 import Fullscreen from "./Fullscreen.ts";
 import { bindTTMLDrop } from "./TTMLDrop.ts";
 import { bindLineActions } from "./LineActions.ts";
 import { localizeDocument } from "../../utils/i18n/runtime.ts";
-import { $quickControlIds } from "../../utils/stores.ts";
-import { controlId, normalizeQuickControls } from "./ControlLayout.ts";
+import { $quickControlIds, $quickControlOrder } from "../../utils/stores.ts";
+import { controlId, normalizeQuickControls, orderedQuickControls, moveQuickControl } from "./ControlLayout.ts";
 import { AddReviewMenuRows } from "./ReviewTools.ts";
 import { ScrollToCurrentActiveLine } from "../../utils/Scrolling/ScrollToActiveLine.ts";
 import { CreativeMenuRows } from "./CreativeTools.ts";
@@ -73,12 +72,10 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
     const cache = doc.createElement('button'); cache.type = 'button'; cache.innerHTML = Icons.ClearCache;
     addRow(cache, 'Clear Cached Lyrics'); cache.onclick = () => { void RemoveCurrentLyrics_AllCaches(true); };
   }
-  const subtitles = doc.createElement('button'); subtitles.type = 'button'; subtitles.id = 'subtitles'; subtitles.innerHTML = Icons.QuoteCard;
+  const subtitles = doc.createElement('button'); subtitles.type = 'button'; subtitles.id = 'subtitles'; subtitles.innerHTML = Icons.Subtitles;
   addRow(subtitles, 'Subtitles'); subtitles.role = 'menuitemcheckbox';
-  const syncSubtitles = () => { subtitles.hidden = !$experiment('subtitleBar').get(); subtitles.setAttribute('aria-checked', String($subtitlePanelVisible.get())); };
-  const stopSubtitleFlag = $experiment('subtitleBar').subscribe(syncSubtitles);
-  const stopSubtitleVisible = $subtitlePanelVisible.subscribe(syncSubtitles);
-  subtitles.onclick = () => $subtitlePanelVisible.set(!$subtitlePanelVisible.get());
+  const stopSubtitleVisible = $subtitlesEnabled.subscribe(value => subtitles.setAttribute('aria-checked', String(value)));
+  subtitles.onclick = () => $subtitlesEnabled.set(!$subtitlesEnabled.get());
   CreativeMenuRows(menu, page, addRow);
   AddReviewMenuRows(menu, addRow);
   // Keep the screenshot's primary controls first, and settings/close last.
@@ -140,28 +137,144 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   const quickbar = doc.createElement('div'); quickbar.className='sl-quick-controls'; quickbar.role='toolbar'; quickbar.setAttribute('aria-label','Quick lyrics controls');
   controls.insertBefore(quickbar, exitFullscreen);
   const allRows=Array.from(menu.querySelectorAll<HTMLButtonElement>('button'));
+  const orderAction = doc.createElement("button");
+  orderAction.type = "button";
+  orderAction.className = "sl-fork-menu-item sl-quick-order";
+  orderAction.role = "menuitem";
+  orderAction.textContent = "Reorder quick controls";
+  menu.append(orderAction);
+  const done = doc.createElement("button");
+  done.type = "button";
+  done.className = "sl-quick-done";
+  done.textContent = "Done";
+  done.hidden = true;
+  controls.insertBefore(done, toggle);
   allRows.forEach(row=>row.dataset.menuRole=row.role);
   const syncPressed=()=>quickbar.querySelectorAll<HTMLButtonElement>('button[aria-checked]').forEach(row=>row.setAttribute('aria-pressed',row.getAttribute('aria-checked')!));
-  const placeControls=(ids: string[])=>{
-    const pinned=new Set(normalizeQuickControls(ids));
+  const available = () => Array.from(quickbar.querySelectorAll<HTMLButtonElement>("button:not(:disabled):not([hidden])"));
+  const idsOf = (rows: HTMLButtonElement[]) => rows.map(row => row.dataset.controlId!);
+  let draft: string[] | null = null;
+  let editedId: string | undefined;
+  let drag: { id: number; x: number; y: number; order: string[] } | null = null;
+  let frame = 0;
+  const currentOrder = () => orderedQuickControls(normalizeQuickControls($quickControlIds.get()), $quickControlOrder.get(), idsOf(allRows));
+  const placeControls=()=>{
+    const order = draft ?? currentOrder();
+    const pinned=new Set(order);
     for(const row of allRows){
       const quick=pinned.has(row.dataset.controlId!);
       row.classList.toggle('sl-quick-control',quick);
       row.classList.toggle('ViewControl',quick);
       row.classList.toggle('sl-fork-menu-item',!quick);
-      if(quick){row.role='button';row.setAttribute('aria-label',row.dataset.controlLabel!);row.title=row.dataset.controlLabel!;quickbar.append(row);}
-      else {row.role=row.dataset.menuRole!;row.removeAttribute('aria-pressed');row.removeAttribute('aria-label');row.removeAttribute('title');menu.append(row);}
+      if(quick){row.role='button';row.setAttribute('aria-label',row.dataset.controlLabel!);row.title=row.dataset.controlLabel!;}
+      else {row.role=row.dataset.menuRole!;row.removeAttribute('aria-pressed');row.removeAttribute('aria-label');row.removeAttribute('title');menu.insertBefore(row, orderAction);}
     }
-    toggle.hidden = !menu.querySelector("button");
+    order.forEach((id, index) => {
+      const button = allRows.find(row => row.dataset.controlId === id);
+      if (button && quickbar.children[index] !== button) quickbar.insertBefore(button, quickbar.children[index] ?? null);
+    });
+    orderAction.hidden = available().length < 2;
+    toggle.hidden = Boolean(draft) || !items().length;
     syncPressed();close();
   };
-  const unsubscribeQuick=$quickControlIds.subscribe(placeControls);
+  const stopDrag = () => { drag = null; win.cancelAnimationFrame(frame); };
+  const finishOrder = (save: boolean) => {
+    const order = draft;
+    if (!order) return;
+    stopDrag();
+    draft = null;
+    delete controls.dataset.editing;
+    done.hidden = true;
+    if (save) $quickControlOrder.set(order);
+    placeControls();
+    (available().find(row => row.dataset.controlId === editedId) ?? toggle).focus();
+  };
+  orderAction.onclick = () => {
+    draft = currentOrder();
+    controls.dataset.editing = "true";
+    done.hidden = false;
+    placeControls();
+    editedId = available()[0]?.dataset.controlId;
+    available()[0]?.focus();
+  };
+  done.onclick = () => finishOrder(true);
+  const cancelEditing = (event: KeyboardEvent) => {
+    if (!draft || event.key !== "Escape") return;
+    event.preventDefault(); event.stopImmediatePropagation(); finishOrder(false);
+  };
+  win.addEventListener("keydown", cancelEditing, true);
+  function reorderQuickButton(to: string) {
+    if (!draft || !editedId) return;
+    const order = moveQuickControl(draft, idsOf(available()), editedId, to);
+    if (order === draft) return;
+    const focused = doc.activeElement as HTMLElement;
+    draft = order;
+    placeControls();
+    if (quickbar.contains(focused)) focused.focus({ preventScroll: true });
+  }
+  function reorderUnderPointer() {
+    if (!drag) return;
+    const row = doc.elementFromPoint(drag.x, drag.y)?.closest<HTMLButtonElement>(".sl-quick-control");
+    if (row && available().includes(row)) reorderQuickButton(row.dataset.controlId!);
+  }
+  function dragFrame() {
+    if (!drag) return;
+    const rect = quickbar.getBoundingClientRect();
+    if (drag.x < rect.left + 22) quickbar.scrollLeft -= 8;
+    if (drag.x > rect.right - 22) quickbar.scrollLeft += 8;
+    reorderUnderPointer();
+    frame = win.requestAnimationFrame(dragFrame);
+  }
+  quickbar.addEventListener("click", event => {
+    if (draft) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+    if (!menu.hidden && (event.target as Element).closest(".sl-quick-control")) close();
+  }, true);
+  quickbar.onpointerdown = event => {
+    const row = (event.target as Element).closest<HTMLButtonElement>(".sl-quick-control");
+    if (!draft || drag || event.button !== 0 || !row || !available().includes(row)) return;
+    event.preventDefault();
+    editedId = row.dataset.controlId;
+    row.focus({ preventScroll: true });
+    quickbar.setPointerCapture(event.pointerId);
+    drag = { id: event.pointerId, x: event.clientX, y: event.clientY, order: draft };
+    frame = win.requestAnimationFrame(dragFrame);
+  };
+  quickbar.onpointermove = event => {
+    if (drag?.id === event.pointerId) { drag.x = event.clientX; drag.y = event.clientY; }
+  };
+  quickbar.onpointerup = event => {
+    if (drag?.id !== event.pointerId) return;
+    drag.x = event.clientX; drag.y = event.clientY;
+    reorderUnderPointer(); stopDrag();
+  };
+  const cancelDrag = (event: PointerEvent) => {
+    if (!drag || drag.id !== event.pointerId) return;
+    draft = drag.order; stopDrag(); placeControls();
+  };
+  quickbar.onpointercancel = quickbar.onlostpointercapture = cancelDrag;
+  const unsubscribeQuick=$quickControlIds.subscribe(() => {
+    if (draft) finishOrder(false);
+    else placeControls();
+  });
+  const unsubscribeOrder=$quickControlOrder.listen(placeControls);
   const pressedObserver=new MutationObserver(syncPressed);
   pressedObserver.observe(quickbar,{subtree:true,attributes:true,attributeFilter:['aria-checked']});
   quickbar.addEventListener('keydown',event=>{
     if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
     const rows=Array.from(quickbar.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')).filter(button => !button.hidden);
-    if(!rows.length)return;event.preventDefault();const index=rows.indexOf(doc.activeElement as HTMLButtonElement);
+    if(!rows.length)return;event.preventDefault();
+    const index = rows.indexOf((event.target as Element).closest<HTMLButtonElement>("button") ?? doc.activeElement as HTMLButtonElement);
+    if (draft && index >= 0) {
+      event.stopPropagation();
+      editedId = rows[index].dataset.controlId;
+      const target = event.key === "Home" ? 0 : event.key === "End" ? rows.length - 1 : index + (event.key === "ArrowRight" ? 1 : -1);
+      if (rows[target]) reorderQuickButton(rows[target].dataset.controlId!);
+      return;
+    }
     rows[event.key==='Home'?0:event.key==='End'?rows.length-1:(index+(event.key==='ArrowRight'?1:-1)+rows.length)%rows.length]?.focus();
   });
   const shortcuts = (event: KeyboardEvent) => {
@@ -176,5 +289,5 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   doc.addEventListener('pointerdown', outside); doc.addEventListener('keydown', keys, true);
   const observer = new MutationObserver(() => { if (!controls.isConnected) cleanup?.(); });
   observer.observe(doc.body, { childList: true, subtree: true });
-  cleanup = () => { unbindExtras(); stopSubtitleFlag(); stopSubtitleVisible(); unbindDrop();unbindLines();unsubscribeQuick(); pressedObserver.disconnect(); doc.removeEventListener('keydown', shortcuts); close(); menu.remove(); win.removeEventListener('resize', closeOnResize); observer.disconnect(); doc.removeEventListener('pointerdown', outside); doc.removeEventListener('keydown', keys, true); cleanup = undefined; };
+  cleanup = () => { stopDrag(); unbindExtras(); stopSubtitleVisible(); unbindDrop();unbindLines();unsubscribeQuick();unsubscribeOrder(); pressedObserver.disconnect(); doc.removeEventListener('keydown', shortcuts); close(); menu.remove(); win.removeEventListener('resize', closeOnResize); win.removeEventListener("keydown", cancelEditing, true); observer.disconnect(); doc.removeEventListener('pointerdown', outside); doc.removeEventListener('keydown', keys, true); cleanup = undefined; };
 }

@@ -88,12 +88,6 @@ export type Experiment = {
 export const EXPERIMENTS = [
   { id: "refreshedSimpleLyrics", category: "lyrics", label: "Legacy Simple Lyrics", description: "Use the refreshed simple renderer for the fork's legacy animation style.", default: true, pageClass: "Exp_RefreshedSimpleLyrics", rebuildsLyrics: true },
   {
-    id: "subtitleBar",
-    label: "Bottom Lyrics Subtitles",
-    description: "Show the current and next lyric above the Spotify player while browsing. Hidden while the full lyrics page is open. Click a line to seek.",
-    default: false,
-  },
-  {
     id: "instrumentalArtwork",
     label: "Artwork During Instrumental Breaks",
     description: "Let the cover gently float, sway and breathe during instrumental breaks of at least eight seconds. Song information follows the cover with comfortable spacing. Return before vocals resume. Only applies to synced lyrics in the full lyrics view.",
@@ -262,6 +256,13 @@ export const EXPERIMENTS = [
       "The view buttons share one frosted capsule instead of each having its own. Buttons that switch something on, like romanization, compact mode or the NowBar, fill in white with their icon cut out while it is on. The button back to the current line becomes a matching frosted circle in the bottom corner. Disable to bring back the separate frosted buttons that change their icon instead, and the round button at the lyrics' edge.",
     default: true,
     pageClass: "Exp_GroupedViewControls",
+  },
+  {
+    id: "syncedLyricsTrackBadges",
+    category: "lyrics",
+    label: "Synced Lyrics Track Badges",
+    description: "Show a Spicy Lyrics icon by playlist and album tracks with known synced community lyrics. Uses cached results without extra requests.",
+    default: false,
   },
 ] as const satisfies readonly Experiment[];
 

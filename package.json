@@ -31,6 +31,7 @@
     "idb": "^8.0.3",
     "kuroshiro": "^1.2.0",
     "langs": "^2.0.0",
+    "mediabunny": "1.66.0",
     "nanostores": "^1.3.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
@@ -48,8 +49,8 @@
   "peerDependencies": {
     "typescript": "^5.9.3"
   },
-  "description": "Spicy Lyrics \u2014 based on Spikerko, iPixelGalaxy and Ruytha",
-  "version": "1.11.3",
+  "description": "Spicy Lyrics — based on Spikerko, iPixelGalaxy and Ruytha",
+  "version": "1.12.0",
   "contributors": [
     {
       "name": "Spikerko"

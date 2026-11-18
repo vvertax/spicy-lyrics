@@ -1,3 +1,4 @@
+import { SectionTitle } from "./components.tsx";
 import { Select } from "./Select.tsx";
 import { settingDestination } from "./SettingNavigation.ts";
 import { settingsLocation } from "./SettingsLayout.ts";
@@ -12,6 +13,7 @@ import { $settingsDesign, $favoriteSettings } from "../../../utils/stores.ts";
 import { ExperimentSettings } from "./ExperimentsPanel.tsx";
 import { $uiLanguage } from "../../../utils/stores.ts";
 import { PopupModal } from "../../Modal.ts";
+import { Icons } from "../../Styling/Icons.ts";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useStore } from "@nanostores/react";
 import { $allowHidingSettings, $hideHidingIcon } from "../../../utils/stores.ts";
@@ -146,6 +148,7 @@ export default function SettingsPanel({ onOpenHiddenSettings, onManageAnimator, 
         <button className={`sl-sp-tab sl-sp-tab--action sl-sp-hide-action${editFavorites ? " sl-sp-tab--active" : ""}`} type="button" aria-pressed={editFavorites} onClick={() => setEditFavorites(!editFavorites)}><span aria-hidden="true">☆</span>Add to favorites</button>
       </nav>
       <section className="sl-sp-pane">
+        {design === "vvertax-you" && <span className="sl-sp-pane-logo" aria-hidden="true" dangerouslySetInnerHTML={{ __html: Icons.LyricsPage.replace(/ (?:class|id)="[^"]*"/g, "") }} />}
         <div className="sl-sp-pane-header">
           <h2 className="sl-sp-pane-title">{title}</h2>
           <button className="sl-sp-close" type="button" aria-label="Close settings" onClick={() => PopupModal.hide()}>×</button>
@@ -159,10 +162,10 @@ export default function SettingsPanel({ onOpenHiddenSettings, onManageAnimator, 
               <div role="tabpanel" id="sl-settings-content" aria-label={title}>
                 {(searching || favoritesOnly || ["Lyrics Display", "Playback"].includes(sectionFilter)) && <div className="sl-sp-card"><UpstreamSettings query={query} sectionFilter={filter} /></div>}
                 {(searching || favoritesOnly || sectionFilter === "Appearance") && <div className="sl-sp-card"><AppearanceSection query={query} sectionFilter={filter} /></div>}
-                {!searching && !favoritesOnly && sectionFilter === "Appearance" && <SettingsGroup title="Background" {...groupProps("Background")}><UpstreamSettings query="" sectionFilter="Background" /><AppearanceSection query="" sectionFilter="Background" /></SettingsGroup>}
+                {!searching && !favoritesOnly && sectionFilter === "Appearance" && <div className="sl-sp-card"><SectionTitle>Background</SectionTitle><UpstreamSettings query="" sectionFilter="Background" /><AppearanceSection query="" sectionFilter="Background" showSectionTitle={false} /></div>}
                 {(searching || favoritesOnly || ["Lyrics Display", "Playback"].includes(sectionFilter)) && <div className="sl-sp-card"><LyricsSection query={query} sectionFilter={filter} /></div>}
                 {(searching || favoritesOnly) && <div className="sl-sp-card"><EffectsSection query={query} sectionFilter="All" onManageAnimator={manageAnimator} /></div>}
-                {!searching && !favoritesOnly && sectionFilter === "Lyrics Display" && <SettingsGroup title="Effects" {...groupProps("Effects")}><EffectsSection query="" sectionFilter="Effects" onManageAnimator={manageAnimator} /></SettingsGroup>}
+                {!searching && !favoritesOnly && sectionFilter === "Lyrics Display" && <div className="sl-sp-card"><EffectsSection query="" sectionFilter="Effects" onManageAnimator={manageAnimator} /></div>}
                 {(searching || favoritesOnly || sectionFilter === "Interface") && <div className="sl-sp-card"><InterfaceSection query={query} sectionFilter={filter} /></div>}
                 {(searching || favoritesOnly || sectionFilter === "Sources") && <div className="sl-sp-card"><SourcesSection query={query} sectionFilter={filter} /></div>}
                 {(searching || favoritesOnly || sectionFilter === "Advanced") && <div className="sl-sp-card"><DeveloperSection query={query} sectionFilter={filter} onOpenHiddenSettings={onOpenHiddenSettings ?? (() => {})} /></div>}

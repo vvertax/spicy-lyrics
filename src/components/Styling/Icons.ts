@@ -45,6 +45,8 @@ export const Icons = {
   Karaoke: Line(`<rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 10v2a6 6 0 0 0 12 0v-2M12 18v3M9 21h6"/>`),
   RecordingMode: Line(`<rect x="3" y="5" width="12" height="14" rx="3"/><path d="m15 10 6-4v12l-6-4"/>`),
   QuoteCard: Line(`<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9h3v4H7v-2M14 9h3v4h-3v-2M8 16h8"/>`),
+  Subtitles: Line(`<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M6 10h3m4 0h5M6 14.5h5m4 0h3"/>`),
+  SubtitleLayout: Line(`<path d="M4 6h7m4 0h5M4 12h3m4 0h9M4 18h11m4 0h1M13 3v6M9 9v6m8 0v6"/>`),
   FindAuthorWorks: Line(`<circle cx="9" cy="7" r="3"/><path d="M3 20v-2a6 6 0 0 1 9-5"/><circle cx="16" cy="15" r="4"/><path d="m19 18 3 3"/>`),
   ReviewLyrics: Line(`<path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6M8 7h3M8 11h2M8 17h4M14 10l5-5 2 2-5 5-3 1z"/>`),
   CompareTTML: Line(`<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M12 4v16M6 9h3M6 13h3M15 11h3M15 15h3"/>`),

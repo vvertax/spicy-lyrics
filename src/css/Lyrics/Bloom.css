@@ -1113,7 +1113,7 @@
 }
 
 /* Without the refined credits, label and value read as one sentence: "Written by: ...". */
-#SpicyLyricsPage.SpicyRenderer.BloomRenderer:not(.Exp_RefinedCredits) .LyricsContainer :is(.LyricsContent, .LyricsPinnedCredits) .CreditsLabel::after {
+#SpicyLyricsPage.SpicyRenderer.BloomRenderer:not(.Exp_RefinedCredits) .LyricsContainer :is(.LyricsContent, .LyricsPinnedCredits) .CreditsLabel:not(.Credits > .CreditsLabel)::after {
   content: ":";
 }
 

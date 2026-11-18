@@ -31,7 +31,7 @@ export type NoticeOptions = {
   content: React.ReactElement<{ style?: React.CSSProperties }>[];
   primary: { label: string; onClick: () => void };
   extraActions?: { label: string; onClick: () => void }[];
-  secondaryLabel: string;
+  secondaryLabel?: string;
   wide?: boolean;
   /** Escape, a backdrop click, and the secondary button all land here. */
   onDismiss?: () => void;
@@ -151,9 +151,9 @@ export function showNotice({ title, content, primary, extraActions, secondaryLab
                 {action.label}
               </button>
             ))}
-            <button type="button" className="sl-notice-button sl-notice-button--quiet" onClick={dismiss}>
+            {secondaryLabel && <button type="button" className="sl-notice-button sl-notice-button--quiet" onClick={dismiss}>
               {secondaryLabel}
-            </button>
+            </button>}
             <button
               type="button"
               className="sl-notice-button sl-notice-button--primary"

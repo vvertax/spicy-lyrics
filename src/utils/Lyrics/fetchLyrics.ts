@@ -186,6 +186,7 @@ async function presentLyrics(uri: string, lyricsData: any): Promise<void> {
 }
 
 type FetchLyricsOptions = {
+  reloadLocalLyrics?: boolean;
   keepCurrentLyricsVisible?: boolean;
   signal?: AbortSignal;
 };
@@ -215,8 +216,9 @@ export default async function fetchLyrics(
       if ((error as Error)?.name !== "AbortError") throw error;
       return fetchLyrics(uri, options);
     }
-    return isCurrentTrack(uri) ? result : null;
+    return options.reloadLocalLyrics ? fetchLyrics(uri, options) : isCurrentTrack(uri) ? result : null;
   }
+  if (options.reloadLocalLyrics && isCurrentTrack(uri)) $currentLyricsData.set("");
 
   const controller = new AbortController(); controllers.add(controller);
   const promise = fetchLyricsInternal(uri, { ...options, signal: controller.signal });
@@ -327,7 +329,7 @@ async function fetchLyricsInternal(
     return presentStoredLyrics(uri, { ...sessionLyric, id: trackId, fromCache: true, fromLocal: true }, options.signal);
   }
 
-  const localLyric = await LocalLyricsManager.get(uri);
+  const localLyric = await LocalLyricsManager.get(uri, SpotifyPlayer.GetDuration());
   checkRequest(options.signal);
   if (localLyric) {
     lastAnswer = { uri, from: "Local DB" };

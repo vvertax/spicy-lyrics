@@ -1,1 +1,1 @@
-export const fetchSelectedChannelVersion=async()=>undefined;
+export const fetchSelectedChannelRelease=async()=>undefined;

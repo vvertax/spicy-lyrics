@@ -1,3 +1,4 @@
+import { getProgressPercentage } from "../TimedProgress.ts";
 import { animateSplitWords } from "./SplitWordMotion.ts";
 // @ts-ignore pkg has no @types on npm
 import Spline from "cubic-spline";
@@ -1121,12 +1122,6 @@ function getElementState(
   return "Active";
 }
 
-function getProgressPercentage(currentTime: number, startTime: number, endTime: number): number {
-  if (currentTime <= startTime) return 0;
-  if (currentTime >= endTime) return 1;
-  return (currentTime - startTime) / (endTime - startTime);
-}
-
 function reconcileLineAnimation(line: LyricsSyllable | LyricsLine, position: number): void {
   const simple = $simpleLyricsMode.get();
   const active = position >= line.StartTime && position < line.EndTime;
@@ -1221,20 +1216,20 @@ function reconcileLineAnimation(line: LyricsSyllable | LyricsLine, position: num
 
 let lastAnimateFrameTime = 0;
 
-export function Animate(position: number, target?: { type: "Syllable" | "Line"; lines: LyricsSyllable[] }): void {
-  const ProcessedPosition = position + timeOffset - ($simpleLyricsMode.get() ? 33.5 : 0);
+export function Animate(position: number, target?: { type: "Syllable" | "Line"; lines: LyricsSyllable[]; useTrackOffset?: boolean; frameTime?: number }): void {
+  const ProcessedPosition = position + (target?.useTrackOffset === false ? 0 : timeOffset) - ($simpleLyricsMode.get() ? 33.5 : 0);
   const refreshedSimple =
     !$spaceGravityMode.get() && $simpleLyricsMode.get() && isExperimentEnabled("refreshedSimpleLyrics");
   // Spline point split letters wait at before they're sung: shrunk and low
   // normally, plain text under the refreshed wave (which starts from rest).
   const letterRest = refreshedSimple ? 1 : 0;
 
-  const now = performance.now();
+  const now = target?.frameTime ?? performance.now();
   const playbackJumped = lastPlaybackPosition !== null &&
     (position < lastPlaybackPosition - 80 || position - lastPlaybackPosition > Math.max(250, now - lastFrameTime + 120));
   lastPlaybackPosition = position;
 
-  const deltaTime = Math.min((now - lastFrameTime) / 1000, 1 / 30);
+  const deltaTime = Math.min(Math.max(0, now - lastFrameTime) / 1000, 1 / 30);
   lastFrameTime = now;
   lastAnimateFrameTime = now;
 
@@ -2680,7 +2675,7 @@ export function Animate(position: number, target?: { type: "Syllable" | "Line"; 
     const lines = target?.lines ?? LyricsObject.Types.Syllable.Lines;
     const win = mountedLine?.ownerDocument?.defaultView;
     const reduced = win?.matchMedia('(prefers-reduced-motion: reduce)').matches ?? false;
-    animateSplitWords(lines, reduced || !$splitWordMotion.get());
+    animateSplitWords(lines, reduced, $splitWordMotion.get(), ProcessedPosition);
   }
 }
 
@@ -2707,7 +2702,7 @@ export function createWordAnimationPreview(element: HTMLElement, startMs: number
 }
 
 /** Separate timeline, springs and sweep measurements; executes the production animator. */
-export function createLyricsAnimationSession(type: "Syllable" | "Line", lines: LyricsSyllable[]) {
+export function createLyricsAnimationSession(type: "Syllable" | "Line", lines: LyricsSyllable[], options: { useTrackOffset?: boolean } = {}) {
   const capture = () => ({ Blurring_LastLine, lastFrameTime, lastPlaybackPosition, lastAnimateFrameTime,
     sungAfterMarked, sungAfterSpare, bgGroupsMarked, _sweptLines, _sweepResize });
   const restore = (state: ReturnType<typeof capture>) => {
@@ -2731,12 +2726,13 @@ export function createLyricsAnimationSession(type: "Syllable" | "Line", lines: L
   const unsubscribe = $animatorValues.listen(invalidate);
   const unsubscribePreset = $animatorPreset.listen(invalidate);
   return {
-    animate(position: number) {
+    animate(position: number, frameTime?: number) {
       if (destroyed) return;
       const main = capture();restore(state);
       try {
-        for (const line of lines) line.Status = position + timeOffset < line.StartTime ? "NotSung" : position + timeOffset >= line.EndTime ? "Sung" : "Active";
-        Animate(position, { type, lines });
+        const clock = position + (options.useTrackOffset === false ? 0 : timeOffset);
+        for (const line of lines) line.Status = clock < line.StartTime ? "NotSung" : clock >= line.EndTime ? "Sung" : "Active";
+        Animate(position, { type, lines, useTrackOffset: options.useTrackOffset, frameTime });
       }
       finally { state = capture();restore(main); }
     },

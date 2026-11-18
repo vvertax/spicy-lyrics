@@ -107,6 +107,16 @@
 #SpicyLyricsPage .sl-quick-controls:empty { display:none; }
 #SpicyLyricsPage .sl-quick-controls .sl-quick-control > span { display:none; }
 #SpicyLyricsPage .sl-quick-controls .sl-quick-control[aria-pressed="true"] { color:var(--ry-accent-3, #c9def5); }
+#SpicyLyricsPage :is(.sl-quick-order,.sl-quick-done,.sl-quick-control,.sl-fork-menu-item)[hidden] { display:none; }
+#SpicyLyricsPage .sl-fork-controls[data-editing] { visibility:visible; pointer-events:auto; transition-delay:0s; }
+#SpicyLyricsPage .sl-fork-controls[data-editing] .sl-quick-control { opacity:1; cursor:grab; touch-action:none; }
+#SpicyLyricsPage .sl-fork-controls[data-editing] .sl-quick-control:focus-visible { outline:2px solid currentColor; outline-offset:-4px; }
+#SpicyLyricsPage .sl-quick-done {
+  flex:none; min-height:var(--ViewControlSize,32px); padding-inline:12px; border-radius:999px;
+  border:1px solid var(--ry-line-strong,#ffffff55); color:var(--ry-text,#fff);
+  background:var(--ry-bg,#211735); cursor:pointer;
+}
+#SpicyLyricsPage .sl-quick-done:focus-visible { outline:2px solid currentColor; outline-offset:2px; }
 .vv-quick-settings h3 { margin:16px 0 8px; font-size:14px; }
 .vv-quick-settings > p { color:var(--ry-muted); font-size:12px; line-height:1.5; }
 .vv-quick-settings > button { margin:12px 0; }
@@ -423,12 +433,16 @@
 .vv-check-preview .OppositeAligned { text-align:right; }
 
 /* Subtitle layout actions do not interrupt clicks on the lyric tape. */
-#sl-subtitle-bar .sl-subtitle-actions { display:flex; flex-direction:column; gap:5px; align-self:start; }
+#sl-subtitle-bar .sl-subtitle-actions { display:flex; gap:5px; align-self:start; justify-self:end; }
+#sl-subtitle-bar:has(.sl-subtitle-actions) { grid-template-columns:auto minmax(0,1fr) auto; gap:clamp(8px,2vw,18px); }
+#sl-subtitle-bar .sl-subtitle-actions button { color:var(--ry-text,#eee); background:var(--ry-surface,#ffffff0d); }
+#sl-subtitle-bar .sl-subtitle-actions button:hover { background:var(--ry-surface-2,#ffffff26); }
+#sl-subtitle-bar .sl-subtitle-actions button:focus-visible { outline:2px solid var(--ry-accent,#d0bcf2); outline-offset:-2px; }
 #sl-subtitle-bar .sl-subtitle-artwork { cursor:grab; user-select:none; }
 #sl-subtitle-bar .sl-subtitle-artwork:active { cursor:grabbing; }
 #sl-subtitle-bar .sl-subtitle-artwork:focus-visible { outline:2px solid #d0bcf2; outline-offset:3px; }
 #sl-subtitle-bar .sl-subtitle-layout { grid-column:1/-1; display:grid; gap:16px; margin-top:2px; padding:18px 2px 0; border-top:1px solid #ffffff1a; font:13px/1.4 var(--SpicyLyrics-Font,SpicyLyrics),sans-serif; }
-#sl-subtitle-bar .sl-subtitle-layout-heading { color:#ffffffe6; font-size:14px; }
+#sl-subtitle-bar .sl-subtitle-layout-heading { color:var(--ry-text,#ffffffe6); font-size:14px; }
 #sl-subtitle-bar .sl-subtitle-presets { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
 #sl-subtitle-bar .sl-subtitle-layout button { display:flex; align-items:center; justify-content:center; gap:8px; min-width:0; padding:10px; border:1px solid #ffffff1c; border-radius:12px; color:#ffffffa8; background:#ffffff06; font:inherit; cursor:pointer; transition:background .18s,color .18s,border-color .18s; }
 #sl-subtitle-bar .sl-subtitle-layout button:hover { color:#fff; background:#ffffff12; border-color:#ffffff35; }
@@ -442,7 +456,6 @@
 #sl-subtitle-bar .sl-subtitle-layout-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 #sl-subtitle-bar .sl-subtitle-layout-hint { margin:0; color:#ffffff73; font-size:12px; }
 #sl-subtitle-bar .sl-subtitle-layout .sl-subtitle-layout-reset { flex:none; border:0; background:transparent; padding:7px 0 7px 8px; color:#ffffffa3; }
-#sl-subtitle-bar .sl-subtitle-resize { position:absolute; right:8px; bottom:4px; border:0; background:none; color:#ffffff65; font:16px/1 sans-serif; cursor:ew-resize; padding:2px 5px; }
 .sl-quick-controls #subtitles[hidden] { display:none!important; }
 @media(max-width:600px) {
   #sl-subtitle-bar .sl-subtitle-presets { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -732,3 +745,95 @@ sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings .sl-sp-tabs > .sl-sp-ta
 .sl-sp-settings-group-label { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
 
 .sl-sp-settings-group--quick > summary { padding:14px 16px; }
+
+.sl-synced-track-badge { display:inline-flex; flex:none; align-items:center; vertical-align:middle; margin-inline-start:6px; color:var(--spice-text, var(--text-base, #fff)); }
+.sl-synced-track-badge svg { display:block; width:14px; height:14px; }
+.sl-synced-track-badge svg path { fill:currentColor; }
+
+.vv-quote-dialog [hidden] { display:none; }
+
+.vv-quote-motion-stage {
+  position:fixed;
+  inset:0 auto auto -16000px;
+  width:888px;
+  visibility:hidden;
+  pointer-events:none;
+  font:700 86px/1.24 SpicyLyrics,sans-serif;
+  --DefaultLyricsSize:86px;
+}
+.vv-quote-motion-stage .line {
+  display:block;
+  margin:0;
+  padding:0;
+  font:inherit;
+  text-align:start;
+  overflow-wrap:anywhere;
+}
+.vv-quote-motion-stage :is(.word, .letter, .letterGroup) {
+  display:inline-block;
+  font:inherit;
+  vertical-align:baseline;
+}
+.vv-quote-motion-stage .word-group {
+  display:inline-flex;
+  position:relative;
+  flex-wrap:wrap;
+  max-width:100%;
+  white-space:nowrap;
+  vertical-align:baseline;
+}
+.vv-quote-motion-stage .SpaceLetter { white-space:pre; }
+
+.vv-quote-audio { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:14px; }
+.vv-quote-audio :is(small, label, span) { flex:0 0 100%; overflow-wrap:anywhere; }
+.vv-quote-audio small { color:#b7adc3; }
+.vv-quote-audio input[type="number"] { margin-inline-start:8px; width:75px; padding:5px 7px; color:inherit; background:#25202f; border:1px solid #ffffff25; border-radius:7px; }
+
+.vv-quote-timeline {
+  min-inline-size: 0;
+  margin: 14px 0 4px;
+  padding: 6px 12px 10px;
+  border: 1px solid var(--quote-control-border, #ffffff22);
+  border-radius: 12px;
+}
+.vv-quote-timeline legend { padding-inline: 6px; font-size: 12px; font-weight: 600; }
+.vv-quote-marker { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font-size: 12px; }
+.vv-quote-marker + .vv-quote-marker { margin-top: 6px; }
+.vv-quote-marker span:last-of-type { font-variant-numeric: tabular-nums; }
+.vv-quote-marker input { grid-column: 1 / -1; width: 100%; margin: 0; accent-color: var(--quote-control-accent, #d0bcf2); }
+.vv-quote-marker input:focus-visible { outline: 2px solid var(--quote-control-accent, #d0bcf2); outline-offset: 2px; }
+
+.vv-quote-frame { position:relative; max-width:100%; }
+.vv-quote-frame--video {
+  width:min(100%, calc(55vh * var(--quote-frame-ratio)));
+  aspect-ratio:var(--quote-frame-ratio);
+  flex:none;
+}
+.vv-quote-frame--video canvas { width:100%; height:100%; }
+.vv-quote-layout-overlay { position:absolute; inset:0; pointer-events:none; }
+.vv-quote-layout-overlay button {
+  position:absolute; display:grid; align-content:start; justify-content:start;
+  margin:0; padding:3px; border:1px dashed #fff9; border-radius:4px; background:transparent;
+  font:600 10px/1.1 system-ui,sans-serif; color:#fff; text-shadow:0 1px 3px #000,0 0 3px #000;
+  pointer-events:auto; touch-action:none; cursor:grab;
+}
+.vv-quote-layout-overlay button > span {
+  position:absolute; inset:0 auto auto 0; translate:0 -100%; padding:2px 4px;
+  border-radius:4px 4px 0 0; background:#231f2ced; white-space:nowrap;
+}
+.vv-quote-layout-overlay button:is([data-region="title"],[data-region="cover"]) { z-index:1; }
+.vv-quote-layout-overlay button:is(:hover,:focus-visible) { border-style:solid; background:#fff2; outline:2px solid #fff; outline-offset:-2px; }
+.vv-quote-safe-zones {
+  position:absolute; inset:0;
+  background:
+    linear-gradient(#ffbe4350,#ffbe4350) 0 0 / 100% 12% no-repeat,
+    linear-gradient(#ffbe4350,#ffbe4350) 0 100% / 100% 22% no-repeat,
+    linear-gradient(#ffbe4350,#ffbe4350) 100% 12% / 13% 66% no-repeat;
+}
+.vv-quote-layout-options {
+  display:grid; grid-template-columns:1fr 1fr; gap:8px; min-inline-size:0;
+  margin:12px 0; padding:10px; border:1px solid var(--quote-control-border,#ffffff22); border-radius:12px;
+}
+.vv-quote-layout-options label { grid-column:1/-1; font-size:12px; }
+.vv-quote-layout-options label:last-child { display:flex; align-items:center; gap:6px; }
+.vv-quote-layout-options button { margin:0; font-size:12px; }

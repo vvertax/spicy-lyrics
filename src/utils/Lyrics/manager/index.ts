@@ -1,6 +1,6 @@
 import { dbPromise, ObjectStores } from "../../db";
 import Logger from "../../Logger";
-import { ParseTTML } from "./parseTTML";
+import { isTrackUri, parseLocalLyrics, parseLyricsBackup, readLocalLyricsFile, type LocalLyricsFile } from "./LocalLyricsFile.ts";
 
 const logger = new Logger("Local Lyrics Manager");
 
@@ -22,23 +22,12 @@ async function put(uri: string, ttml: unknown) {
   }
 }
 
-async function get(uri: string): Promise<any | null> {
+async function get(uri: string, durationMs?: number): Promise<any | null> {
   try {
     const db = await dbPromise;
     const data = await db.get(objStore, uri);
-    if (data == null) {
-      return null;
-    }
-
-    const parsed = await ParseTTML(data);
-    if (parsed == null || typeof parsed !== "object") {
-      return null;
-    }
-
-    const result = "Result" in parsed ? (parsed as Record<string, unknown>).Result : undefined;
-    return (result && typeof result === "object" && result !== null)
-      ? Object.assign({}, result as object, { source: "ldb" })
-      : null;
+    const file = readLocalLyricsFile(data);
+    return file ? await parseLocalLyrics(file, durationMs) : null;
   } catch (error) {
     logCaught("get", error, { uri });
     return null;
@@ -78,7 +67,55 @@ async function remove(uri: string): Promise<void> {
   }
 }
 
+async function getFile(uri: string) {
+  return readLocalLyricsFile(await (await dbPromise).get(objStore, uri));
+}
+
+async function saveFile(uri: string, file: LocalLyricsFile, replace: boolean) {
+  const db = await dbPromise;
+  const value = file.format === "ttml" ? file.text : file;
+  if (replace) await db.put(objStore, value, uri);
+  else await db.add(objStore, value, uri);
+}
+
+async function exportBackup() {
+  const db = await dbPromise;
+  let cursor = await db.transaction(objStore).store.openCursor();
+  const entries = [];
+  while (cursor) {
+    const file = readLocalLyricsFile(cursor.value);
+    if (isTrackUri(cursor.key) && file) entries.push({ uri: cursor.key, ...file });
+    cursor = await cursor.continue();
+  }
+  return JSON.stringify({ version: 1, entries }, null, 2);
+}
+
+async function restoreBackup(source: string) {
+  const entries = await parseLyricsBackup(source);
+  const transaction = (await dbPromise).transaction(objStore, "readwrite");
+  const done = transaction.done;
+  void done.catch(() => {});
+  const restored: string[] = [];
+  try {
+    for (const { uri, format, text } of entries) {
+      if (await transaction.store.getKey(uri) !== undefined) continue;
+      await transaction.store.add(format === "ttml" ? text : { format, text }, uri);
+      restored.push(uri);
+    }
+    await done;
+  } catch (error) {
+    try { transaction.abort(); } catch { /* Already aborted by IndexedDB. */ }
+    await done.catch(() => {});
+    throw error;
+  }
+  return { restored, skipped: entries.length - restored.length };
+}
+
 export const LocalLyricsManager = {
+  getFile,
+  saveFile,
+  exportBackup,
+  restoreBackup,
   put,
   get,
   getRaw,

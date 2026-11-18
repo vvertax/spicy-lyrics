@@ -2,7 +2,7 @@ import { checkRequest, abortable } from "../RequestAbort.ts";
 import { createProviderResult, buildLineLyrics, buildStaticLyrics, parseTimestampToMilliseconds } from "./Shared.ts";
 import type { TrackLyricsInfo, ExternalLyricsResult, TimedLine } from "./Types.ts";
 
-function parseLRCLikeLyrics(text: string): {
+export function parseLRCLikeLyrics(text: string): {
   synced: TimedLine[] | null;
   unsynced: string[] | null;
 } {

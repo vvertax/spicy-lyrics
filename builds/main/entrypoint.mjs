@@ -1,5 +1,6 @@
 // Standalone loader UI: available even when the extension bundle cannot load.
 const FORK_RELEASE_HOST = "lrc.vvrtx.lol";
+import { fetchHotfix, hotfixBundleName, usesForkHotfix } from "./release-hotfix.mjs";
 const FORK_ISSUES_URL = "https://github.com/vvertax/spicy-lyrics/issues";
 const LOADER_RU = {
   "Build Channel": "Канал сборок",
@@ -797,21 +798,35 @@ const fetchVersion = async (channel = activeChannel) => {
   }
 };
 
+const fetchRelease = async (channel) => {
+  const version = await fetchVersion(channel);
+  if (!usesForkHotfix(channel)) return { version };
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const hotfix = await fetchHotfix(channel.apiHost, controller.signal);
+    return { version, hotfix };
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
 // Chromium remembers a failed module fetch per URL, so every retry needs a URL it hasn't seen.
 let importCount = 0;
 
 const failedInitializations = new Map();
-const importExtension = (version, channel, canContinue) => {
+const importExtension = (version, channel, canContinue, hotfix) => {
   // Official builds require the upstream loader, which obtains their signed URL.
   // Fork, custom and pinned channels keep their explicitly configured bundle URL.
+  const bundle = hotfix > 0 ? hotfixBundleName(version, hotfix) : `spicy-lyrics@${encodeURIComponent(version)}.mjs`;
   const url = usesOfficialStatus(channel)
     ? `https://${channel.apiHost}/bp/loader/grabPluginFile`
-    : `https://${channel.storageHost}/spicy-lyrics@${encodeURIComponent(version)}.mjs`;
+    : `https://${channel.storageHost}/${bundle}`;
   // A bundle that threw may have registered listeners before failing. Never
   // evaluate another copy of that version in the same Spotify session.
   const initializationKey = `${url}#${version}`;
   if (failedInitializations.has(initializationKey)) return Promise.reject(failedInitializations.get(initializationKey));
-  window._spicy_lyrics_metadata = { LoadedVersion: version, ForkReleaseHost: FORK_RELEASE_HOST };
+  window._spicy_lyrics_metadata = { LoadedVersion: version, LoadedHotfix: hotfix, LoadedApiHost: channel.apiHost, ForkReleaseHost: FORK_RELEASE_HOST };
   return withRetries(
     IMPORT_ATTEMPTS,
     () => {
@@ -829,24 +844,26 @@ const importExtension = (version, channel, canContinue) => {
 const attemptLoad = async (versionAttempts = VERSION_ATTEMPTS, isActive = () => true) => {
   const channel = activeChannel;
   const canContinue = () => isActive() && isCurrentChannel(channel);
-  let version = channel.fixedVersion;
+  let release;
   try {
-    if (!version) version = await withRetries(versionAttempts, () => fetchVersion(channel), () => true, canContinue);
+    release = channel.fixedVersion ? { version: channel.fixedVersion } :
+      await withRetries(versionAttempts, () => fetchRelease(channel), () => true, canContinue);
   } catch (error) {
     if (!canContinue()) return { ok: false, kind: "cancelled" };
     console.error(`${LOG_PREFIX} Couldn't fetch the current version:`, error);
     return { ok: false, kind: "connection", error, channel };
   }
   if (!canContinue()) return { ok: false, kind: "cancelled" };
+  const { version, hotfix } = release;
   try {
-    await importExtension(version, channel, canContinue);
+    await importExtension(version, channel, canContinue, hotfix);
     if (!canContinue()) return { ok: false, kind: "cancelled" };
     renderChannelSettings();
     return { ok: true };
   } catch (error) {
     if (!canContinue()) return { ok: false, kind: "cancelled" };
     console.error(`${LOG_PREFIX} Couldn't load version ${version}:`, error);
-    return { ok: false, kind: isModuleFetchFailure(error) ? "connection" : "startup", error, version, channel };
+    return { ok: false, kind: isModuleFetchFailure(error) ? "connection" : "startup", error, version, hotfix, channel };
   }
 };
 
@@ -2157,7 +2174,7 @@ const startReconnect = () => {
 };
 
 // A crashed bundle won't fix itself, but a newer version might, so this watches for one.
-const startFixWatch = ({ version, error, channel = activeChannel }) => {
+const startFixWatch = ({ version, hotfix, error, channel = activeChannel }) => {
   const pinned = Boolean(channel.fixedVersion);
   let checking = false;
   let countdown = null;
@@ -2176,14 +2193,14 @@ const startFixWatch = ({ version, error, channel = activeChannel }) => {
     task.update();
     let latest = null;
     try {
-      latest = await fetchVersion(channel);
+      latest = await fetchRelease(channel);
     } catch (checkError) {
       console.warn(`${LOG_PREFIX} Couldn't check for a fixed version:`, checkError);
     }
     checking = false;
     if (task.ended || !isCurrentChannel(channel)) return;
-    if (latest && latest !== version) {
-      showFixReady(latest);
+    if (latest && (latest.version !== version || (latest.hotfix ?? 0) > (hotfix ?? 0))) {
+      showFixReady(latest.version);
       return;
     }
     schedule();

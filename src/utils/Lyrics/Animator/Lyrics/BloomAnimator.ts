@@ -1,11 +1,13 @@
+import { animateSplitWords } from "./SplitWordMotion.ts";
 // @ts-ignore pkg has no @types on npm
 import Spline from "cubic-spline";
 import { easeSinOut } from "d3-ease";
-import { $currentLyricsType, $rendererVisualStyle, isBloomRenderer } from "../../../../utils/stores.ts";
+import { $currentLyricsType, $rendererVisualStyle, $splitWordMotion, isBloomRenderer } from "../../../../utils/stores.ts";
 import {
   EarlySungBefore,
   LyricsObject,
   SimpleLyricsMode_LetterEffectsStrengthConfig,
+  type LyricsSyllable,
   type SyllableLead,
   preHiddenDotLineMs,
 } from "../../lyrics.ts";
@@ -1286,17 +1288,18 @@ function getProgressPercentage(currentTime: number, startTime: number, endTime: 
 
 let lastAnimateFrameTime = 0;
 
-export function Animate(position: number, target?: { type: "Syllable" | "Line"; lines: any[] }): void {
-  const ProcessedPosition = position + timeOffset - (isBloomRenderer() ? 33.5 : 0);
+export function Animate(position: number, target?: { type: "Syllable" | "Line"; lines: LyricsSyllable[]; useTrackOffset?: boolean; frameTime?: number }): void {
+  const ProcessedPosition = position + (target?.useTrackOffset === false ? 0 : timeOffset) - (isBloomRenderer() ? 33.5 : 0);
   const refreshedSimple =
     isBloomRenderer();
   // Spline point split letters wait at before they're sung: shrunk and low
   // normally, plain text under the refreshed wave (which starts from rest).
   const letterRest = refreshedSimple ? 1 : 0;
 
-  const now = performance.now();
+  const now = target?.frameTime ?? performance.now();
 
-  const deltaTime = (now - lastFrameTime) / 1000;
+  const elapsed = Math.max(0, now - lastFrameTime) / 1000;
+  const deltaTime = target ? Math.min(elapsed, 1 / 30) : elapsed;
   lastFrameTime = now;
   lastAnimateFrameTime = now;
 
@@ -1415,7 +1418,7 @@ export function Animate(position: number, target?: { type: "Syllable" | "Line"; 
   if (CurrentLyricsType === "Syllable") {
     const arr = (target ? (target.type === "Syllable" ? target.lines : []) : LyricsObject.Types.Syllable.Lines);
     // The pop-out belongs to the refreshed layout; anywhere else every background line stays open.
-    markBackgroundGroups(arr, ProcessedPosition, isBgPopActive());
+    markBackgroundGroups(arr, ProcessedPosition, !target && isBgPopActive());
 
     // Sweeps are measured here, before this frame changes any class, so the
     // reads don't force a layout. A line's words are as wide before it turns
@@ -1432,12 +1435,8 @@ export function Animate(position: number, target?: { type: "Syllable" | "Line"; 
     for (let index = 0; index < arr.length; index++) {
       const line = arr[index];
       if (!line.HTMLElement.isConnected) continue;
-      const lineState = getBloomLineState(
-        getElementState(ProcessedPosition, line.StartTime, line.EndTime),
-        line,
-        index,
-        ProcessedPosition
-      );
+      const state = getElementState(ProcessedPosition, line.StartTime, line.EndTime);
+      const lineState = target ? state : getBloomLineState(state, line, index, ProcessedPosition);
       mountedLine ??= line.HTMLElement;
       if (lineState !== "Sung") anyLineUnsung = true;
       if (lineState === "Active") noteActiveLine(index);
@@ -2487,12 +2486,8 @@ export function Animate(position: number, target?: { type: "Syllable" | "Line"; 
     for (let index = 0; index < arr.length; index++) {
       const line = arr[index];
       if (!line.HTMLElement.isConnected) continue;
-      const lineState = getBloomLineState(
-        getElementState(ProcessedPosition, line.StartTime, line.EndTime),
-        line,
-        index,
-        ProcessedPosition
-      );
+      const state = getElementState(ProcessedPosition, line.StartTime, line.EndTime);
+      const lineState = target ? state : getBloomLineState(state, line, index, ProcessedPosition);
       mountedLine ??= line.HTMLElement;
       if (lineState !== "Sung") anyLineUnsung = true;
       if (lineState === "Active") noteActiveLine(index);
@@ -2689,7 +2684,7 @@ export function Animate(position: number, target?: { type: "Syllable" | "Line"; 
   if (CurrentLyricsType === "Syllable" || CurrentLyricsType === "Line") {
     // Off, -1 clears the marks left from when it was on.
     markSungAfterActive(
-      LyricsObject.Types[CurrentLyricsType].Lines,
+      target?.lines ?? LyricsObject.Types[CurrentLyricsType].Lines,
       ProcessedPosition,
       isExperimentEnabled("keepOverlappingLines") ? firstActive : -1
     );
@@ -2702,4 +2697,42 @@ export function Animate(position: number, target?: { type: "Syllable" | "Line"; 
 
   // Commit any queued style changes after completing the animation computations
   flushStyleBatch();
+  if (CurrentLyricsType === "Syllable") {
+    const lines = target?.lines ?? LyricsObject.Types.Syllable.Lines;
+    const reduced = mountedLine?.ownerDocument.defaultView?.matchMedia("(prefers-reduced-motion: reduce)").matches ?? false;
+    animateSplitWords(lines, reduced, $splitWordMotion.get(), ProcessedPosition);
+  }
+}
+
+/** Run Bloom against a separate lyric model without moving the live lyric page. */
+export function createBloomAnimationSession(
+  type: "Syllable" | "Line", lines: LyricsSyllable[], options: { useTrackOffset?: boolean } = {},
+) {
+  const capture = () => ({ Blurring_LastLine, lastFrameTime, lastAnimateFrameTime,
+    sungAfterMarked, sungAfterSpare, bgGroupsMarked, _sweptLines, _sweepResize, _groupFlames, _groupFlamesAt });
+  const restore = (state: ReturnType<typeof capture>) => {
+    ({ Blurring_LastLine, lastFrameTime, lastAnimateFrameTime, sungAfterMarked, sungAfterSpare,
+      bgGroupsMarked, _sweptLines, _sweepResize, _groupFlames, _groupFlamesAt } = state);
+  };
+  let state: ReturnType<typeof capture> = { Blurring_LastLine: null, lastFrameTime: performance.now(),
+    lastAnimateFrameTime: 0, sungAfterMarked: [], sungAfterSpare: [], bgGroupsMarked: false,
+    _sweptLines: null, _sweepResize: null, _groupFlames: new Map(), _groupFlamesAt: NaN };
+  let destroyed = false;
+  return {
+    animate(position: number, frameTime?: number) {
+      if (destroyed) return;
+      const live = capture();
+      restore(state);
+      try { Animate(position, { type, lines, useTrackOffset: options.useTrackOffset, frameTime }); }
+      finally { state = capture(); restore(live); }
+    },
+    destroy() {
+      if (destroyed) return;
+      destroyed = true;
+      state._sweepResize?.disconnect();
+      state._groupFlames.clear();
+      state.sungAfterMarked.length = 0;
+      state.sungAfterSpare.length = 0;
+    },
+  };
 }

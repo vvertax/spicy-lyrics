@@ -12,7 +12,15 @@ import { quoteLineText } from "./QuoteText.ts";
 import { comparisonTiming } from "./ReviewModel.ts";
 
 /** The same DOM vocabulary and animator as the main lyrics, with a private model. */
-export function renderComparisonLyrics(view:HTMLElement, data:any, seek:(index:number,start:number)=>void, options:{backgroundOnly?:boolean}={}) {
+export function renderComparisonLyrics(view:HTMLElement, data:any, seek:(index:number,start:number)=>void, options:{
+  backgroundOnly?:boolean; useTrackOffset?:boolean;
+  animator?: { createSession: typeof createLyricsAnimationSession; emphasize: typeof Emphasize;
+    isLetterCapable: (length: number, duration: number, background: boolean) => boolean;
+    minLetterDuration: typeof MinLetterCapableDuration };
+}={}) {
+  const { createSession = createLyricsAnimationSession, emphasize = Emphasize,
+    minLetterDuration = MinLetterCapableDuration } = options.animator ?? {};
+  const isLetterCapable = options.animator?.isLetterCapable ?? IsLetterCapable;
   const doc=view.ownerDocument;
   const type=data.Type==='Syllable'?'Syllable':'Line';
   const container=doc.createElement('div');container.className='SpicyLyricsScrollContainer';container.dataset.lyricsType=type;if(data.Content.some((line:any)=>line.OppositeAligned))container.classList.add('HasDuetLines');
@@ -36,9 +44,9 @@ export function renderComparisonLyrics(view:HTMLElement, data:any, seek:(index:n
     parts.forEach((part:any,index:number)=>{
       const text=StripZeroWidth(part.Text??'');const duration=(part.EndTime-part.StartTime)*1000;
       let word:HTMLElement=doc.createElement('span');
-      const letters=!data.experimentalWordSync&&duration>=MinLetterCapableDuration()?SplitLetters(text):[];
-      if(letters.length&&IsLetterCapable(letters.length,duration)&&!isRtl(text)){
-        word=doc.createElement('div');Emphasize(letters,word,{...part,Text:text},background,model.Syllables!.Lead);
+      const letters=!data.experimentalWordSync&&duration>=minLetterDuration()?SplitLetters(text):[];
+      if(letters.length&&isLetterCapable(letters.length,duration,background)&&!isRtl(text)){
+        word=doc.createElement('div');emphasize(letters,word,{...part,Text:text},background,model.Syllables!.Lead);
         if(!$simpleLyricsMode.get()){
           word.style.setProperty('--text-shadow-opacity','0%');word.style.setProperty('--text-shadow-blur-radius','4px');
           word.style.scale=String(getIdleEmphasisLyricsScale());word.style.transform='translateY(calc(var(--DefaultLyricsSize) * 0.02))';
@@ -70,6 +78,6 @@ export function renderComparisonLyrics(view:HTMLElement, data:any, seek:(index:n
     (source.Background??[]).forEach((background:any,backgroundIndex:number)=>makeLine({...background,OppositeAligned:source.OppositeAligned},index,true,backgroundIndex));
   });
   view.replaceChildren(container);
-  const session=createLyricsAnimationSession(type,lines);
+  const session=createSession(type,lines,{useTrackOffset:options.useTrackOffset});
   return {...session,rows,diffRows};
 }

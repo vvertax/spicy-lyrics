@@ -16,3 +16,19 @@ export function normalizeQuickControls(value: unknown): string[] {
   const known = new Set<string>(QUICK_CONTROLS.map(([id]) => id));
   return [...new Set(value.filter((id): id is string => typeof id === "string" && known.has(id)))];
 }
+
+export function orderedQuickControls(pinned: string[], saved: unknown, menuOrder: string[]) {
+  const leading = Array.isArray(saved) ? normalizeQuickControls(saved) : menuOrder;
+  return [...new Set([...leading, ...pinned])].filter(id => pinned.includes(id));
+}
+
+export function moveQuickControl(order: string[], visible: string[], from: string, to: string) {
+  const movable = order.filter(id => visible.includes(id));
+  const source = movable.indexOf(from);
+  const target = movable.indexOf(to);
+  if (source === -1 || target === -1 || source === target) return order;
+  movable.splice(source, 1);
+  movable.splice(target, 0, from);
+  let index = 0;
+  return order.map(id => visible.includes(id) ? movable[index++] : id);
+}

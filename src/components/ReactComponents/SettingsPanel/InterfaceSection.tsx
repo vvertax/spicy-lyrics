@@ -3,7 +3,7 @@ import { RevealedSettingContext } from "./components.tsx";
 import { useContext } from "react";
 import { FavoriteSettingsContext } from "./components.tsx";
 import { QUICK_CONTROLS, normalizeQuickControls } from "../../Utils/ControlLayout.ts";
-import { $quickControlIds } from "../../../utils/stores.ts";
+import { $quickControlIds, $quickControlOrder } from "../../../utils/stores.ts";
 import { useStore } from "@nanostores/react";
 import {
   $alwaysShowInFullscreen,
@@ -22,6 +22,7 @@ import {
   $viewControlsPosition,
   $showNoLyricsNotice,
   $showQueueWhenNoLyrics,
+  $subtitlesEnabled,
 } from "../../../utils/stores.ts";
 import { $isGlobalNav } from "../../../utils/uiState.ts";
 import { matches, Row, Select, SectionTitle, Toggle } from "./components.tsx";
@@ -39,6 +40,7 @@ export default function InterfaceSection({ query, sectionFilter, showHidden = fa
   const revealedSetting = useRevealedContext(RevealedSettingContext);
   const favoritesOnly = useContext(FavoriteSettingsContext);
   const quickIds = normalizeQuickControls(useStore($quickControlIds));
+  const subtitles = useStore($subtitlesEnabled);
   const lockedMediaBox = useStore($lockedMediaBox);
   const allowHidingSettings = useStore($allowHidingSettings);
   const popupLyricsAllowed = useStore($popupLyricsAllowed);
@@ -66,16 +68,23 @@ export default function InterfaceSection({ query, sectionFilter, showHidden = fa
   ].map((matched, index) => matched && (showHidden ? hiddenSettingIds.includes(ids[index]) : !allowHidingSettings || (ids[index] === revealedSetting || !hiddenSettingIds.includes(ids[index])) || Boolean(query.trim())));
   const notice = matches(query, "Detailed No Lyrics Notice", "Show the explanation and actions when lyrics are unavailable. Turn off for a minimal message. Loading errors always show full details.") && (showHidden ? hiddenSettingIds.includes("interface-no-lyrics-notice") : !allowHidingSettings || !hiddenSettingIds.includes("interface-no-lyrics-notice") || Boolean(query.trim()));
   const quick = !showHidden && matches(query, "Quick Controls", "Pin actions outside the lyrics menu " + QUICK_CONTROLS.map(([,label])=>label).join(" "));
-  if (!rows.some(Boolean) && !notice && !quick) return null;
+  const subtitleDescription = "Show the current and next lyric above the Spotify player while browsing.";
+  const showSubtitles = !showHidden && matches(query, "Bottom Lyrics Subtitles", subtitleDescription);
+  if (!rows.some(Boolean) && !notice && !quick && !showSubtitles) return null;
   const normalizedAlwaysShow = alwaysShowInFullscreen === "All" ? "Both" : alwaysShowInFullscreen;
 
   return <>
     <SectionTitle>Interface</SectionTitle>
     {quick && <details className="vv-quick-settings" open={query.trim() || favoritesOnly ? true : undefined}>
       <summary><span className="vv-quick-summary-text"><span>Quick Controls</span><span className="vv-quick-hint vv-quick-hint--closed">Click to configure</span><span className="vv-quick-hint vv-quick-hint--open">Click to collapse</span></span></summary><div className="vv-quick-body"><p>Enabled actions appear beside the menu button. Disabled actions stay inside the menu. Availability depends on the current view.</p>
-      {QUICK_CONTROLS.map(([id, label]) => <Row key={id} label={label}><Toggle checked={quickIds.includes(id)} onChange={enabled => $quickControlIds.set(enabled ? [...quickIds,id] : quickIds.filter(value=>value!==id))} /></Row>)}
-      <div className="vv-quick-footer"><button type="button" className="sl-sp-btn" onClick={()=>$quickControlIds.set([])}>Move all to menu</button></div></div>
+      {QUICK_CONTROLS.map(([id, label]) => <Row key={id} label={label}><Toggle checked={quickIds.includes(id)} onChange={enabled => {
+        const order = $quickControlOrder.get();
+        if (!enabled && Array.isArray(order)) $quickControlOrder.set(order.filter(value => value !== id));
+        $quickControlIds.set(enabled ? [...quickIds,id] : quickIds.filter(value=>value!==id));
+      }} /></Row>)}
+      <div className="vv-quick-footer"><button type="button" className="sl-sp-btn" onClick={() => { $quickControlIds.set([]); $quickControlOrder.set(null); }}>Move all to menu</button></div></div>
     </details>}
+    {showSubtitles && <Row label="Bottom Lyrics Subtitles" description={subtitleDescription} featureId="subtitleBar"><Toggle checked={subtitles} onChange={value => $subtitlesEnabled.set(value)} /></Row>}
     {notice && <Row settingId="interface-no-lyrics-notice" label="Detailed No Lyrics Notice" description="Show the explanation and actions when lyrics are unavailable. Turn off for a minimal message. Loading errors always show full details."><Toggle checked={showNoLyricsNotice} onChange={(v) => $showNoLyricsNotice.set(v)} /></Row>}
     {rows[12] && <Row settingId="interface-auto-queue" label="Show Queue When a Song Has No Lyrics" description="In Fullscreen and Cinema View, open the queue in place of the lyrics. It closes again on the next song with lyrics."><Toggle checked={showQueueWhenNoLyrics} onChange={(v) => $showQueueWhenNoLyrics.set(v)} /></Row>}
     {rows[0] && <Row settingId="interface-lock-media-box" label="Lock Media Box Size in Compact Mode" description="Prevent the media box from resizing when Forced Compact Mode is active."><Toggle checked={lockedMediaBox} onChange={(v) => $lockedMediaBox.set(v)} /></Row>}

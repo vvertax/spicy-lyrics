@@ -1,5 +1,5 @@
 /* Label/value spans keep the original sentence when the experiment is off. */
-#SpicyLyricsPage.SpicyRenderer:not(.Exp_RefinedCredits) .LyricsContainer :is(.LyricsContent, .LyricsPinnedFooter) .CreditsLabel::after {
+#SpicyLyricsPage.SpicyRenderer:not(.Exp_RefinedCredits) .LyricsContainer :is(.LyricsContent, .LyricsPinnedFooter) .CreditsLabel:not(.Credits > .CreditsLabel)::after {
   content: ":";
 }
 

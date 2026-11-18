@@ -5,8 +5,11 @@ import { useStore } from "@nanostores/react";
 import React from "react";
 import { toast } from "sonner";
 import { SaveFontFile, FONT_FILE_FAMILY } from "../../../utils/fonts/FontFile.ts";
+import { INTERFACE_DESIGNS, VVERTAX_YOU_PALETTES, normalizeVvertaxYouPalette, type InterfaceDesign } from "../../../utils/InterfaceDesign.ts";
+import { CustomPaletteColor } from "./CustomPaletteColor.tsx";
 import {
   $settingsDesign,
+  $vvertaxYouPalette,
   $coverArtAnimation,
   $smoothSceneTransitions,
   $allowHidingSettings,
@@ -28,18 +31,24 @@ const FPS_CAP_DESCRIPTION = "Limit how often lyrics, animated backgrounds, and s
 const FPS_SLIDER_DESCRIPTION = "Frames per second while the cap is on.";
 const bgModeOptions = ["default", "legacy", "auto", "artistHeader", "coverArt", "color", "none"];
 const bgModeLabels = ["Default", "Legacy", "Auto", "Artist Header", "Cover Art", "Color", "None (Transparent)"];
+const designDescription = "Choose the style of Spicy Lyrics windows and controls.";
+const paletteDescription = "Choose the color palette for vvertax You.";
 
 interface Props {
+  showSectionTitle?: boolean;
   query: string;
   sectionFilter: string;
   showHidden?: boolean;
 }
 
-export default function AppearanceSection({ query, sectionFilter, showHidden = false }: Props) {
+export default function AppearanceSection({ query, sectionFilter, showHidden = false, showSectionTitle = true }: Props) {
   const revealedSetting = useRevealedContext(RevealedSettingContext);
   const settingsDesign = useStore($settingsDesign);
+  const palette = normalizeVvertaxYouPalette(useStore($vvertaxYouPalette));
   const coverArtAnimation = useStore($coverArtAnimation);
-  const designMatches = sectionFilter !== "Background" && !showHidden && matches(query, "Interface Design", "Choose the Ruytha or original Spicy Lyrics style for all extension windows and controls.");
+  const showDesign = sectionFilter !== "Background" && !showHidden;
+  const designMatches = showDesign && matches(query, "Interface Design", designDescription);
+  const paletteMatches = showDesign && settingsDesign === "vvertax-you" && matches(query, "Color Palette", paletteDescription);
   const smoothSceneTransitions = useStore($smoothSceneTransitions);
   const customFontEnabled = useStore($customFontEnabled);
   const customFont = useStore($customFont);
@@ -68,15 +77,19 @@ export default function AppearanceSection({ query, sectionFilter, showHidden = f
   const r10 = visible("appearance-fps-cap") && matches(query, "Animation Frame Rate", FPS_SLIDER_DESCRIPTION);
   const cover = visible("appearance-cover-art-animation") && matches(query, "Cover Art Animation", "Animate cover art changes in the NowBar.");
 
-  if (!designMatches && !scene && !r1 && !r2 && !r3 && !r4 && !r6 && !r7 && !r8 && !r9 && !r10 && !cover) return null;
+  if (!designMatches && !paletteMatches && !scene && !r1 && !r2 && !r3 && !r4 && !r6 && !r7 && !r8 && !r9 && !r10 && !cover) return null;
 
   return (
     <>
-      <SectionTitle>{sectionFilter === "Background" ? "Background" : "Appearance"}</SectionTitle>
+      {showSectionTitle && <SectionTitle>{sectionFilter === "Background" ? "Background" : "Appearance"}</SectionTitle>}
       {cover && <Row settingId="appearance-cover-art-animation" label="Cover Art Animation" description="Animate cover art changes in the NowBar."><Toggle checked={coverArtAnimation} onChange={(value) => $coverArtAnimation.set(value)} /></Row>}
-      {designMatches && <Row label="Interface Design" description="Choose the Ruytha or original Spicy Lyrics style for all extension windows and controls.">
-        <Select value={settingsDesign} options={["ruytha", "original"]} labels={["Ruytha Fork", "Original Spicy Lyrics"]} onChange={value => $settingsDesign.set(value as "ruytha" | "original")} />
+      {designMatches && <Row label="Interface Design" description={designDescription}>
+        <Select label="Interface Design" value={settingsDesign} options={Object.keys(INTERFACE_DESIGNS)} labels={Object.values(INTERFACE_DESIGNS)} onChange={value => $settingsDesign.set(value as InterfaceDesign)} />
       </Row>}
+      {paletteMatches && <Row label="Color Palette" description={paletteDescription} featureId="vvertaxYouPalette">
+        <Select label="Color Palette" value={palette} options={Object.keys(VVERTAX_YOU_PALETTES)} labels={Object.values(VVERTAX_YOU_PALETTES)} onChange={value => $vvertaxYouPalette.set(normalizeVvertaxYouPalette(value))} />
+      </Row>}
+      {paletteMatches && palette === "custom" && <Row label="Palette color" description="Generate the interface colors from one HEX color." stacked><CustomPaletteColor /></Row>}
       {scene && <Row settingId="appearance-scene-transitions" label="Smooth Track Transitions" description="Fade lyrics and song information when tracks change, alongside the background transition."><Toggle checked={smoothSceneTransitions} onChange={value => $smoothSceneTransitions.set(value)} /></Row>}
 
       {r3 && (

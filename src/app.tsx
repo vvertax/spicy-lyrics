@@ -4,6 +4,8 @@ import "./css/PortraitFullscreen.css";
 import "./css/PlayerBelowCover.css";
 import "./css/Romanization.css";
 import { consumeRecordingEscape } from "./components/Utils/CreativeTools.ts";
+import { initSyncedTrackBadges } from "./components/Utils/SyncedTrackBadges.ts";
+import { LyricsStore } from "./utils/Lyrics/fetchLyrics.ts";
 import { initNextLyricsPrefetch } from "./utils/Lyrics/PrefetchNextLyrics.ts";
 import { waitForVisibleLyrics } from "./utils/WindowActivity.ts";
 import { initSubtitleBar } from "./components/Utils/SubtitleBar.ts";
@@ -90,7 +92,7 @@ import ApplyLyrics, {
 import { ScrollingIntervalTime } from "./utils/Lyrics/lyrics.ts";
 import { ScrollToActiveLine } from "./utils/Scrolling/ScrollToActiveLine.ts";
 import { ScrollSimplebar } from "./utils/Scrolling/Simplebar/ScrollSimplebar.ts";
-import { $fromVersion, $lastFetchedUri, $previousVersion } from "./utils/uiState.ts";
+import { $fromRelease, $fromVersion, $lastFetchedUri, $previousVersion } from "./utils/uiState.ts";
 import { needsMigration, showMigrationModal } from "./utils/migration/DataMigration.tsx";
 import { OpenBuildChannelPanel } from "./utils/openBuildChannelPanel.tsx";
 import "./css/settings-panel.css";
@@ -103,7 +105,7 @@ import "./css/PopupDock.css";
 import "./css/PortraitFullscreen.css";
 import "./css/PlayerBelowCover.css";
 import "./css/GroupedViewControls.css";
-import { showUpdatedDialog } from "./components/ReactComponents/UpdateDialog.tsx";
+import { showInstalledUpdate } from "./components/ReactComponents/UpdateDialog.tsx";
 import { IsPIP, OpenPopupLyrics, ClosePopupLyrics } from "./components/Utils/PopupLyrics.ts";
 import {
   IsExternalCinemaLyrics,
@@ -287,13 +289,14 @@ async function main() {
   }
 
   $spicyLyricsVersion.set(window._spicy_lyrics_metadata?.LoadedVersion ?? $spicyLyricsVersion.get());
-  window._spicy_lyrics_metadata = {};
 
   const fromVersion = $fromVersion.get();
   const spicyLyricsVersion = $spicyLyricsVersion.get();
-  const updatedFromPreviousVersion = Boolean(fromVersion && spicyLyricsVersion && fromVersion !== spicyLyricsVersion);
-  if (updatedFromPreviousVersion) showUpdatedDialog(fromVersion, spicyLyricsVersion);
+  const loaded = Session.SpicyLyrics.GetCurrentVersion();
+  const release = { version: spicyLyricsVersion, hotfix: loaded?.Hotfix ?? 0, host: loaded?.Host };
+  const showedInstalledUpdate = showInstalledUpdate(fromVersion, $fromRelease.get(), release);
 
+  $fromRelease.set(release);
   $fromVersion.set(spicyLyricsVersion);
   void initSession();
   StartExperimentOverridesSync();
@@ -1481,7 +1484,7 @@ async function main() {
       };
       setTimeout(
         async () => await CheckForUpdates_Intervaled(),
-        updatedFromPreviousVersion ? getRemoteConfig().updates.checkIntervalMs : getRemoteConfig().updates.firstCheckDelayMs
+        showedInstalledUpdate ? getRemoteConfig().updates.checkIntervalMs : getRemoteConfig().updates.firstCheckDelayMs
       );
     }
   };
@@ -1494,6 +1497,7 @@ async function main() {
   initNPVLyrics();
   initSubtitleBar();
   initNextLyricsPrefetch();
+  initSyncedTrackBadges(id => LyricsStore.GetItem(id));
 
   Hometinue();
 
@@ -1558,6 +1562,7 @@ main();
 
 import "./css/ForkTheme.css";
 import "./css/ForkUI.css";
+import "./css/VvertaxYou.css";
 
 import "./css/ForkSettings.css";
 

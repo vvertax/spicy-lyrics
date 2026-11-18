@@ -5,7 +5,8 @@ import {PopupModal}from "../components/Modal.ts";
 import React from 'react';
 import {createRoot} from 'react-dom/client';
 import PageView,{PageContainer}from '../components/Pages/PageView.ts';
-import ApplyLyrics from '../utils/Lyrics/Global/Applyer.ts';
+import ApplyLyrics,{ApplyLyricsIfCurrent}from '../utils/Lyrics/Global/Applyer.ts';
+import {getDisplayedLyrics}from '../utils/Lyrics/DisplayedLyrics.ts';
 import fetchLyrics from './adapters/fetchLyrics.ts';
 import Defaults from '../components/Global/Defaults.ts';
 import Global from '../components/Global/Global.ts';
@@ -15,7 +16,6 @@ import {quoteCard}from '../components/Utils/CreativeTools.ts';
 import {reviewLyrics,compareTTML}from '../components/Utils/ReviewTools.ts';
 import {openTTMLCheck}from '../components/Utils/TTMLCheckPanel.ts';
 import {initSubtitleBar}from '../components/Utils/SubtitleBar.ts';
-import {setExperiment}from '../utils/experiments.ts';
 import {localizeDocument}from '../utils/i18n/runtime.ts';
 import LoadFonts from '../components/Styling/Fonts.ts';
 import {state,track,position,seek,next,toggle,events,uri,unavailable}from './environment.ts';
@@ -51,11 +51,15 @@ async function feature(name:string){for(const dialog of document.querySelectorAl
  if(name==='settings')settingsTab();
  if(name==='history')settingsTab('History');
  if(name==='experiments')settingsTab('Experiments');
- if(name==='cards')await quoteCard(document);
+ if(name==='cards'){
+   const current=uri();
+   if(!getDisplayedLyrics(current))await ApplyLyricsIfCurrent(current,await fetchLyrics(current));
+   await quoteCard(document);
+ }
  if(name==='review')reviewLyrics(document);
  if(name==='check'){openTTMLCheck(document);const input=document.querySelector<HTMLInputElement>('.vv-ttml-check input[type=file]');if(input){const transfer=new DataTransfer();transfer.items.add(new File([compareA.replace('</div>','<p begin="30s" end="29s">Timing example</p></div>')],'demo-check.ttml',{type:'application/xml'}));input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));}}
  if(name==='compare'){compareTTML(document);const inputs=document.querySelectorAll<HTMLInputElement>('.vv-page-comparison input[type=file]');for(const [i,input]of [...inputs].entries()){const transfer=new DataTransfer();transfer.items.add(new File([i?compareB:compareA],`demo-${i?'B':'A'}.ttml`,{type:'application/xml'}));input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));}}
- if(name==='subtitles'){setExperiment('subtitleBar',true);stores.$subtitlePanelVisible.set(true);await PageView.Destroy();const hint=document.createElement('div');hint.className='preview-library';hint.textContent=t('Лирика остаётся рядом, пока вы выбираете музыку.','Lyrics stay with you while you browse music.');stage.replaceChildren(hint);}
+ if(name==='subtitles'){stores.$subtitlesEnabled.set(true);await PageView.Destroy();const hint=document.createElement('div');hint.className='preview-library';hint.textContent=t('Лирика остаётся рядом, пока вы выбираете музыку.','Lyrics stay with you while you browse music.');stage.replaceChildren(hint);}
  if(name==='author'){rememberAuthor({id:'11111',username:'demo',displayName:'Spicy Lyrics Demo',avatar:new URL(track().cover,location.href).href});showIframeProfileModal('11111',document,{signal:new AbortController().signal,onState:()=>{}});}
  if(name==='preload'){state.announcePrefetch=true;stores.$prefetchNextLyrics.set(true);window.dispatchEvent(new Event('online'));window.dispatchEvent(new CustomEvent('preview:notice',{detail:t('Готовим текст следующего демо-трека. Нажмите «Следующая» после уведомления.','Preparing next demo lyrics. Press Next after the notification.')}));}
 }

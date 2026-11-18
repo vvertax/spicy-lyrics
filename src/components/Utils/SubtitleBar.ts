@@ -4,8 +4,7 @@ import { createSubtitleReel } from "./SubtitleReel.ts";
 import { createSubtitlePresence } from "./SubtitlePresence.ts";
 import { onAnimationFrame } from "../../utils/AnimationFrameLoop.ts";
 import { Icons } from "../Styling/Icons.ts";
-import { $experiment } from "../../utils/experiments.ts";
-import { $subtitlePanelVisible, $playbackOffset, $songPlaybackOffsets, $seekFadeCompensation, $uiLanguage, $simpleLyricsMode } from "../../utils/stores.ts";
+import { $subtitlesEnabled, $playbackOffset, $songPlaybackOffsets, $seekFadeCompensation, $uiLanguage, $simpleLyricsMode } from "../../utils/stores.ts";
 import { effectiveOffset } from "../../utils/Lyrics/PlaybackOffsets.ts";
 import { getDisplayedLyrics } from "../../utils/Lyrics/DisplayedLyrics.ts";
 import fetchLyrics from "../../utils/Lyrics/fetchLyrics.ts";
@@ -27,7 +26,7 @@ export function initSubtitleBar() {
   let stop: (() => void) | undefined;
   let removeClosing: (() => void) | undefined;
   const sync = () => {
-    const enabled = $experiment("subtitleBar").get() && $subtitlePanelVisible.get();
+    const enabled = $subtitlesEnabled.get();
     stop?.(); stop = undefined;
     if (!enabled) return;
     removeClosing?.(); removeClosing = undefined;
@@ -44,7 +43,11 @@ export function initSubtitleBar() {
     const stage = document.createElement("div"); stage.className = "sl-subtitle-stage";
     const lyrics = document.createElement("div"); lyrics.className = "sl-subtitle-lyrics sl-lyrics-fragment";
     const close = document.createElement("button"); close.type = "button"; close.className = "sl-subtitle-close";
-    close.innerHTML = Icons.Close; close.onclick = () => $subtitlePanelVisible.set(false);
+    close.innerHTML = Icons.Close;
+    close.onclick = () => {
+      $subtitlesEnabled.set(false);
+      document.querySelector<HTMLElement>(".sl-quick-control#subtitles")?.focus();
+    };
     stage.append(lyrics); bar.append(watermark, artwork, stage, close); document.body.append(bar); bar.hidden = true;
     let uri: string | undefined, lines: SubtitleLine[] = [], backingLines: SubtitleLine[] = [], generation = 0, disposed = false;
     let source: any = null, loading = false, footer: Element | null = null;
@@ -129,6 +132,5 @@ export function initSubtitleBar() {
       removeClosing = remove; void exit.then(remove);
     };
   };
-  $experiment("subtitleBar").listen(sync);
-  $subtitlePanelVisible.subscribe(sync);
+  $subtitlesEnabled.subscribe(sync);
 }

@@ -61,6 +61,7 @@ export function Row({
   const hiddenSettingIds = useStore($hiddenSettingIds);
   const isHidden = settingId && hiddenSettingIds.includes(settingId);
   if (favoritesOnly && !favorite) return null;
+  if (showHidden && !isHidden) return null;
   if (settingId && isHidden && allowHidingSettings && !showHidden && !showHiddenInSearch && revealedSetting !== settingId) return null;
   const toggleVisibility = () => {
     if (!settingId) return;
@@ -78,7 +79,7 @@ export function Row({
           <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill={favorite ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6"><path d="m12 3 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2-5.7-3-5.7 3 1.1-6.2-4.5-4.4 6.3-.9Z"/></svg>
         </button>}
         {settingId && settingId !== "advanced-hide-settings" && ((showHidden && isHidden) || (allowHidingSettings && !hideHidingIcon)) && (
-          <button className="sl-sp-btn sl-sp-visibility-btn" onClick={toggleVisibility} aria-label={`${isHidden ? "Restore" : "Hide"} ${label}`} title={`${isHidden ? "Restore" : "Hide"} setting`}>
+          <button type="button" className="sl-sp-btn sl-sp-visibility-btn sl-sp-eye-btn" onClick={toggleVisibility} aria-label={`${isHidden ? "Restore" : "Hide"} ${label}`} title={`${isHidden ? "Restore" : "Hide"} setting`}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1.5 8s2.3-4 6.5-4 6.5 4 6.5 4-2.3 4-6.5 4-6.5-4-6.5-4Z" stroke="currentColor" strokeWidth="1.4"/><circle cx="8" cy="8" r="1.8" stroke="currentColor" strokeWidth="1.4"/>{!isHidden && <path d="M2 2l12 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>}</svg>
           </button>
         )}

@@ -8,6 +8,14 @@ export function translateUi(text: string, language: Language): string {
   if(dictionary[core])return text.replace(text.trim(),dictionary[core]);
   if(core.startsWith("Code: "))return `Код: ${core.slice(6)}`;
   const available=core.match(/^Version (.+) is out$/);
+  const fixAvailable=core.match(/^Update available for (.+)$/);
+  if(fixAvailable)return `Доступно обновление для ${fixAvailable[1]}`;
+  const fix=core.match(/^Fix #(\d+)$/);
+  if(fix)return `Исправление №${fix[1]}`;
+  const installedFix=core.match(/^Fix #(\d+) for (.+) is now installed\.$/);
+  if(installedFix)return `Исправление №${installedFix[1]} для версии ${installedFix[2]} установлено.`;
+  const appliedHotfix=core.match(/^Hotfix (\d+)$/);
+  if(appliedHotfix)return `Хотфикс ${appliedHotfix[1]}`;
   if(available)return `Доступна версия ${available[1]}`;
   const updateToast=core.match(/^Spicy Lyrics (.+) is out$/);
   if(updateToast)return `Доступна Spicy Lyrics ${updateToast[1]}`;
@@ -19,7 +27,7 @@ export function translateUi(text: string, language: Language): string {
   if(differences)return `${differences[1]} строк с различиями · текст / тайминг`;
   const shortcut=core.split(" · ");
   if(shortcut.length>1&&dictionary[shortcut[0]])return text.replace(shortcut[0],dictionary[shortcut[0]]);
-  const lines=core.match(/^(\d+) \/ 12 lines$/);if(lines)return `${lines[1]} / 12 строк`;
+  const lines=core.match(/^(\d+) \/ (\d+) lines$/);if(lines)return `${lines[1]} / ${lines[2]} строк`;
   const version=core.match(/^(Updated to|Changed to|Loaded|Showing) (.+)$/);
   if(version)return `${({"Updated to":"Обновлено до","Changed to":"Версия изменена на","Loaded":"Загружено","Showing":"Показано"} as Record<string,string>)[version[1]]} ${version[2]}`;
   const moved=core.match(/^Move (.+) (up|down)$/);

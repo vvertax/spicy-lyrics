@@ -1,32 +1,8 @@
-import { forkReleaseHost } from "./ForkReleaseHost.ts";
-const CHANNEL_PREFIX = "SpicyLyrics-";
-const DEFAULT_API_HOST = "api.spicylyrics.org";
+import { DEFAULT_API_HOST, selectedChannel } from "./SelectedChannel.ts";
+import { fetchHotfix, usesForkHotfix } from "../../../builds/main/release-hotfix.mjs";
 const VERSION_TIMEOUT_MS = 5000;
 
-type ChannelHosts = [string, string] | [string, string, string];
-
-function selectedChannel(): { apiHost: string; fixedVersion: string | null; storageHost?: string } {
-  const name = Spicetify.LocalStorage.get(`${CHANNEL_PREFIX}buildChannel`) ?? "vvertax Edition";
-  if (name === "vvertax Edition" || name === "SL") return { apiHost: forkReleaseHost(), fixedVersion: null };
-  if (name === "Stable" || name === "Beta") return { apiHost: DEFAULT_API_HOST, storageHost: "public.storage.spicylyrics.org", fixedVersion: null };
-
-  try {
-    const custom = JSON.parse(Spicetify.LocalStorage.get(`${CHANNEL_PREFIX}customChannels`) ?? "{}");
-    const hosts = custom?.[name] as ChannelHosts | undefined;
-    if (Array.isArray(hosts) && typeof hosts[0] === "string") {
-      return {
-        apiHost: hosts[0],
-        storageHost: hosts[1],
-        fixedVersion: typeof hosts[2] === "string" && hosts[2].trim() ? hosts[2].trim() : null,
-      };
-    }
-  } catch {
-    // Match the entrypoint's SL fallback when stored channels are invalid.
-  }
-  return { apiHost: forkReleaseHost(), fixedVersion: null };
-}
-
-export async function fetchSelectedChannelVersion(): Promise<string | undefined> {
+export async function fetchSelectedChannelRelease() {
   const channel = selectedChannel();
   if (channel.fixedVersion) return undefined;
 
@@ -46,7 +22,8 @@ export async function fetchSelectedChannelVersion(): Promise<string | undefined>
     if (typeof version !== 'string' || !/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(version)) {
       throw new Error(`Unexpected version response: ${JSON.stringify(String(version).slice(0, 40))}`);
     }
-    return version;
+    const hotfix = usesForkHotfix(channel) ? await fetchHotfix(channel.apiHost, controller.signal) : undefined;
+    return { version, hotfix, host: channel.apiHost };
   } finally {
     window.clearTimeout(timeout);
   }

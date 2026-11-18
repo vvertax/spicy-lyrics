@@ -3,11 +3,18 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { transform } from "esbuild";
 const { code } = await transform(readFileSync(new URL("../src/components/Utils/ControlLayout.ts",import.meta.url),"utf8"),{loader:"ts",format:"esm"});
-const { controlId, normalizeQuickControls, QUICK_CONTROLS } = await import(`data:text/javascript;base64,${Buffer.from(code).toString("base64")}`);
+const { controlId, normalizeQuickControls, QUICK_CONTROLS, orderedQuickControls, moveQuickControl } = await import(`data:text/javascript;base64,${Buffer.from(code).toString("base64")}`);
 test("quick settings ignore invalid persisted entries and duplicates",()=>assert.deepEqual(normalizeQuickControls(["SettingsToggle","invalid",null,"SettingsToggle","karaoke"]),["SettingsToggle","karaoke"]));
 test("shortcut labels retain stable control IDs",()=>assert.equal(controlId("","Karaoke · Alt+Shift+K"),"karaoke"));
 test("existing controls retain their original IDs",()=>assert.equal(controlId("RomanizationToggle","Enable Romanization"),"RomanizationToggle"));
 test("all quick action identifiers are unique",()=>assert.equal(new Set(QUICK_CONTROLS.map(([id])=>id)).size,QUICK_CONTROLS.length));
+test("reordering preserves hidden slots and appends newly pinned actions",()=>{
+ const pinned=["subtitles","quote","review"];
+ assert.deepEqual(orderedQuickControls(pinned,null,["quote","subtitles","review"]),["quote","subtitles","review"]);
+ const edited=moveQuickControl(["quote","subtitles","review"],["quote","review"],"quote","review");
+ assert.deepEqual(edited,["review","subtitles","quote"]);
+ assert.deepEqual(orderedQuickControls([...pinned,"karaoke"],edited,[]),["review","subtitles","quote","karaoke"]);
+});
 
 const {code:presentationCode}=await transform(readFileSync(new URL("../src/components/Utils/ControlPresentation.ts",import.meta.url),"utf8"),{loader:"ts",format:"esm"});
 const {prepareMenuButton,controlMenuPlacement}=await import(`data:text/javascript;base64,${Buffer.from(presentationCode).toString('base64')}`);

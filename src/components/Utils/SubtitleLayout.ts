@@ -11,10 +11,12 @@ export function bindSubtitleLayout(bar: HTMLElement, handle: HTMLElement, close:
   const doc = bar.ownerDocument, win = doc.defaultView!;
   const t = (text: string) => translateUi(text, $uiLanguage.get());
   const actions = doc.createElement("div"); actions.className = "sl-subtitle-actions";
-  const gear = doc.createElement("button"); gear.type = "button"; gear.className = "sl-subtitle-close"; gear.innerHTML = Icons.Settings;
+  const gear = doc.createElement("button"); gear.type = "button"; gear.className = "sl-subtitle-close sl-subtitle-settings"; gear.innerHTML = Icons.SubtitleLayout;
   gear.setAttribute("aria-label", t("Subtitle layout")); gear.title = t("Subtitle layout");
   close.before(actions); actions.append(gear, close);
   const panel = doc.createElement("div"); panel.className = "sl-subtitle-layout"; panel.hidden = true;
+  panel.id = "sl-subtitle-layout-options";
+  gear.setAttribute("aria-controls", panel.id);
   panel.setAttribute("role", "region"); panel.setAttribute("aria-label", t("Subtitle layout"));
   const heading = doc.createElement("div"); heading.className = "sl-subtitle-layout-heading";
   const title = doc.createElement("strong"); title.textContent = t("Subtitle layout"); heading.append(title);
@@ -48,32 +50,35 @@ export function bindSubtitleLayout(bar: HTMLElement, handle: HTMLElement, close:
   const footer = doc.createElement("div"); footer.className = "sl-subtitle-layout-footer"; footer.append(hint, reset);
   panel.append(heading, presets, sizing, footer); bar.append(panel);
   gear.setAttribute("aria-expanded", "false");
-  gear.onclick = () => {
-    panel.hidden = !panel.hidden; gear.setAttribute("aria-expanded", String(!panel.hidden));
+  function setPanelOpen(open: boolean) {
+    panel.hidden = !open; gear.setAttribute("aria-expanded", String(open));
     if (!panel.hidden && !win.matchMedia("(prefers-reduced-motion: reduce)").matches)
       panel.animate([{ opacity: 0, transform: "translateY(-5px)" }, { opacity: 1, transform: "translateY(0)" }], { duration: 180, easing: "ease-out" });
-  };
-  const grip = doc.createElement("button"); grip.type = "button"; grip.className = "sl-subtitle-resize";
-  grip.textContent = "↔"; grip.setAttribute("aria-label", t("Resize subtitles")); bar.append(grip);
-  handle.title = t("Drag subtitles"); handle.tabIndex = 0; handle.role = "button"; handle.setAttribute("aria-label", t("Drag subtitles")); handle.style.touchAction = grip.style.touchAction = "none";
+  }
+  gear.onclick = () => setPanelOpen(panel.hidden);
+  bar.addEventListener("keydown", event => {
+    if (event.key !== "Escape" || panel.hidden) return;
+    event.preventDefault(); event.stopPropagation(); setPanelOpen(false); gear.focus();
+  });
+  handle.title = t("Drag subtitles"); handle.tabIndex = 0; handle.role = "button"; handle.setAttribute("aria-label", t("Drag subtitles")); handle.style.touchAction = "none";
   handle.ondragstart = e => e.preventDefault();
-  let drag: { id: number; node: HTMLElement; resize: boolean; x: number; y: number; left: number; top: number; width: number } | undefined;
-  const down = (e: PointerEvent, resize: boolean) => {
-    if (e.button !== 0) return; e.preventDefault(); const rect = bar.getBoundingClientRect();
-    const node = resize ? grip : handle; node.setPointerCapture(e.pointerId);
-    drag = { id: e.pointerId, node, resize, x: e.clientX, y: e.clientY, left: rect.left, top: rect.top, width: rect.width };
+  let drag: { id: number; x: number; y: number; left: number; top: number } | undefined;
+  handle.onpointerdown = e => {
+    if (e.button !== 0 || drag) return;
+    e.preventDefault();
+    const rect = bar.getBoundingClientRect();
+    handle.setPointerCapture(e.pointerId);
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, left: rect.left, top: rect.top };
   };
-  const move = (e: PointerEvent) => {
+  handle.onpointermove = e => {
     if (!drag || drag.id !== e.pointerId) return;
-    if (drag.resize) save({ width: clamp(drag.width + e.clientX - drag.x, 320, 1200) });
-    else save({ anchor: "free", x: clamp((drag.left + e.clientX - drag.x - 12) / Math.max(1, win.innerWidth - bar.offsetWidth - 24), 0, 1),
+    save({ anchor: "free", x: clamp((drag.left + e.clientX - drag.x - 12) / Math.max(1, win.innerWidth - bar.offsetWidth - 24), 0, 1),
       y: clamp((drag.top + e.clientY - drag.y - 12) / Math.max(1, win.innerHeight - bar.offsetHeight - 24), 0, 1) });
   };
-  const up = () => { drag = undefined; };
-  handle.onpointerdown = e => down(e, false); grip.onpointerdown = e => down(e, true);
-  for (const node of [handle, grip]) { node.addEventListener("pointermove", move); node.addEventListener("pointerup", up); node.addEventListener("pointercancel", up); node.addEventListener("lostpointercapture", up); }
+  handle.onpointerup = handle.onpointercancel = handle.onlostpointercapture = e => {
+    if (drag?.id === e.pointerId) drag = undefined;
+  };
   handle.onkeydown = e => { if (!e.key.startsWith("Arrow")) return; e.preventDefault(); const rect = bar.getBoundingClientRect(); save({ anchor: "free", x: clamp((rect.left - 12 + (e.key === "ArrowRight" ? 20 : e.key === "ArrowLeft" ? -20 : 0)) / Math.max(1, win.innerWidth - bar.offsetWidth - 24), 0, 1), y: clamp((rect.top - 12 + (e.key === "ArrowDown" ? 20 : e.key === "ArrowUp" ? -20 : 0)) / Math.max(1, win.innerHeight - bar.offsetHeight - 24), 0, 1) }); };
-  grip.onkeydown = e => { if (!["ArrowLeft", "ArrowRight"].includes(e.key)) return; e.preventDefault(); save({ width: clamp(normalizedSubtitleLayout($subtitleLayout.get()).width + (e.key === "ArrowRight" ? 20 : -20), 320, 1200) }); };
   const position = () => {
     const value = normalizedSubtitleLayout($subtitleLayout.get());
     bar.style.width = `${Math.min(value.width, Math.max(0, win.innerWidth - 24))}px`;
@@ -90,5 +95,5 @@ export function bindSubtitleLayout(bar: HTMLElement, handle: HTMLElement, close:
     range.style.setProperty("--subtitle-range-progress", `${(value.width - 320) / 880 * 100}%`);
   };
   const unsubscribe = $subtitleLayout.subscribe(position);
-  return { position, destroy() { unsubscribe(); panel.remove(); grip.remove(); } };
+  return { position, destroy() { unsubscribe(); panel.remove(); } };
 }

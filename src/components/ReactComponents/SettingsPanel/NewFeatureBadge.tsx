@@ -30,7 +30,10 @@ const NEW_FEATURES = new Set<string>(
   "Interface Design",
   "Romanization Under the Lyrics",
   "Diagnostic report",
-  "Settings history"
+  "Settings history",
+  // 1.12.0: synced track badges and vvertax You palettes.
+  "syncedLyricsTrackBadges",
+  "vvertaxYouPalette",
 ]);
 export function isNewFeature(id: string | undefined): boolean { return Boolean(id && NEW_FEATURES.has(id)); }
 export default function NewFeatureBadge() { return <span className="sl-sp-new-badge">New</span>; }

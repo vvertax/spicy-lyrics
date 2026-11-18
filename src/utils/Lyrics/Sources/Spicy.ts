@@ -4,6 +4,7 @@ import { Query } from "../../API/Query.ts";
 import { SLObjPack } from "../../objpack.ts";
 import { resolveLyricsSourceLabel } from "../LyricsSourcePreferences.ts";
 import { tryGetSongWriters } from "./Shared.ts";
+import { rememberSpicyLyricsAvailability } from "../SyncedTrackAvailability.ts";
 import type { ExternalLyricsResult } from "./Types.ts";
 
 const spicyLyricsPacker = new SLObjPack();
@@ -57,6 +58,7 @@ export async function fetchSpicyLyricsRaw(trackId: string, signal?: AbortSignal)
       return null;
     }
 
+    void rememberSpicyLyricsAvailability(trackId, lyrics).catch(() => {});
     return {
       lyrics: {
         ...(lyrics as Record<string, any>),

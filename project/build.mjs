@@ -2,12 +2,14 @@ import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { createRequire } from "node:module";
+import { hotfixBundleName, parseHotfix } from "../builds/main/release-hotfix.mjs";
 
 const require = createRequire(import.meta.url);
 
 function parseArgs(args) {
   let version;
   let targetDir;
+  let hotfix = 0;
   let testBuild = false;
   const positional = [];
 
@@ -27,6 +29,11 @@ function parseArgs(args) {
 
     if (arg.startsWith("--version=")) {
       version = arg.slice("--version=".length);
+      continue;
+    }
+
+    if (arg === "--hotfix" || arg.startsWith("--hotfix=")) {
+      hotfix = parseHotfix(arg === "--hotfix" ? args[++i] : arg.slice("--hotfix=".length));
       continue;
     }
 
@@ -63,7 +70,7 @@ function parseArgs(args) {
     targetDir ??= positional[0];
   }
 
-  return { version, targetDir, testBuild };
+  return { version, targetDir, testBuild, hotfix };
 }
 
 function readProjectName() {
@@ -108,18 +115,18 @@ function writeFileReplacing(destination, contents) {
 const TEST_BUILD_VERSION = "100.10.0";
 const parsedArgs = parseArgs(process.argv.slice(2));
 const version = parsedArgs.testBuild ? TEST_BUILD_VERSION : (parsedArgs.version ?? String(require("node:fs").readFileSync(resolve("project/config.ts"))).match(/ProjectVersion\s*=\s*["']([^"']+)["']/)?.[1]);
-const { targetDir } = parsedArgs;
+const { targetDir, hotfix } = parsedArgs;
 
 if (!version) {
   console.error("Usage: bun run build --version <version> [outputDir]");
-  console.error("   or: node project/build.mjs --version <version> [outputDir]");
+  console.error("   or: node project/build.mjs [--version <version>] [--hotfix=<number>] [outputDir]");
   console.error("   or: node project/build.mjs -test [outputDir]");
   process.exit(1);
 }
 
 const projectName = readProjectName();
 const defaultDist = resolve("dist");
-const outputFile = `${projectName}@${version}.mjs`;
+const outputFile = hotfixBundleName(version, hotfix);
 const creatorBin = require.resolve("@spicemod/creator/bin");
 
 const result = spawnSync(process.execPath, [creatorBin, "build", "--no-copy"], {
@@ -127,6 +134,7 @@ const result = spawnSync(process.execPath, [creatorBin, "build", "--no-copy"], {
   env: {
     ...process.env,
     SPICY_LYRICS_BUILD_VERSION: version,
+    SPICY_LYRICS_BUILD_HOTFIX: String(hotfix),
   },
   stdio: "inherit",
 });
@@ -141,6 +149,7 @@ try {
   copyFileReplacing(builtFile, versionedOutput);
   if (!parsedArgs.testBuild) {
     writeFileReplacing(join(defaultDist, "version"), version);
+    writeFileReplacing(join(defaultDist, "hotfix"), String(hotfix));
   }
 
   if (targetDir) {
@@ -149,6 +158,7 @@ try {
     copyFileReplacing(versionedOutput, join(dest, outputFile));
     if (!parsedArgs.testBuild) {
       writeFileReplacing(join(dest, "version"), version);
+      writeFileReplacing(join(dest, "hotfix"), String(hotfix));
     }
     console.log(`Copied ${parsedArgs.testBuild ? "test " : ""}build to ${dest}`);
   }

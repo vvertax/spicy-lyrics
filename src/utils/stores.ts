@@ -1,4 +1,5 @@
-import { registerDesignDocument, setInterfaceDesign } from "./InterfaceDesign.ts";
+import { registerDesignDocument, setInterfaceDesign, setVvertaxYouPalette, setVvertaxYouCustomColor, type InterfaceDesign, type VvertaxYouPalette } from "./InterfaceDesign.ts";
+import { DEFAULT_CUSTOM_COLOR } from "./CustomPalette.ts";
 import { settingsHistory } from "./SettingsHistory.ts";
 import { atom, computed, type WritableAtom } from "nanostores";
 import { ProjectVersion } from "../../project/config.ts";
@@ -35,6 +36,12 @@ function migrateSettingsKeys(blob: Record<string, any>): Record<string, any> {
     "experiment:duetLinePadding": "duetLinePadding",
   };
   let changed = false;
+  if ("experiment:subtitleBar" in blob || "subtitlePanelVisible" in blob) {
+    blob.subtitlesEnabled ??= blob["experiment:subtitleBar"] === true && blob.subtitlePanelVisible !== false;
+    delete blob["experiment:subtitleBar"];
+    delete blob.subtitlePanelVisible;
+    changed = true;
+  }
   if ("experiment:ctrlWheelLyricsZoom" in blob) {
     blob.ctrlWheelLyricsZoom ??= blob["experiment:ctrlWheelLyricsZoom"];
     delete blob["experiment:ctrlWheelLyricsZoom"];
@@ -411,6 +418,7 @@ export const $currentlyFetching = atom<boolean>(false);
 export const $currentLyricsData = atom<string>("");
 
 export const $quickControlIds = persistAtom<string[]>("quickControlIds", []);
+export const $quickControlOrder = persistAtom<string[] | null>("quickControlOrder", null);
 
 export const $uiLanguage = persistAtom<"en" | "ru">("uiLanguage", typeof navigator !== "undefined" && navigator.language.toLowerCase().startsWith("ru") ? "ru" : "en");
 
@@ -420,8 +428,8 @@ export const $duetOtherColor=persistAtom<string>("duetOtherColor","#ffb4cd");
 
 export const $favoriteSettings = persistAtom<string[]>("favoriteSettings", []);
 
-// Panel visibility is independent of the experimental feature's availability.
-export const $subtitlePanelVisible = persistAtom<boolean>("subtitlePanelVisible", true);
+// Both the floating panel and the quick action use this preference.
+export const $subtitlesEnabled = persistAtom<boolean>("subtitlesEnabled", false);
 export type SubtitleLayout = { anchor: "player" | "top" | "corner" | "free"; width: number; x: number; y: number };
 export const $subtitleLayout = persistAtom<SubtitleLayout>("subtitleLayout", { anchor: "player", width: 780, x: .5, y: .5 });
 export const $showLyricsSourceInfo = persistAtom<boolean>("showLyricsSourceInfo", false);
@@ -430,8 +438,12 @@ export const $showScrollResumeIndicator = persistAtom<boolean>("showScrollResume
 export const $prefetchNextLyrics = persistAtom<boolean>("prefetchNextLyrics", true);
 
 /** Settings appearance only; lyric rendering keeps its own style. */
-export const $settingsDesign = persistAtom<"ruytha" | "original">("settingsDesign", "ruytha");
+export const $settingsDesign = persistAtom<InterfaceDesign>("settingsDesign", "ruytha");
+export const $vvertaxYouPalette = persistAtom<VvertaxYouPalette>("vvertaxYouPalette", "gray");
+export const $vvertaxYouCustomColor = persistAtom("vvertaxYouCustomColor", DEFAULT_CUSTOM_COLOR);
 
+$vvertaxYouCustomColor.subscribe(setVvertaxYouCustomColor);
+$vvertaxYouPalette.subscribe(setVvertaxYouPalette);
 $settingsDesign.subscribe(setInterfaceDesign);
 if (typeof document !== "undefined") registerDesignDocument(document);
 

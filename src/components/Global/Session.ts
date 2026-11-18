@@ -1,5 +1,6 @@
 import { $spicyLyricsVersion } from "../../utils/stores.ts";
-import { fetchSelectedChannelVersion } from "../../utils/version/ChannelVersion.ts";
+import { fetchSelectedChannelRelease } from "../../utils/version/ChannelVersion.ts";
+import { ProjectHotfix } from "../../../project/config.ts";
 import Global from "./Global.ts";
 
 interface Location {
@@ -15,6 +16,8 @@ type VersionParsedData =
       Major: number;
       Minor: number;
       Patch: number;
+      Hotfix?: number;
+      Host?: string;
     }
   | undefined;
 
@@ -64,7 +67,7 @@ const Session = {
     sessionHistory.push(data);
   },
   SpicyLyrics: {
-    ParseVersion: (version: string): VersionParsedData => {
+    ParseVersion: (version: string, hotfix?: number, host?: string): VersionParsedData => {
       const versionMatches = version.match(/(\d+)\.(\d+)\.(\d+)/);
 
       if (versionMatches === null) {
@@ -77,14 +80,17 @@ const Session = {
         Major: parseInt(versionMatches[1]),
         Minor: parseInt(versionMatches[2]),
         Patch: parseInt(versionMatches[3]),
+        Hotfix: hotfix,
+        Host: host,
       };
     },
     GetCurrentVersion: (): VersionParsedData => {
-      return Session.SpicyLyrics.ParseVersion($spicyLyricsVersion.get());
+      const loaded = window._spicy_lyrics_metadata;
+      return Session.SpicyLyrics.ParseVersion($spicyLyricsVersion.get(), loaded?.LoadedHotfix ?? ProjectHotfix, loaded?.LoadedApiHost);
     },
     GetLatestVersion: async (): Promise<VersionParsedData> => {
-      const version = await fetchSelectedChannelVersion();
-      return version ? Session.SpicyLyrics.ParseVersion(version) : undefined;
+      const release = await fetchSelectedChannelRelease();
+      return release ? Session.SpicyLyrics.ParseVersion(release.version, release.hotfix, release.host) : undefined;
     },
     /**
      * Compares two parsed versions.
@@ -94,6 +100,8 @@ const Session = {
       if (a.Major !== b.Major) return a.Major > b.Major ? 1 : -1;
       if (a.Minor !== b.Minor) return a.Minor > b.Minor ? 1 : -1;
       if (a.Patch !== b.Patch) return a.Patch > b.Patch ? 1 : -1;
+      if (a.Host && b.Host && a.Host !== b.Host) return 0;
+      if (a.Hotfix !== undefined && b.Hotfix !== undefined && a.Hotfix !== b.Hotfix) return a.Hotfix > b.Hotfix ? 1 : -1;
       return 0;
     },
     /**

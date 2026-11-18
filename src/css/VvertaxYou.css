@@ -1,0 +1,515 @@
+/* Material 3 grey roles and shape scale adapted from tokens.css and material.css. */
+:root[data-sl-design="vvertax-you"] {
+  --you-surface: #131313;
+  --you-container: #1f1f1f;
+  --you-container-high: #2a2a2a;
+  --you-text: #e2e2e2;
+  --you-muted: #c6c6c6;
+  --you-outline: #919191;
+  --you-divider: #474747;
+  --you-primary: #c6c6c6;
+  --you-on-primary: #303030;
+  --you-tonal: #474747;
+  --you-on-tonal: #e2e2e2;
+  --you-scheme: dark;
+}
+
+:root[data-sl-design="vvertax-you"][data-sl-palette="lavender"] {
+  --you-surface: oklch(.235 .08 297);
+  --you-container: oklch(.278 .074 297);
+  --you-container-high: oklch(.335 .077 297);
+  --you-text: oklch(.955 .022 297);
+  --you-muted: #c2afd9;
+  --you-outline: #a28cbf;
+  --you-divider: #5a4675;
+  --you-primary: #dbc4fa;
+  --you-on-primary: oklch(.25 .09 297);
+  --you-tonal: #55416f;
+  --you-on-tonal: #f1e3fc;
+}
+
+:root[data-sl-design="vvertax-you"][data-sl-palette="green"] {
+  --you-surface: #101610;
+  --you-container: #1c231b;
+  --you-container-high: #272f25;
+  --you-text: #dfe5d8;
+  --you-muted: #c0cbbb;
+  --you-outline: #8b9987;
+  --you-divider: #414d40;
+  --you-primary: #a1d49d;
+  --you-on-primary: #123817;
+  --you-tonal: #2d4f30;
+  --you-on-tonal: #c5edbd;
+}
+
+:root[data-sl-design="vvertax-you"][data-sl-palette="white"] {
+  --you-surface: #fff;
+  --you-container: #f3f3f3;
+  --you-container-high: #e8e8e8;
+  --you-text: #1b1b1b;
+  --you-muted: #474747;
+  --you-outline: #777;
+  --you-divider: #c6c6c6;
+  --you-primary: #4b4b4b;
+  --you-on-primary: #fff;
+  --you-tonal: #e2e2e2;
+  --you-on-tonal: #303030;
+  --you-scheme: light;
+}
+
+:root[data-sl-design="vvertax-you"] {
+  :is(.sl-notice-overlay .sl-notice, [data-sonner-toast].sl-update-toast[data-styled="true"]) {
+    --sl-field: var(--you-container-high);
+    --sl-field-deep: var(--you-container-high);
+    --sl-ink: var(--you-text);
+    --sl-ink-muted: var(--you-muted);
+    --sl-cta: var(--you-primary);
+    --sl-cta-ink: var(--you-on-primary);
+    --sl-tint: color-mix(in oklab, var(--you-primary) 24%, transparent);
+    color-scheme: var(--you-scheme);
+  }
+
+  .sl-notice-overlay .sl-notice {
+    border-color: var(--you-divider);
+    border-radius: 28px;
+    background: var(--sl-field);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: 0 12px 36px rgb(0 0 0 / .25);
+    font-family: system-ui, sans-serif;
+  }
+
+  .sl-notice .sl-notice-brand { color: var(--you-primary); }
+  .sl-notice .sl-notice-title { font-weight: 600; }
+  .sl-notice .sl-notice-button { border-radius: 999px; }
+  .sl-notice .sl-notice-button--primary:hover {
+    background-color: color-mix(in oklab, var(--you-primary) 88%, var(--you-on-primary));
+  }
+  .sl-notice :is(button, a):focus-visible { outline-color: var(--you-primary); }
+  .sl-notice-patch-notes {
+    background: var(--you-container);
+    border-color: var(--you-divider);
+    border-radius: 16px;
+  }
+
+  .sl-sp-custom-palette small { display:block; margin-top:6px; color:var(--you-muted); }
+  .sl-sp-color-field {
+    display:inline-flex; flex-wrap:wrap; align-items:center; gap:6px;
+    max-width:100%; padding:4px; border:1px solid var(--you-divider);
+    border-radius:16px; background:var(--you-container-high);
+  }
+  .sl-sp-color-field > button {
+    display:inline-flex; align-items:center; justify-content:center; gap:5px;
+    min-height:34px; margin:0; padding:4px 6px; border:0; border-radius:12px;
+    color:var(--you-on-tonal); background:var(--you-tonal); cursor:pointer;
+  }
+  .sl-sp-color-field > button:is(:hover,[aria-expanded="true"]) {
+    color:var(--you-on-primary); background:var(--you-primary);
+  }
+  .sl-sp-color-swatch > span {
+    display:block; flex:none; width:24px; height:24px; border-radius:8px;
+    background:var(--palette-picked);
+    box-shadow:inset 0 0 0 1px rgb(255 255 255 / .32),0 0 0 1px rgb(0 0 0 / .24);
+  }
+  .sl-sp-color-swatch svg { width:13px; height:13px; }
+  .sl-sp-color-swatch[aria-expanded="true"] svg { rotate:180deg; }
+  .sl-sp-hex-field {
+    display:flex; align-items:center; gap:4px; padding:0 8px;
+    min-width:0; height:34px; border:1px solid transparent; border-radius:9px;
+    font-size:14px; color:var(--you-muted); cursor:text;
+  }
+  .sl-sp-hex-field:focus-within { border-color:var(--you-primary); }
+  .sl-sp-hex-field:has(input[aria-invalid="true"]) { border-color:var(--you-outline); border-style:dashed; }
+  .sl-sp-hex-field input {
+    box-sizing:content-box; width:7.5ch; min-width:0; padding:0;
+    border:0; background:transparent; color:var(--you-text);
+    font:600 14px system-ui,sans-serif; font-variant-numeric:tabular-nums; letter-spacing:.06em;
+  }
+  sl-generic-modal.SpicyLyricsModal .sl-modal .sl-sp-hex-field input:focus-visible { outline:0; }
+  .sl-sp-color-field > .sl-sp-copy-color { min-width:34px; }
+  .sl-sp-copy-color svg { width:16px; height:16px; flex:none; }
+  .sl-sp-palette-picker {
+    display:grid; gap:12px; width:min(100%,320px); margin-top:10px; padding:12px;
+    border:1px solid var(--you-divider); border-radius:16px; background:var(--you-container);
+  }
+  .sl-sp-palette-picker[hidden] { display:none; }
+  .sl-sp-palette-plane {
+    position:relative; height:clamp(90px,19vh,146px); border-radius:10px; cursor:crosshair; touch-action:none;
+    background:linear-gradient(transparent,#000),linear-gradient(90deg,#fff,transparent),var(--palette-hue);
+  }
+  .sl-sp-palette-plane > span {
+    position:absolute; width:15px; height:15px; translate:-50% -50%; pointer-events:none;
+    border:2px solid #fff; border-radius:50%; background:var(--palette-picked); box-shadow:0 0 0 1px #000b;
+  }
+  .sl-sp-palette-hue {
+    appearance:none; display:block; width:100%; min-width:0; height:18px; margin:0;
+    border:0; border-radius:999px; cursor:ew-resize;
+    background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);
+  }
+  .sl-sp-palette-hue::-webkit-slider-thumb {
+    appearance:none; width:15px; height:15px; border:2px solid #fff; border-radius:50%;
+    background:var(--palette-hue); box-shadow:0 0 0 1px #000b;
+  }
+  .sl-sp-palette-hue::-moz-range-thumb {
+    width:12px; height:12px; border:2px solid #fff; border-radius:50%;
+    background:var(--palette-hue); box-shadow:0 0 0 1px #000b;
+  }
+
+  #SpicyLyricsPage .sl-quick-done {
+    color:var(--you-on-primary); background:var(--you-primary); border-color:transparent;
+  }
+  #sl-subtitle-bar {
+    color-scheme:var(--you-scheme);
+    color:var(--you-text);
+    background:var(--you-container);
+    border:1px solid var(--you-divider);
+    border-radius:24px;
+    box-shadow:0 6px 18px rgb(0 0 0 / .27);
+    backdrop-filter:none;
+    --subtitle-you-sung:var(--you-text);
+    --subtitle-you-pending:var(--you-muted);
+    --subtitle-you-next:var(--you-muted);
+
+    .sl-subtitle-artwork { background:var(--you-container-high); color:var(--you-primary); }
+    .sl-subtitle-watermark { color:var(--you-primary); opacity:.12; }
+    .sl-subtitle-block:not(.sl-subtitle-current) .sl-subtitle-lead {
+      opacity:1;
+      --subtitle-you-sung:var(--subtitle-you-next);
+      --subtitle-you-pending:var(--subtitle-you-next);
+    }
+    :is(.line:not(:has(.word,.letter)),.word,.letter) {
+      background-image:linear-gradient(var(--gradient-degrees),
+        var(--subtitle-you-sung) var(--gradient-position),
+        var(--subtitle-you-pending) calc(var(--gradient-position) + 20% + var(--gradient-offset)));
+    }
+    .line.Active :is(.word,.letter,.letterGroup) {
+      text-shadow:0 0 var(--text-shadow-blur-radius,0px)
+        color-mix(in srgb,var(--you-primary) var(--text-shadow-opacity,0%),transparent);
+    }
+    .sl-subtitle-actions button {
+      color:var(--you-on-tonal); background:var(--you-tonal); border-color:var(--you-outline);
+    }
+    .sl-subtitle-actions button:is(:hover,[aria-expanded="true"]) { color:var(--you-on-primary); background:var(--you-primary); }
+    .sl-subtitle-layout {
+      color:var(--you-text); background:var(--you-surface); border:1px solid var(--you-divider);
+      border-radius:12px; padding:12px;
+    }
+    .sl-subtitle-layout :is(.sl-subtitle-layout-heading,.sl-subtitle-sizing,output,.sl-subtitle-layout-hint) { color:var(--you-text); }
+    .sl-subtitle-layout button { color:var(--you-text); background:var(--you-container-high); border-color:var(--you-outline); }
+    .sl-subtitle-layout button:is(:hover,[aria-pressed="true"]) { color:var(--you-on-tonal); background:var(--you-tonal); }
+    .sl-subtitle-sizing input { background:linear-gradient(to right,var(--you-primary) var(--subtitle-range-progress),var(--you-divider) var(--subtitle-range-progress)); }
+    .sl-subtitle-sizing input::-webkit-slider-thumb { background:var(--you-primary); }
+    :is(button,input,[tabindex]):focus-visible { outline:2px solid var(--you-primary); }
+  }
+
+  :is(sl-generic-modal.SpicyLyricsModal, .vv-quote-dialog, .vv-review-dialog, .vv-author-profile, .vv-ttml-check,
+      .vv-line-menu, #SpicyLyricsPage > .sl-fork-menu) {
+    color-scheme: var(--you-scheme);
+    accent-color: var(--you-primary);
+    --you-state: color-mix(in oklab, var(--you-text) 10%, transparent);
+    --ry-bg: var(--you-surface);
+    --ry-sky: var(--you-surface);
+    --ry-text: var(--you-text);
+    --ry-muted: var(--you-muted);
+    --ry-accent: var(--you-primary);
+    --ry-accent-2: var(--you-primary);
+    --ry-accent-3: var(--you-text);
+    --ry-accent-ink: var(--you-on-primary);
+    --ry-line: var(--you-divider);
+    --ry-line-strong: var(--you-outline);
+    --ry-surface: var(--you-container);
+    --ry-surface-2: var(--you-container-high);
+    --ry-font: system-ui, sans-serif;
+    --ry-display: var(--ry-font);
+  }
+
+  sl-generic-modal.SpicyLyricsModal :is(.sl-modal, .sl-modal.slmodal-settingsPanel) {
+    --sl-sp-field: var(--you-container);
+    --sl-sp-field-deep: var(--you-surface);
+    --color-text-primary: var(--you-text);
+    --color-text-secondary: var(--you-muted);
+    --color-text-tertiary: var(--you-muted);
+    --color-text-quaternary: var(--you-outline);
+    --color-text-on-fill: var(--you-on-primary);
+    --color-bg-elevated: var(--you-container-high);
+    --on-material-text-primary: var(--you-text);
+    --on-material-text-secondary: var(--you-muted);
+    --on-material-text-tertiary: var(--you-muted);
+    --on-material-hairline: var(--you-divider);
+    --on-material-hairline-strong: var(--you-outline);
+    --on-material-tint-bg: var(--you-container);
+    --on-material-tint-bg-hover: var(--you-container-high);
+    --hairline: var(--you-divider);
+    --hairline-strong: var(--you-outline);
+    --accent: var(--you-primary);
+    --accent-hover: var(--you-text);
+    --accent-on-fill: var(--you-on-primary);
+    --accent-tint-bg: var(--you-container);
+    --accent-tint-bg-hover: var(--you-container-high);
+    --radius-sm: 12px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+    color: var(--you-text);
+    font-family: var(--ry-font);
+  }
+
+  sl-generic-modal.SpicyLyricsModal .sl-modal-overlay.sl-modal-overlay-animated.Active
+      :is(.sl-modal, .sl-modal.slmodal-settingsPanel)::before {
+    background: var(--you-surface);
+    box-shadow: inset 0 0 0 1px var(--you-divider), 0 12px 32px rgb(0 0 0 / .28);
+    backdrop-filter: none;
+  }
+
+  sl-generic-modal.SpicyLyricsModal.Exp_NewSettingsDesign .sl-modal.slmodal-settingsPanel::after,
+  sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings .sl-sp-pane::before {
+    background: none;
+  }
+
+  sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings {
+    background: var(--you-surface);
+    color: var(--you-text);
+    scrollbar-color: var(--you-outline) transparent;
+
+    .sl-sp-sidebar { background: var(--you-container); }
+    .sl-sp-card {
+      background: color-mix(in srgb, var(--you-container) 65%, transparent);
+      border-color: var(--you-divider);
+    }
+    .sl-sp-tab { border-radius: 999px; color: var(--you-muted); }
+    .sl-sp-tab[data-active] { background: var(--you-tonal); color: var(--you-on-tonal); box-shadow: none; }
+    .sl-sp-tab .sl-sp-tab-icon { background: none; color: inherit; box-shadow: none; }
+    .sl-sp-brand-line { color: var(--you-primary); }
+    .sl-sp-pane-logo {
+      position: absolute;
+      inset: -150px -130px auto auto;
+      z-index: -1;
+      width: 420px;
+      color: var(--you-primary);
+      opacity: .17;
+      pointer-events: none;
+      transform: rotate(-14deg);
+    }
+    .sl-sp-pane-logo svg { display: block; width: 100%; height: auto; fill: currentColor; }
+    @media (max-width: 680px) {
+      .sl-sp-pane-logo { inset: -95px -85px auto auto; width: 300px; }
+    }
+  }
+
+  sl-generic-modal.SpicyLyricsModal .sl-modal {
+    :is(.sl-modal-title, .sl-modal-close-btn, .sl-sp-footer-wordmark) { color: var(--you-text); }
+    :is(.sl-sp-btn, .sl-sp-footer-link, .sl-sp-filter-btn, .sl-ldb-upload-button, .sl-sp-select) {
+      border-radius: 999px;
+      background: var(--you-tonal);
+      color: var(--you-on-tonal);
+      box-shadow: none;
+    }
+    :is(.sl-sp-btn, .sl-sp-footer-link, .sl-sp-filter-btn, .sl-ldb-upload-button, .sl-sp-select):hover {
+      background: color-mix(in oklab, var(--you-tonal), var(--you-on-tonal) 10%);
+    }
+    .sl-sp-new-badge { background: var(--you-tonal); color: var(--you-on-tonal); border-color: var(--you-outline); }
+    .sl-sp-toggle .sl-sp-toggle-track {
+      background: var(--you-container-high);
+      box-shadow: inset 0 0 0 1px var(--you-outline);
+      &::after { background: var(--you-outline); box-shadow: none; }
+    }
+    .sl-sp-toggle input:checked + .sl-sp-toggle-track {
+      background: var(--you-primary);
+      box-shadow: none;
+      &::after { background: var(--you-on-primary); box-shadow: none; }
+    }
+    .sl-sp-toggle input:focus-visible + .sl-sp-toggle-track,
+    .sl-sp-search-wrap:focus-within {
+      outline: 2px solid var(--you-primary);
+      outline-offset: 2px;
+    }
+    .sl-sp-listbox {
+      background: var(--you-container-high);
+      color: var(--you-text);
+      box-shadow: inset 0 0 0 1px var(--you-divider), 0 2px 6px 2px rgb(0 0 0 / .15);
+    }
+    .sl-sp-option[data-active] { background: var(--you-tonal); color: var(--you-on-tonal); }
+    :is(.vv-quick-settings, .sl-sp-settings-group--quick) > summary::after {
+      background:
+        linear-gradient(45deg, transparent 39%, var(--you-on-tonal) 40% 60%, transparent 61%) calc(50% - 2px) center / 5px 5px no-repeat,
+        linear-gradient(-45deg, transparent 39%, var(--you-on-tonal) 40% 60%, transparent 61%) calc(50% + 2px) center / 5px 5px no-repeat
+        var(--you-tonal);
+      border-color: var(--you-divider);
+    }
+  }
+
+  :is(.vv-quote-dialog, .vv-review-dialog, .vv-author-profile, .vv-ttml-check, .vv-line-menu, .sl-sp-filter-menu) {
+    background: var(--you-container);
+    color: var(--you-text);
+    border-color: var(--you-divider);
+    border-radius: 24px;
+  }
+
+  .vv-review-dialog.vv-review-workspace {
+    scrollbar-color: var(--you-outline) transparent;
+
+    :is(.vv-review-body, .vv-review-line-list, .vv-review-problems) { scrollbar-color: var(--you-outline) transparent; }
+    .vv-review-line-list::-webkit-scrollbar-thumb { background: var(--you-outline); }
+    :is(.vv-review-line-list, .vv-review-actions, .vv-review-problems[open] > summary,
+        .vv-review-line.is-background, .vv-review-note-quote) { border-color: var(--you-divider); }
+    :is(.vv-review-track, .vv-review-line span, .vv-review-time, .vv-review-editor > strong,
+        .vv-review-problem-group > span, .vv-review-note-meta, .vv-review-note-footer > span,
+        .vv-review-empty, .vv-review-note-comment) { color: var(--you-muted); }
+    :is(header h2, .vv-review-issue-selection, .vv-review-note-kind, .vv-review-note-quote,
+        .vv-review-feedback, .vv-review-note-delete) { color: var(--you-text); }
+    :is(.vv-review-picker, .vv-review-editor, article.vv-review-note, .vv-review-problems,
+        .vv-review-note-comment, .vv-review-feedback, input, select, textarea, option) {
+      background: var(--you-container-high);
+      border-color: var(--you-divider);
+    }
+    :is(.vv-review-empty, .vv-review-problem-group) { border-color: var(--you-divider); }
+    button:not(.vv-review-line, .vv-review-note-delete) {
+      background: var(--you-tonal);
+      border-color: var(--you-divider);
+      color: var(--you-on-tonal);
+    }
+    :is(.vv-review-line:hover, .vv-review-line[aria-pressed="true"],
+        .vv-review-problem-group > button[aria-pressed="true"]) {
+      background: var(--you-tonal);
+      border-color: var(--you-outline);
+      color: var(--you-on-tonal);
+      box-shadow: none;
+    }
+    :is(button:not(.vv-review-line, .vv-review-note-delete):hover:enabled,
+        .vv-review-note-delete:hover:enabled) { background: var(--you-state); }
+  }
+
+  #SpicyLyricsPage > .sl-fork-menu {
+    background: var(--you-container);
+    color: var(--you-text);
+    border-color: var(--you-divider);
+    border-radius: 24px;
+    .sl-fork-menu-item:is(:hover, :focus-visible) { background: var(--you-container-high); }
+    .sl-fork-menu-item[aria-checked="true"]::after { color: var(--you-primary); }
+    .sl-fork-menu-item#SettingsToggle { border-color: var(--you-divider); }
+  }
+
+  #SpicyLyricsPage .ViewControls.sl-fork-controls {
+    .sl-quick-controls { scrollbar-color: var(--you-outline) transparent; }
+
+    .ViewControl {
+      --you-control-fill: var(--you-container-high);
+      --you-control-ink: var(--you-text);
+      --you-control-background: var(--you-control-fill);
+      border-radius: clamp(9px, calc(var(--ViewControlHeight) * .32), 20px);
+
+      &:is(.sl-fork-menu-toggle, .sl-fullscreen-exit) {
+        --you-control-fill: var(--you-primary);
+        --you-control-ink: var(--you-on-primary);
+        border-radius: 50%;
+      }
+      &:is([aria-pressed="true"], [aria-expanded="true"]) {
+        --you-control-fill: var(--you-tonal);
+        --you-control-ink: var(--you-on-tonal);
+        border-radius: 50%;
+      }
+      &:is(:hover, :focus-visible):enabled {
+        --you-control-background: color-mix(in oklab, var(--you-control-fill), var(--you-control-ink) 10%);
+      }
+      &:active:enabled {
+        --you-control-background: color-mix(in oklab, var(--you-control-fill), var(--you-control-ink) 16%);
+      }
+      &:focus-visible { outline: 2px solid var(--you-control-ink); outline-offset: -4px; }
+      &:disabled {
+        --you-control-fill: var(--you-container);
+        --you-control-ink: color-mix(in oklab, var(--you-muted) 55%, var(--you-container));
+      }
+    }
+  }
+
+  :is(.vv-line-menu, .sl-sp-filter-menu) button {
+    color: var(--you-text);
+    &:is(:hover, :focus-visible, [aria-selected="true"]) { background: var(--you-tonal); color: var(--you-on-tonal); }
+  }
+
+  .vv-quote-dialog {
+    --quote-control-accent: var(--you-primary);
+    --quote-control-border: var(--you-divider);
+    scrollbar-color: var(--you-outline) transparent;
+    :is(header, footer, .vv-quote-editor, .vv-quote-lines, .vv-quote-option) { border-color: var(--you-divider); }
+    :is(p, .vv-quote-editor > label, .vv-quote-audio small, .vv-quote-line-number, .vv-quote-counter, .vv-quote-dimensions) { color: var(--you-muted); }
+    .vv-quote-preview { background: var(--you-surface); }
+    .vv-quote-footer { background: var(--you-container); }
+    :is(select, .vv-quote-audio input[type="number"], .vv-quote-lines) {
+      background: var(--you-container-high);
+      border-color: var(--you-outline);
+      color: var(--you-text);
+    }
+    .vv-quote-lines label { color: var(--you-muted); }
+    .vv-quote-lines label:hover { background: var(--you-state); }
+    .vv-quote-lines label:has(input:checked) {
+      background: var(--you-tonal);
+      color: var(--you-on-tonal);
+      box-shadow: inset 2px 0 var(--you-primary);
+    }
+    .vv-quote-option:hover { color: var(--you-text); }
+    button { border: 0; border-radius: 999px; background: var(--you-tonal); color: var(--you-on-tonal); }
+    button:hover:not(:disabled) { background: color-mix(in oklab, var(--you-tonal), var(--you-on-tonal) 10%); }
+    .vv-quote-footer button:not(.vv-quote-copy) { background: var(--you-primary); color: var(--you-on-primary); }
+    .vv-quote-footer .vv-quote-copy { color: var(--you-text); }
+    .vv-quote-layout-overlay button {
+      color:#fff; background:transparent; border:1px dashed #fff9; border-radius:4px;
+    }
+    .vv-quote-layout-overlay button:hover { background:#fff2; }
+    input[type="checkbox"] { border-color: var(--you-outline); background-color: var(--you-container-high); }
+    input[type="checkbox"]:checked { background: var(--you-primary); border-color: var(--you-primary); }
+    .vv-quote-lines input:checked::after {
+      content: "";
+      position: absolute;
+      inset: 3px 3px auto auto;
+      width: 9px;
+      height: 5px;
+      border: solid var(--you-on-primary);
+      border-width: 0 0 2px 2px;
+      transform: rotate(-45deg);
+    }
+    .vv-quote-option input[type="checkbox"]::before { background: var(--you-outline); }
+    .vv-quote-option input[type="checkbox"]:checked::before { background: var(--you-on-primary); }
+  }
+
+  :is(sl-generic-modal.SpicyLyricsModal, .vv-quote-dialog, .vv-review-dialog, .vv-author-profile, .vv-ttml-check,
+      .vv-line-menu, #SpicyLyricsPage > .sl-fork-menu, .sl-sp-filter-menu)
+      :is(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--you-primary);
+    outline-offset: 2px;
+  }
+  sl-generic-modal.SpicyLyricsModal .sl-sp-settings-group > summary:focus-visible { outline-offset: -3px; }
+}
+
+/* Legacy glass styles use important paint rules, including in Cinema View. */
+@layer vvertax-you-quick-controls {
+  :root[data-sl-design="vvertax-you"] #SpicyLyricsPage .ViewControls.sl-fork-controls .ViewControl {
+    background: var(--you-control-background) !important;
+    color: var(--you-control-ink) !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+:root[data-sl-design="vvertax-you"][data-sl-palette="gray"] {
+  #sl-subtitle-bar {
+    --subtitle-you-sung:#fafafa;
+    --subtitle-you-pending:#969696;
+    --subtitle-you-next:#a6a6a6;
+  }
+
+  .vv-review-dialog.vv-review-workspace::before { filter: grayscale(1); }
+
+  sl-generic-modal.SpicyLyricsModal .sl-modal.slmodal-settingsPanel .sl-modal-header h1::before {
+    filter: grayscale(1);
+    color: var(--you-muted);
+  }
+
+  sl-generic-modal.SpicyLyricsModal .sl-modal .sl-sp-about-link--brand {
+    background: var(--you-tonal);
+    color: var(--you-on-tonal);
+    box-shadow: inset 0 0 0 1px var(--you-divider);
+    &:hover { background: color-mix(in oklab, var(--you-tonal), var(--you-on-tonal) 10%); }
+  }
+}
