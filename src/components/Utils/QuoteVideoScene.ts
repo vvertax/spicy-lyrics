@@ -1,21 +1,23 @@
 import { createBloomAnimationSession } from "../../utils/Lyrics/Animator/Lyrics/BloomAnimator.ts";
+import { sampleInterludeDot } from "../../utils/Lyrics/Animator/Lyrics/LyricsAnimator.ts";
 import bloomEmphasize from "../../utils/Lyrics/Applyer/Utils/BloomEmphasize.ts";
 import { IsLetterCapable, MinLetterCapableDuration } from "../../utils/Lyrics/Applyer/Utils/BloomIsLetterCapable.ts";
 import { isBloomRenderer, $spaceGravityMode } from "../../utils/stores.ts";
 import isRtl from "../../utils/Lyrics/isRtl.ts";
 import { renderComparisonLyrics } from "./ComparisonRenderer.ts";
-import { coverCrop, quoteBackgroundFill, type QuoteCardOptions } from "./QuoteCardRenderer.ts";
+import { coverCrop, drawBlurredQuoteCover, quoteBackgroundFill, type QuoteCardOptions } from "./QuoteCardRenderer.ts";
 import { wrapQuoteText } from "./QuoteText.ts";
 import type { QuoteVideoClip } from "./QuoteVideo.ts";
 
 import { VIDEO_QUOTE_FRAMES, type QuoteVideoLayout, type VideoQuoteFormat } from "./QuoteVideoLayout.ts";
 
-function paintBackdrop(ctx: CanvasRenderingContext2D, options: QuoteCardOptions, composition: QuoteVideoLayout, format: VideoQuoteFormat) {
+function paintBackdrop(ctx: CanvasRenderingContext2D, options: QuoteCardOptions, composition: QuoteVideoLayout, format: VideoQuoteFormat, scale: number) {
   const { width: WIDTH, height: HEIGHT } = VIDEO_QUOTE_FRAMES[format];
   const inset = format === "9:16" ? 96 : 72;
   const textWidth = WIDTH - inset * 2;
   const cover = options.cover;
-  const customGradient = options.gradient && !options.artworkBackground;
+  const artwork = options.artworkBackground && cover;
+  const customGradient = options.gradient && !artwork;
   if (customGradient) {
     ctx.fillStyle = quoteBackgroundFill(ctx, HEIGHT, options);
   } else {
@@ -25,22 +27,18 @@ function paintBackdrop(ctx: CanvasRenderingContext2D, options: QuoteCardOptions,
     ctx.fillStyle = ambient;
   }
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
-  if (cover && options.artworkBackground) {
-    const crop = coverCrop(cover.naturalWidth, cover.naturalHeight, WIDTH + 240, HEIGHT + 240);
-    ctx.save();
-    ctx.filter = "blur(" + Math.max(30, options.blur * 2) + "px)";
-    ctx.drawImage(cover, crop.x - 120, crop.y - 120, crop.width, crop.height);
-    ctx.restore();
-    ctx.fillStyle = "rgba(12,9,16," + Math.max(.48, options.darken / 100) + ")";
+  if (artwork) {
+    drawBlurredQuoteCover(ctx, artwork, WIDTH, HEIGHT, options.blur, scale);
+    ctx.fillStyle = `rgba(0,0,0,${options.darken / 100})`;
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
   }
-  if (options.logo && !(cover && options.artworkBackground)) {
+  if (options.logo && !artwork) {
     ctx.save();
     ctx.globalAlpha = .12;
     ctx.drawImage(options.logo, WIDTH - 500, -100);
     ctx.restore();
   }
-  if (!customGradient) {
+  if (!customGradient && !artwork) {
     const shade = ctx.createLinearGradient(0, 550, 0, HEIGHT);
     shade.addColorStop(0, "transparent");
     shade.addColorStop(1, "#100e16e8");
@@ -100,7 +98,7 @@ export function prepareQuoteVideo(ctx: CanvasRenderingContext2D, clip: QuoteVide
   backdrop.height = HEIGHT * scale;
   const bg = backdrop.getContext("2d")!;
   bg.scale(scale, scale);
-  paintBackdrop(bg, options, composition, format);
+  paintBackdrop(bg, options, composition, format, scale);
 
   const stage = doc.createElement("div");
   stage.className = "vv-quote-motion-stage";
@@ -129,20 +127,25 @@ export function prepareQuoteVideo(ctx: CanvasRenderingContext2D, clip: QuoteVide
     const align: CanvasTextAlign = row.element.classList.contains("OppositeAligned") ? "right" :
       composition.lyrics.centered ? "center" : rtl ? "right" : "left";
     const rowFontSize = composition.fontSize * (backing ? .6 : 1);
+    const weight = backing ? 600 : 700;
     row.element.dir = rtl ? "rtl" : "ltr";
     row.element.style.textAlign = align;
     row.element.style.fontSize = rowFontSize + "px";
+    row.element.style.fontWeight = String(weight);
     if (backing) row.element.style.setProperty("--DefaultLyricsSize", rowFontSize + "px");
     if (index > 0) nextTop += rowGap * (backing ? .18 : 1);
     const height = row.element.offsetHeight;
     const center = nextTop + height / 2;
     nextTop += height;
-    const segments = row.segments.flatMap(part => {
+    const glyphs = row.segments.flatMap(part => {
       const letters = Array.from(part.element.querySelectorAll<HTMLElement>(".letter"));
       return letters.length ? letters : [part.element];
     });
+    const origin = backing ? row.element.getBoundingClientRect() : undefined;
+    const segments = glyphs.map(element => ({ element, text: element.textContent ?? "",
+      bounds: origin && relativeBounds(element, origin) })).filter(segment => segment.text.trim());
     const interlude = (clip.lyrics.Content[row.sourceIndex] as { Type?: string }).Type === "Interlude";
-    return { ...row, text, rtl, align, backing, rowFontSize, center, height, segments, interlude };
+    return { ...row, text, rtl, align, backing, weight, rowFontSize, center, height, segments, interlude };
   });
   const leadRows = rows.filter(row => !row.backing);
   const destroy = () => { session.destroy(); stage.remove(); };
@@ -172,28 +175,36 @@ export function prepareQuoteVideo(ctx: CanvasRenderingContext2D, clip: QuoteVide
       if (y > bottom || y + row.height < top) continue;
       const distance = Math.abs(row.center - center);
       const emphasis = Math.max(0, 1 - distance / (fontSize * 2.8));
-      const singing = row.start <= time && time < row.end;
-      ctx.globalAlpha = row.backing ? (singing ? .9 : .22 + .35 * emphasis) : .26 + .74 * emphasis;
+      const vocalFade = Math.max(0, Math.min(1, (time - row.start) / 180, (row.end + 220 - time) / 220));
+      const backingAlpha = .22 + .35 * emphasis;
+      ctx.globalAlpha = row.backing
+        ? backingAlpha + (.9 - backingAlpha) * vocalFade * vocalFade * (3 - 2 * vocalFade)
+        : .26 + .74 * emphasis;
 
       if (row.interlude) {
-        const spacing = fontSize * .38;
+        const radius = fontSize * .156;
+        const spacing = fontSize * .46;
         const startX = centered ? left + textWidth / 2 - spacing : left + spacing / 2;
         const progress = (time - row.start) * 3 / (row.end - row.start);
+        ctx.save();
         for (let dot = 0; dot < 3; dot++) {
-          const fill = Math.min(1, Math.max(0, progress - dot));
-          ctx.fillStyle = `rgba(255,255,255,${.35 + .65 * fill})`;
+          const pose = sampleInterludeDot(progress - dot);
+          ctx.fillStyle = `rgba(255,255,255,${pose.opacity})`;
+          ctx.shadowColor = `rgba(255,255,255,${pose.glow * .9})`;
+          ctx.shadowBlur = (4 + 6 * pose.glow) * scale;
           ctx.beginPath();
-          ctx.arc(startX + spacing * dot, y + row.height / 2, fontSize * .085, 0, 2 * Math.PI);
+          ctx.arc(startX + spacing * dot, y + row.height / 2 + pose.lift * fontSize, radius * pose.scale, 0, 2 * Math.PI);
           ctx.fill();
         }
+        ctx.restore();
         continue;
       }
 
-      ctx.font = "700 " + row.rowFontSize + "px SpicyLyrics, sans-serif";
+      ctx.font = row.weight + " " + row.rowFontSize + "px SpicyLyrics, sans-serif";
       ctx.textBaseline = "top";
       ctx.textAlign = row.rtl ? "right" : "left";
       ctx.direction = row.rtl ? "rtl" : "ltr";
-      if (!row.segments.length || (emphasis < .2 && (time < row.start || time > row.end + 480))) {
+      if (!row.segments.length) {
         ctx.fillStyle = "#fff";
         const wrapped = wrapQuoteText(row.text, textWidth, text => ctx.measureText(text).width);
         ctx.textAlign = row.align;
@@ -201,22 +212,21 @@ export function prepareQuoteVideo(ctx: CanvasRenderingContext2D, clip: QuoteVide
         wrapped.forEach((line, index) => ctx.fillText(line, x, y + index * row.rowFontSize * 1.24));
         continue;
       }
-      const origin = row.element.getBoundingClientRect();
-      for (const segment of row.segments) {
-        const text = segment.textContent ?? "";
-        if (!text.trim()) continue;
-        const bounds = segment.getBoundingClientRect();
+      // Backing vocals keep a stable baseline while their timing still drives the highlight.
+      const origin = row.backing ? undefined : row.element.getBoundingClientRect();
+      for (const { element, text, bounds: fixedBounds } of row.segments) {
+        const bounds = fixedBounds ?? relativeBounds(element, origin!);
         if (bounds.width <= 0 || bounds.height <= 0) continue;
         const size = Math.max(row.rowFontSize * .3, bounds.height / 1.24);
         ctx.save();
-        ctx.translate(left + bounds.left - origin.left, y + bounds.top - origin.top);
-        ctx.font = "700 " + size + "px SpicyLyrics, sans-serif";
-        const position = segment.style.getPropertyValue("--SLM_GradientPosition")
-          || segment.style.getPropertyValue("--gradient-position");
+        ctx.translate(left + bounds.left, y + bounds.top);
+        ctx.font = row.weight + " " + size + "px SpicyLyrics, sans-serif";
+        const position = element.style.getPropertyValue("--SLM_GradientPosition")
+          || element.style.getPropertyValue("--gradient-position");
         ctx.fillStyle = gradient(ctx, bounds.width, Number.parseFloat(position || "-20"), row.rtl);
-        const glow = Number.parseFloat(segment.style.getPropertyValue("--text-shadow-opacity")) || 0;
+        const glow = Number.parseFloat(element.style.getPropertyValue("--text-shadow-opacity")) || 0;
         if (glow > 0) {
-          const blur = segment.style.getPropertyValue("--text-shadow-blur-radius");
+          const blur = element.style.getPropertyValue("--text-shadow-blur-radius");
           const relative = blur.match(/calc\(([\d.]+)em\s*\+\s*([\d.]+)px\)/);
           ctx.shadowColor = "rgba(255,255,255," + Math.min(1, glow / 100) + ")";
           ctx.shadowBlur = relative ? Number(relative[1]) * size + Number(relative[2]) : Number.parseFloat(blur) || 0;
@@ -228,4 +238,9 @@ export function prepareQuoteVideo(ctx: CanvasRenderingContext2D, clip: QuoteVide
     ctx.restore();
   }
   return { draw, destroy };
+}
+
+function relativeBounds(element: HTMLElement, origin: DOMRect) {
+  const { left, top, width, height } = element.getBoundingClientRect();
+  return { left: left - origin.left, top: top - origin.top, width, height };
 }

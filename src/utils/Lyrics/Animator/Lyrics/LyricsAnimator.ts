@@ -241,6 +241,17 @@ const DotYOffsetSpline = GetSpline(DotAnimations.YOffsetRange);
 const DotGlowSpline = GetSpline(DotAnimations.GlowRange);
 let DotOpacitySpline = GetSpline(getDotOpacityRange($simpleLyricsMode.get()));
 
+/** Sample the Spring interlude curves by time for seekable, offline renders. */
+export function sampleInterludeDot(progress: number) {
+  const phase = Clamp(progress, 0, 1);
+  return {
+    scale: DotScaleSpline.at(phase),
+    lift: DotYOffsetSpline.at(phase),
+    glow: Clamp(DotGlowSpline.at(phase), 0, 1),
+    opacity: Clamp(DotOpacitySpline.at(phase), 0, 1),
+  };
+}
+
 const createLetterSprings = () => {
   return {
     Scale: new Spring(LetterScaleSpline.at(0), ScaleFrequency, ScaleDamping),

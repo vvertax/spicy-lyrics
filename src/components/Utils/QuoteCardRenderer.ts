@@ -23,6 +23,15 @@ function drawCover(ctx: CanvasRenderingContext2D, image: HTMLImageElement, x: nu
   ctx.drawImage(image, x + crop.x, y + crop.y, crop.width, crop.height); ctx.restore();
 }
 
+export function drawBlurredQuoteCover(ctx: CanvasRenderingContext2D, image: HTMLImageElement, width: number, height: number, blur: number, scale = 1) {
+  const bleed = blur > 0 ? blur * 3 + 2 : 0;
+  ctx.save();
+  // Canvas filters use bitmap pixels even when drawing into a scaled preview.
+  ctx.filter = blur > 0 ? `blur(${blur * scale}px)` : "none";
+  drawCover(ctx, image, -bleed, -bleed, width + bleed * 2, height + bleed * 2);
+  ctx.restore();
+}
+
 export function quoteGeometry(template: QuoteTemplate, height: number, includeCover: boolean) {
   const coverSize = template === "cover-top" ? 280 : template === "poster" ? 360 : 140;
   const top = template === "cover-top" && includeCover ? 536 : template === "poster" && includeCover ? 490 : template === "type" ? 250 : 330;
@@ -72,9 +81,7 @@ export function renderQuoteCard(ctx: CanvasRenderingContext2D, options: QuoteCar
     if (!cached || cached.image !== cover || cached.blur !== options.blur || cached.height !== height) {
       const canvas = ctx.canvas.ownerDocument.createElement("canvas"); canvas.width = 1080; canvas.height = height;
       const background = canvas.getContext("2d")!;
-      const bleed = options.blur * 3 + 2;
-      background.filter = `blur(${options.blur}px)`;
-      drawCover(background, cover, -bleed, -bleed, 1080 + bleed * 2, height + bleed * 2);
+      drawBlurredQuoteCover(background, cover, 1080, height, options.blur);
       cached = { image: cover, blur: options.blur, height, canvas }; backgrounds.set(ctx.canvas, cached);
     }
     ctx.drawImage(cached.canvas, 0, 0);

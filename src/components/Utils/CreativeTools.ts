@@ -393,7 +393,10 @@ export async function quoteCard(doc: Document, initialLine?: number, supplied?:a
   }
   dialog.hidden = true;
   doc.body.append(dialog);
-  await doc.fonts.load('700 52px "SpicyLyrics"').catch(() => []);
+  await Promise.allSettled([
+    doc.fonts.load('700 52px "SpicyLyrics"'),
+    doc.fonts.load('600 32px "SpicyLyrics"'),
+  ]);
 
   const svg = Icons.LyricsPage.replace(/id="[^"]*"/g, "");
   const logo = await loadImage(doc, `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`).catch(() => null);
