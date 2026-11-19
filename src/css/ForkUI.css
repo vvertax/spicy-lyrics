@@ -248,6 +248,10 @@
 .vv-author-dialog header h2 { display:flex; align-items:center; gap:12px; font-size:22px; letter-spacing:-.025em; }
 .vv-author-emblem { display:flex; color:#d0bcf2; }
 .vv-author-emblem svg { width:26px; height:26px; }
+.vv-author-dialog { isolation:isolate; }
+.vv-author-search-watermark { position:absolute; inset:-118px -102px auto auto; z-index:-1; width:280px; color:var(--ry-accent,#d0bcf2); opacity:.13; pointer-events:none; transform:rotate(-14deg); }
+.vv-author-search-watermark svg { display:block; width:100%; height:auto; fill:currentColor; }
+.vv-author-retirement { padding:10px 14px; margin:14px 0 0; border-radius:12px; background:var(--ry-surface-2,#ffffff10); font-size:13px; }
 .vv-author-dialog header > button { display:grid; place-items:center; width:36px; height:36px; padding:0; border-radius:50%; background:#ffffff08; }
 .vv-author-dialog form { flex-wrap:nowrap; margin:24px 0 12px; gap:12px; }
 .vv-author-dialog form input { height:48px; border-radius:14px; padding:0 16px; border-color:#d0bcf22b; background:#ffffff07; }
@@ -399,38 +403,6 @@
   #sl-subtitle-bar .sl-subtitle-backing .line.bg-line { --DefaultLyricsSize:20px; }
   #sl-subtitle-bar .sl-subtitle-close { width:26px; height:26px; padding:5px; }
 }
-
-/* TTML inspection keeps findings separate from the production preview. */
-.vv-ttml-check { width:min(1120px,94vw); max-height:90vh; padding:22px; box-sizing:border-box; color:var(--ry-text,#eee2ff); background:#171421; border:1px solid #d0bcf240; border-radius:20px; font:14px/1.5 var(--ry-font,sans-serif); }
-.vv-ttml-check::backdrop { background:#0009; backdrop-filter:blur(8px); }
-.vv-ttml-check header { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.vv-ttml-check h2 { margin:0 auto 0 0; font-size:22px; }
-.vv-ttml-check button { border:1px solid #d0bcf240; border-radius:9px; background:#d0bcf215; color:inherit; padding:8px 12px; cursor:pointer; font:inherit; }
-.vv-ttml-check button:focus-visible { outline:2px solid #d0bcf2; outline-offset:2px; }
-.vv-ttml-check button:disabled { opacity:.4; cursor:default; }
-.vv-ttml-check > p { margin:12px 0; color:#c1add9; }
-.vv-check-file { overflow-wrap:anywhere; }
-.vv-check-body { display:grid; grid-template-columns:minmax(220px,32%) minmax(0,1fr); gap:18px; height:52vh; }
-.vv-check-findings,.vv-check-preview { min-width:0; overflow:auto; border:1px solid #d0bcf220; border-radius:12px; padding:14px; }
-.vv-check-preview { font-family:SpicyLyrics,sans-serif; }
-.vv-check-preview .line { font-size:28px; line-height:1.5; font-weight:700; padding:12px; margin:4px 0; cursor:pointer; overflow-wrap:anywhere; }
-.vv-check-preview .word,.vv-check-preview .letter { display:inline-block; white-space:pre; }
-.vv-check-preview .vv-check-selected { background:#d0bcf21c; border-radius:8px; }
-.vv-check-preview .bg-line { font-size:20px; opacity:.6; }
-.vv-ttml-check .vv-check-issue { display:flex; flex-direction:column; align-items:flex-start; width:100%; gap:3px; margin:8px 0; text-align:left; }
-.vv-check-issue span { font-size:11px; opacity:.65; }
-.vv-ttml-check .vv-check-error { border-color:#f2a5b480; }
-.vv-ttml-check .vv-check-warning { border-color:#e5c28560; }
-.vv-check-excerpt { white-space:pre-wrap; max-height:70px; overflow:auto; }
-.vv-ttml-check footer { display:flex; align-items:center; gap:12px; }
-.vv-ttml-check input[type="range"] { min-width:0; flex:1; accent-color:#d0bcf2; }
-@media(max-width:700px) { .vv-check-body { grid-template-columns:1fr; height:auto; } .vv-check-findings { max-height:24vh; } .vv-check-preview { max-height:40vh; } .vv-ttml-check footer { flex-wrap:wrap; } }
-
-.vv-check-preview { --DefaultLyricsSize:28px; }
-.vv-check-preview .letterGroup { display:inline-block; white-space:nowrap; }
-.vv-check-preview .word-group { display:inline-flex; align-items:baseline; }
-.vv-check-preview :is(.word,.letter) { background-image:linear-gradient(90deg,#fff var(--gradient-position,-20%),#ffffff60 calc(var(--gradient-position,-20%) + 20%)); background-clip:text; -webkit-background-clip:text; color:transparent; }
-.vv-check-preview .OppositeAligned { text-align:right; }
 
 /* Subtitle layout actions do not interrupt clicks on the lyric tape. */
 #sl-subtitle-bar .sl-subtitle-actions { display:flex; gap:5px; align-self:start; justify-self:end; }

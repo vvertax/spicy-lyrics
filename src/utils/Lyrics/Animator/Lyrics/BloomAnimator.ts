@@ -2700,7 +2700,7 @@ export function Animate(position: number, target?: { type: "Syllable" | "Line"; 
   if (CurrentLyricsType === "Syllable") {
     const lines = target?.lines ?? LyricsObject.Types.Syllable.Lines;
     const reduced = mountedLine?.ownerDocument.defaultView?.matchMedia("(prefers-reduced-motion: reduce)").matches ?? false;
-    animateSplitWords(lines, reduced, $splitWordMotion.get(), ProcessedPosition);
+    animateSplitWords(lines, reduced, $splitWordMotion.get());
   }
 }
 

@@ -7,7 +7,6 @@ import { matches, Row, SectionTitle, Toggle } from "./components.tsx";
 
 const experimentSettingIds: Partial<Record<ExperimentId, string>> = {
   newSettingsDesign: "appearance-settings-design",
-  newProgressBarStyling: "appearance-sliderbar-styling",
   lyricsSkeleton: "lyrics-loading-skeleton",
 };
 

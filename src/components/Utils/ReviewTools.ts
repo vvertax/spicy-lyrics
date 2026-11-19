@@ -3,7 +3,6 @@ import { translateUi } from "../../utils/i18n/translate.ts";
 import { $uiLanguage } from "../../utils/stores.ts";
 import { bindComparisonDiff } from "./ComparisonDiffUI.ts";
 import { createAuthorCard, knownAuthor } from "./AuthorProfile.ts";
-import { openTTMLCheck } from "./TTMLCheckPanel.ts";
 import { followComparisonLine } from "./ComparisonFollow.ts";
 import { bindTTMLDrop } from "./TTMLDrop.ts";
 import { renderComparisonLyrics } from "./ComparisonRenderer.ts";
@@ -48,7 +47,6 @@ export function AddReviewMenuRows(menu:HTMLElement, add:(button:HTMLButtonElemen
   for (const [label, icon, open] of [
     ['Find Author Works',Icons.FindAuthorWorks,()=>authorSearch(doc)],
     ['Review Lyrics',Icons.ReviewLyrics,()=>reviewLyrics(doc)],
-    ['Check TTML',Icons.ReviewLyrics,()=>openTTMLCheck(doc)],
     ['Compare TTML A/B',Icons.CompareTTML,()=>compareTTML(doc)],
   ] as const) {
     const row=element(doc,'button');row.type='button';row.innerHTML=icon;
@@ -57,10 +55,17 @@ export function AddReviewMenuRows(menu:HTMLElement, add:(button:HTMLButtonElemen
 }
 function authorSearch(doc:Document) {
   const root=dialog(doc,'Find Author Works');root.classList.add('vv-author-dialog');
+  const watermark = element(doc, 'span');
+  watermark.className = 'vv-author-search-watermark';
+  watermark.setAttribute('aria-hidden', 'true');
+  watermark.innerHTML = Icons.LyricsPage.replace(/ (?:class|id)="[^"]*"/g, '');
+  root.prepend(watermark);
   const emblem=element(doc,'span');emblem.className='vv-author-emblem';emblem.innerHTML=Icons.FindAuthorWorks;root.querySelector('header h2')!.prepend(emblem);
   const form=element(doc,'form');const input=element(doc,'input');input.placeholder='Username, e.g. vvertax. or july';input.setAttribute('aria-label','Author username');input.required=true;input.maxLength=100;
   const submit=element(doc,'button','Search');submit.type='submit';form.append(input,submit);
   const message=element(doc,'p','Enter a username to open their public profile.');message.role='status';
+  const retirement = element(doc, 'p', 'This menu will be removed in version 1.13.0.');
+  retirement.className = 'vv-author-retirement';
   const results=element(doc,'div');results.className='vv-author-results';
   submit.textContent='Show profile';
   form.onsubmit=event=>{
@@ -70,7 +75,7 @@ function authorSearch(doc:Document) {
     root.classList.add('has-results');
     results.replaceChildren(createAuthorCard(doc,knownAuthor(name)??{username:name}));
   };
-  root.append(form,message,results);input.focus();
+  root.append(form,message,retirement,results);input.focus();
 }
 export function reviewLyrics(doc:Document, supplied?:any, initialLine=0) {
   const data=supplied??currentLyrics(),uri=SpotifyPlayer.GetUri();if(!uri)throw new Error('No current track');

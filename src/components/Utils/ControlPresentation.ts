@@ -16,7 +16,7 @@ export function controlMenuPlacement(anchor: { left: number; right: number; top:
   const maxHeight = Math.max(1, Math.min(viewport.height - inset * 2, opensAbove ? above : below));
   const usedHeight = Math.min(height, maxHeight);
   return {
-    left: Math.max(inset, Math.min(anchor.right - width, viewport.width - width - inset)),
+    left: Math.max(inset, Math.min((anchor.left + anchor.right - width) / 2, viewport.width - width - inset)),
     top: Math.max(inset, Math.min(opensAbove ? anchor.top - gap - usedHeight : anchor.bottom + gap, viewport.height - usedHeight - inset)),
     maxHeight, opensAbove,
   };

@@ -279,16 +279,12 @@
   margin: 0;
 }
 
-#SpicyLyricsPage.Fullscreen.Exp_PlayerBelowCover.Exp_NewProgressBar:not(.CompactMode, .ForcedCompactMode, .CanvasImmersive) .ContentBox .NowBar .Timeline .SliderBar {
+#SpicyLyricsPage.Fullscreen.Exp_PlayerBelowCover.SpicyRenderer:not(.CompactMode, .ForcedCompactMode, .CanvasImmersive) .ContentBox .NowBar .Timeline .SliderBar {
   height: 1.5cqw;
 }
 
-#SpicyLyricsPage.Fullscreen.Exp_PlayerBelowCover.Exp_NewProgressBar:not(.CompactMode, .ForcedCompactMode, .CanvasImmersive) .ContentBox .NowBar .Timeline .SliderBar:is(:hover, .Dragging) {
+#SpicyLyricsPage.Fullscreen.Exp_PlayerBelowCover.SpicyRenderer:not(.CompactMode, .ForcedCompactMode, .CanvasImmersive) .ContentBox .NowBar .Timeline .SliderBar:is(:hover, .Dragging) {
   height: 2.6cqw;
-}
-
-#SpicyLyricsPage.Fullscreen.Exp_PlayerBelowCover:not(.Exp_NewProgressBar):not(.CompactMode, .ForcedCompactMode, .CanvasImmersive) .ContentBox .NowBar .Timeline .SliderBar {
-  height: 0.9cqw;
 }
 
 #SpicyLyricsPage.Fullscreen.Exp_PlayerBelowCover:not(.CompactMode, .ForcedCompactMode, .CanvasImmersive) .ContentBox .NowBar .Timeline .Time {
@@ -374,19 +370,8 @@
   opacity: 1;
 }
 
-#SpicyLyricsPage.Fullscreen.ShowVolumeSlider.Exp_PlayerBelowCover.Exp_NewProgressBar:not(.CompactMode, .ForcedCompactMode, .CanvasImmersive) .ContentBox .NowBar .CenteredView .Header .MediaBox .MediaContent .VolumeControl:is(:hover, .Dragging) {
+#SpicyLyricsPage.Fullscreen.ShowVolumeSlider.Exp_PlayerBelowCover.SpicyRenderer:not(.CompactMode, .ForcedCompactMode, .CanvasImmersive) .ContentBox .NowBar .CenteredView .Header .MediaBox .MediaContent .VolumeControl:is(:hover, .Dragging) {
   --CapsuleWidth: 2.6cqw;
-}
-
-#SpicyLyricsPage.Fullscreen.ShowVolumeSlider.Exp_PlayerBelowCover:not(.Exp_NewProgressBar):not(.CompactMode, .ForcedCompactMode, .CanvasImmersive) .ContentBox .NowBar .CenteredView .Header .MediaBox .MediaContent .VolumeControl {
-  --CapsuleWidth: 0.9cqw;
-  background: linear-gradient(
-    90deg,
-    var(--TraveledColor) 0,
-    var(--TraveledColor) calc(100% * var(--VolumeLevel)),
-    var(--RemainingColor) calc(100% * var(--VolumeLevel)),
-    var(--RemainingColor)
-  );
 }
 
 #SpicyLyricsPage.Fullscreen.Exp_PlayerBelowCover:not(.CompactMode, .ForcedCompactMode, .CanvasImmersive) .NowBar .VolumeControl .VolumeFill {
@@ -405,13 +390,6 @@
   content: "";
   position: absolute;
   inset: -1.5cqw 0;
-}
-
-#SpicyLyricsPage.Fullscreen.Exp_PlayerBelowCover:not(.Exp_NewProgressBar):not(.CompactMode, .ForcedCompactMode, .CanvasImmersive) .NowBar .VolumeControl .Handle {
-  left: 0;
-  top: 50%;
-  bottom: auto;
-  transform: translate(-50%, -50%) translateX(calc(var(--CapsuleHeight) * var(--VolumeLevel)));
 }
 
 #SpicyLyricsPage.Fullscreen.Exp_PlayerBelowCover:not(.CompactMode, .ForcedCompactMode, .CanvasImmersive) .NowBar .VolumeControl :is(.VolumeIcon, .VolumeMaxIcon) {

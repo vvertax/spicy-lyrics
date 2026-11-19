@@ -100,7 +100,7 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
     menu.style.top = `${placement.top}px`;
     menu.style.bottom = 'auto';
     menu.style.maxHeight = `${placement.maxHeight}px`;
-    menu.style.transformOrigin = placement.opensAbove ? 'right bottom' : 'right top';
+    menu.style.transformOrigin = `${(rect.left + rect.right) / 2 - placement.left}px ${placement.opensAbove ? 'bottom' : 'top'}`;
     if (!win.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       menu.getAnimations().forEach(animation => animation.cancel());
       menu.animate([
@@ -115,6 +115,13 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   menu.addEventListener('click', () => close());
   win.addEventListener('resize', closeOnResize);
   function closeOnResize() { close(); }
+  const leaveLyrics = (event: PointerEvent) => {
+    if (menu.hidden || event.pointerType === 'touch') return;
+    const next = event.relatedTarget;
+    if (!(next instanceof win.Node) || (!page.contains(next) && !menu.contains(next))) close();
+  };
+  page.addEventListener('pointerleave', leaveLyrics);
+  menu.addEventListener('pointerleave', leaveLyrics);
   const outside = (event: Event) => { if (!controls.contains(event.target as Node) && !menu.contains(event.target as Node)) close(); };
   const keys = (event: KeyboardEvent) => {
     if (menu.hidden) return;
@@ -289,5 +296,5 @@ export function BuildControlsMenu(controls: HTMLElement, page: HTMLElement) {
   doc.addEventListener('pointerdown', outside); doc.addEventListener('keydown', keys, true);
   const observer = new MutationObserver(() => { if (!controls.isConnected) cleanup?.(); });
   observer.observe(doc.body, { childList: true, subtree: true });
-  cleanup = () => { stopDrag(); unbindExtras(); stopSubtitleVisible(); unbindDrop();unbindLines();unsubscribeQuick();unsubscribeOrder(); pressedObserver.disconnect(); doc.removeEventListener('keydown', shortcuts); close(); menu.remove(); win.removeEventListener('resize', closeOnResize); win.removeEventListener("keydown", cancelEditing, true); observer.disconnect(); doc.removeEventListener('pointerdown', outside); doc.removeEventListener('keydown', keys, true); cleanup = undefined; };
+  cleanup = () => { stopDrag(); unbindExtras(); stopSubtitleVisible(); unbindDrop();unbindLines();unsubscribeQuick();unsubscribeOrder(); pressedObserver.disconnect(); doc.removeEventListener('keydown', shortcuts); close(); page.removeEventListener('pointerleave', leaveLyrics); menu.removeEventListener('pointerleave', leaveLyrics); menu.remove(); win.removeEventListener('resize', closeOnResize); win.removeEventListener("keydown", cancelEditing, true); observer.disconnect(); doc.removeEventListener('pointerdown', outside); doc.removeEventListener('keydown', keys, true); cleanup = undefined; };
 }

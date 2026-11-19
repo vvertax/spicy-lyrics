@@ -7,7 +7,7 @@
   --ry-sky:linear-gradient(165deg,oklch(.3 .095 297),oklch(.235 .08 297));
   --ry-font:SpicyLyrics,system-ui,sans-serif; --ry-display:var(--ry-font);
   --ry-glass:linear-gradient(transparent,transparent); --ry-glass-shine:inset 0 0 0 1px var(--ry-line);
-  :is(.vv-review-dialog.vv-review-workspace,.vv-review-dialog.vv-diagnostics,.vv-author-profile,.vv-quote-dialog,.vv-ttml-check) {
+  :is(.vv-review-dialog.vv-review-workspace,.vv-review-dialog.vv-diagnostics,.vv-author-profile,.vv-quote-dialog) {
     background:var(--ry-sky); color:var(--ry-text); border-color:var(--ry-line-strong); font-family:var(--ry-font);
   }
   :is(.vv-review-picker,.vv-review-editor,.vv-author-card) { background:var(--ry-surface); border-color:var(--ry-line-strong); }
@@ -75,7 +75,7 @@ sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings .vv-quick-footer { padd
 .sl-sp-favorites-only .vv-quick-body > :is(p,.vv-quick-footer) { display:none; }
 @media(max-width:650px) { .vv-preview-renderer { --DefaultLyricsSize:24px; } }
 
-:root[data-sl-design="original"] sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings .vv-quick-settings { margin-inline:16px; }
+:root:is([data-sl-design="original"], [data-sl-design="vvertax-you"]) sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings .vv-quick-settings { margin-inline:16px; }
 
 /* Diagnostics share the settings frame, with a contained editable report surface. */
 .vv-review-dialog.vv-diagnostics { position:relative; isolation:isolate; width:min(860px,94vw); max-height:88vh; padding:0; border-radius:20px; border:1px solid var(--ry-line-strong); overflow:hidden; color:var(--ry-text); box-shadow:0 24px 80px #0007; }

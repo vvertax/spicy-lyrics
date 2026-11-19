@@ -24,6 +24,7 @@ test('renderer toggle becomes one menu glyph with a checked state instead of a s
  assert.equal(prepareMenuButton(button),'true');assert.equal(removed,1);assert.equal(animationCleared,1);assert.equal(attrs.has('aria-pressed'),false);assert.equal(attrs.get('aria-checked'),'true');
 });
 test('detached controls menu stays within the viewport and opens above a bottom toolbar',()=>{
+ const center=controlMenuPlacement({left:610,right:650,top:20,bottom:64},240,480,{width:1280,height:720});assert.equal(center.left+120,630);
  const top=controlMenuPlacement({left:1200,right:1244,top:20,bottom:64},260,500,{width:1280,height:720});assert.equal(top.opensAbove,false);assert.ok(top.left+260<=1268);assert.equal(top.top,74);
  const bottom=controlMenuPlacement({left:24,right:68,top:650,bottom:694},260,500,{width:1280,height:720});assert.equal(bottom.opensAbove,true);assert.equal(bottom.left,12);assert.equal(bottom.top+500,640);
  const narrow=controlMenuPlacement({left:0,right:44,top:20,bottom:64},260,500,{width:320,height:260});assert.equal(narrow.left,12);assert.ok(narrow.maxHeight+narrow.top<=248);

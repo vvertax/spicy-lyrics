@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.12.1
+
+- Base vvertax You settings on the Original Spicy Lyrics layout, with flat sidebar tabs, aligned Quick Controls, and a single search focus ring.
+- Make glass styling permanent for the playback timeline and fullscreen volume slider. Remove the old toggle.
+- Center the three-dot menu on its button and close it when the pointer leaves the lyrics view and menu.
+- Restore the original Spicy Lyrics 6.5.10 split-word animation when Split Word Motion is off.
+- Show timed backing vocals below the lead in video quotes and align duet lines to the right in previews and exports.
+- Restyle Author Works for Material You, match its accents to the selected palette, and place the Spicy Lyrics logo in the upper-right corner.
+- Add a notice that Author Works is scheduled for removal in 1.13.0.
+- Remove the standalone TTML inspection tool. TTML/LRC import, lyric review, and TTML A/B comparison remain available.
+
 ## 1.12.0
 
 - Add vvertax You, a Material Design 3 theme with Gray, Lavender, Green, and White palettes and a custom palette generated from one HEX color.

@@ -101,15 +101,6 @@ export const EXPERIMENTS = [
     default: true,
   },
   {
-    id: "newProgressBarStyling",
-    category: "player",
-    label: "New SliderBar Styling",
-    description:
-      "New glass-like style for the SliderBar. Disable to revert back to the original one.",
-    default: true,
-    pageClass: "Exp_NewProgressBar",
-  },
-  {
     id: "lyricsSkeleton",
     category: "lyrics",
     label: "Lyrics Loading Skeleton",
@@ -310,7 +301,6 @@ export function getVisibleExperiments(): ResolvedExperiment[] {
 // These controls already appear in their main settings sections.
 const INLINE_EXPERIMENTS: ReadonlySet<ExperimentId> = new Set([
   "newSettingsDesign",
-  "newProgressBarStyling",
   "lyricsSkeleton",
 ]);
 

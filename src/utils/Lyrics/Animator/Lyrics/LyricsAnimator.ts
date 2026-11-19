@@ -2675,7 +2675,7 @@ export function Animate(position: number, target?: { type: "Syllable" | "Line"; 
     const lines = target?.lines ?? LyricsObject.Types.Syllable.Lines;
     const win = mountedLine?.ownerDocument?.defaultView;
     const reduced = win?.matchMedia('(prefers-reduced-motion: reduce)').matches ?? false;
-    animateSplitWords(lines, reduced, $splitWordMotion.get(), ProcessedPosition);
+    animateSplitWords(lines, reduced, $splitWordMotion.get());
   }
 }
 

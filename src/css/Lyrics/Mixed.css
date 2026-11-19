@@ -502,10 +502,10 @@
 
 /* SplitWordMotion keeps scaled pieces touching around the word's centre.
    Each piece must scale about its own centre for that layout rule to hold. */
-#SpicyLyricsPage.SpicyRenderer:not(.SpaceGravityMode) .word-group {
+#SpicyLyricsPage.SpicyRenderer:not(.SpaceGravityMode) .word-group.SplitWordSpread {
   position: relative;
 }
-#SpicyLyricsPage.SpicyRenderer:not(.SpaceGravityMode) .LyricsContent .line .word-group > :is(.word, .letterGroup) {
+#SpicyLyricsPage.SpicyRenderer:not(.SpaceGravityMode) .LyricsContent .line .word-group.SplitWordSpread > :is(.word, .letterGroup) {
   transform-origin: center center !important;
 }
 

@@ -122,23 +122,31 @@ export function prepareQuoteVideo(ctx: CanvasRenderingContext2D, clip: QuoteVide
   });
   const rowGap = composition.fontSize;
   let nextTop = 0;
-  const rows = session.rows.map(row => {
+  const rows = session.diffRows.map((row, index) => {
     const text = row.element.textContent ?? "";
     const rtl = isRtl(text);
+    const backing = row.backgroundIndex !== undefined;
+    const align: CanvasTextAlign = row.element.classList.contains("OppositeAligned") ? "right" :
+      composition.lyrics.centered ? "center" : rtl ? "right" : "left";
+    const rowFontSize = composition.fontSize * (backing ? .6 : 1);
     row.element.dir = rtl ? "rtl" : "ltr";
-    if (composition.lyrics.centered) row.element.style.textAlign = "center";
+    row.element.style.textAlign = align;
+    row.element.style.fontSize = rowFontSize + "px";
+    if (backing) row.element.style.setProperty("--DefaultLyricsSize", rowFontSize + "px");
+    if (index > 0) nextTop += rowGap * (backing ? .18 : 1);
     const height = row.element.offsetHeight;
     const center = nextTop + height / 2;
-    nextTop += height + rowGap;
+    nextTop += height;
     const segments = row.segments.flatMap(part => {
       const letters = Array.from(part.element.querySelectorAll<HTMLElement>(".letter"));
       return letters.length ? letters : [part.element];
     });
     const interlude = (clip.lyrics.Content[row.sourceIndex] as { Type?: string }).Type === "Interlude";
-    return { ...row, text, rtl, center, height, segments, interlude };
+    return { ...row, text, rtl, align, backing, rowFontSize, center, height, segments, interlude };
   });
+  const leadRows = rows.filter(row => !row.backing);
   const destroy = () => { session.destroy(); stage.remove(); };
-  if (!rows.length || rows.some(row => row.height > Math.min(620, composition.lyrics.height))) { destroy(); return null; }
+  if (!leadRows.length || rows.some(row => row.height > Math.min(620, composition.lyrics.height))) { destroy(); return null; }
   ctx.canvas.width = WIDTH * scale;
   ctx.canvas.height = HEIGHT * scale;
   ctx.scale(scale, scale);
@@ -154,9 +162,9 @@ export function prepareQuoteVideo(ctx: CanvasRenderingContext2D, clip: QuoteVide
     ctx.rect(left - 12, top, textWidth + 24, height);
     ctx.clip();
     let active = 0;
-    for (let i = 1; i < rows.length; i++) if (rows[i].start <= time) active = i;
-    const current = rows[active];
-    const previous = rows[Math.max(0, active - 1)];
+    for (let i = 1; i < leadRows.length; i++) if (leadRows[i].start <= time) active = i;
+    const current = leadRows[active];
+    const previous = leadRows[Math.max(0, active - 1)];
     const progress = Math.max(0, Math.min(1, (time - current.start) / 440));
     const center = current.center + (previous.center - current.center) * (1 - progress) ** 3;
     for (const row of rows) {
@@ -164,7 +172,8 @@ export function prepareQuoteVideo(ctx: CanvasRenderingContext2D, clip: QuoteVide
       if (y > bottom || y + row.height < top) continue;
       const distance = Math.abs(row.center - center);
       const emphasis = Math.max(0, 1 - distance / (fontSize * 2.8));
-      ctx.globalAlpha = .26 + .74 * emphasis;
+      const singing = row.start <= time && time < row.end;
+      ctx.globalAlpha = row.backing ? (singing ? .9 : .22 + .35 * emphasis) : .26 + .74 * emphasis;
 
       if (row.interlude) {
         const spacing = fontSize * .38;
@@ -180,16 +189,16 @@ export function prepareQuoteVideo(ctx: CanvasRenderingContext2D, clip: QuoteVide
         continue;
       }
 
-      ctx.font = "700 " + fontSize + "px SpicyLyrics, sans-serif";
+      ctx.font = "700 " + row.rowFontSize + "px SpicyLyrics, sans-serif";
       ctx.textBaseline = "top";
       ctx.textAlign = row.rtl ? "right" : "left";
       ctx.direction = row.rtl ? "rtl" : "ltr";
       if (!row.segments.length || (emphasis < .2 && (time < row.start || time > row.end + 480))) {
         ctx.fillStyle = "#fff";
         const wrapped = wrapQuoteText(row.text, textWidth, text => ctx.measureText(text).width);
-        if (centered) ctx.textAlign = "center";
-        const x = centered ? left + textWidth / 2 : row.rtl ? left + textWidth : left;
-        wrapped.forEach((line, index) => ctx.fillText(line, x, y + index * fontSize * 1.24));
+        ctx.textAlign = row.align;
+        const x = row.align === "center" ? left + textWidth / 2 : row.align === "right" ? left + textWidth : left;
+        wrapped.forEach((line, index) => ctx.fillText(line, x, y + index * row.rowFontSize * 1.24));
         continue;
       }
       const origin = row.element.getBoundingClientRect();
@@ -198,7 +207,7 @@ export function prepareQuoteVideo(ctx: CanvasRenderingContext2D, clip: QuoteVide
         if (!text.trim()) continue;
         const bounds = segment.getBoundingClientRect();
         if (bounds.width <= 0 || bounds.height <= 0) continue;
-        const size = Math.max(.3, bounds.height / (fontSize * 1.24)) * fontSize;
+        const size = Math.max(row.rowFontSize * .3, bounds.height / 1.24);
         ctx.save();
         ctx.translate(left + bounds.left - origin.left, y + bounds.top - origin.top);
         ctx.font = "700 " + size + "px SpicyLyrics, sans-serif";

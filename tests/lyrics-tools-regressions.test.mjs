@@ -45,7 +45,7 @@ test('layout follows the rendered spring scale continuously, including shrinkage
  assert.ok(wordGrowthShifts([100,50],[.95,1])[1]<0);
 });
 test('Swift layout uses fractional glyph widths, leaving visual padding and the trailing gap out of word growth',()=>{
- const parent={classList:{contains:()=>true}};
+ const parent={classList:{contains:()=>true,add(){}}};
  const doc={defaultView:{getComputedStyle:(element,pseudo)=>pseudo
   ? {content:'""',marginLeft:'0px',marginRight:'8px'}
   : {width:element.width,boxSizing:'border-box',paddingLeft:'18px',paddingRight:'18px',scale:element.scale}
@@ -59,18 +59,21 @@ test('Swift layout uses fractional glyph widths, leaving visual padding and the 
  assert.deepEqual(words.map(word=>word.HTMLElement.style.translate),['3.000px 0','9.650px 0']);
 });
 test('wrapped fragments move independently, preserve lift and reset for reduced motion',()=>{
- const parent={classList:{contains:()=>true}};
+ const classes=new Set(['word-group']);
+ const parent={classList:{contains:name=>classes.has(name),add:name=>classes.add(name),remove:name=>classes.delete(name)}};
  const doc={defaultView:{getComputedStyle:el=>({scale:el.style.scale})}};
  const words=[0,1,2].map(i=>({HTMLElement:{parentElement:parent,ownerDocument:doc,offsetTop:i===2?50:0,offsetLeft:i===1?100:0,offsetWidth:100,style:{scale:i===0?'1.1':'1',transform:'original'}}}));
  const line={HTMLElement:{isConnected:true},Syllables:{Lead:words}};
  animateSplitWords([line],false);
+ assert.ok(classes.has('SplitWordSpread'));
  assert.equal(words[1].HTMLElement.style.translate,'5.000px 0');
  assert.equal(words[2].HTMLElement.style.translate,'0.000px 0');
  assert.equal(words[1].HTMLElement.style.transform,'original');
  words[0].HTMLElement.style.scale='1';animateSplitWords([line],false);
  assert.equal(words[1].HTMLElement.style.translate,'0.000px 0');
  words[0].HTMLElement.style.scale='1.1';animateSplitWords([line],true);
- assert.equal(words[1].HTMLElement.style.translate,'0.000px 0');
+ assert.equal(words[1].HTMLElement.style.translate,'');
+ assert.equal(classes.has('SplitWordSpread'),false);
 });
 test('animated scales reuse split geometry until a resize changes the layout',()=>{
  let reads=0, onResize;
@@ -83,7 +86,7 @@ test('animated scales reuse split geometry until a resize changes the layout',()
    unobserve(element){observed.delete(element);}
   }
  }};
- const parent={classList:{contains:()=>true},ownerDocument:doc,isConnected:true};
+ const parent={classList:{contains:()=>true,add(){},remove(){}},ownerDocument:doc,isConnected:true};
  const words=[0,1].map(i=>({HTMLElement:{parentElement:parent,ownerDocument:doc,isConnected:true,
   offsetTop:0,get offsetLeft(){reads++;return i*100;},offsetWidth:100,style:{scale:'1'}}}));
  const line={HTMLElement:{isConnected:true},Syllables:{Lead:words}};

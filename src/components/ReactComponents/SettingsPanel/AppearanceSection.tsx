@@ -24,7 +24,6 @@ import {
   $pinnedFooterMode,
 } from "../../../utils/stores.ts";
 import { matches, Row, SectionTitle, Select, Slider, Toggle } from "./components.tsx";
-import { ExperimentSettings } from "./ExperimentsPanel.tsx";
 
 const SECTION_NAME = "Appearance";
 const FPS_CAP_DESCRIPTION = "Limit how often lyrics, animated backgrounds, and smooth scrolling redraw. Turn off to redraw on every display refresh.";
@@ -72,12 +71,11 @@ export default function AppearanceSection({ query, sectionFilter, showHidden = f
   const blurApplies = ["auto", "artistHeader", "coverArt"].includes(staticBackgroundMode);
   const r6 = visible("appearance-background-blur") && matches(query, "Background Blur", "Soften the static background image.");
   const r7 = visible("appearance-pinned-footer") && matches(query, "Pinned Lyrics Footer", "Keep source and community credits visible. Full also pins writers.");
-  const r8 = visible("appearance-sliderbar-styling") && matches(query, "New SliderBar Styling", "New glass-like style for the SliderBar. Disable to revert back to the original one.");
   const r9 = visible("appearance-fps-limit") && matches(query, "Limit Animation Frame Rate", FPS_CAP_DESCRIPTION);
   const r10 = visible("appearance-fps-cap") && matches(query, "Animation Frame Rate", FPS_SLIDER_DESCRIPTION);
   const cover = visible("appearance-cover-art-animation") && matches(query, "Cover Art Animation", "Animate cover art changes in the NowBar.");
 
-  if (!designMatches && !paletteMatches && !scene && !r1 && !r2 && !r3 && !r4 && !r6 && !r7 && !r8 && !r9 && !r10 && !cover) return null;
+  if (!designMatches && !paletteMatches && !scene && !r1 && !r2 && !r3 && !r4 && !r6 && !r7 && !r9 && !r10 && !cover) return null;
 
   return (
     <>
@@ -130,8 +128,6 @@ export default function AppearanceSection({ query, sectionFilter, showHidden = f
           <Toggle checked={showNpvDynamicBg} onChange={(v) => $showNpvDynamicBg.set(v)} />
         </Row>
       )}
-      {r8 && <ExperimentSettings experimentIds={["newProgressBarStyling"]} showBuiltIn={false} />}
-
       {r9 && (
         <Row settingId="appearance-fps-limit" label="Limit Animation Frame Rate" description={FPS_CAP_DESCRIPTION}>
           <Toggle checked={fpsCapEnabled} onChange={(value) => $animationFpsCapEnabled.set(value)} />

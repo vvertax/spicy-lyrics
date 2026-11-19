@@ -1,5 +1,5 @@
 import { quoteLineText } from "./QuoteText.ts";
-import { subtitleLines } from "./SubtitleModel.ts";
+import { subtitleBackingLines, subtitleLines } from "./SubtitleModel.ts";
 
 export const MAX_QUOTE_VIDEO_LINES = 24;
 const MAX_QUOTE_VIDEO_DURATION_MS = 60_000;
@@ -34,17 +34,26 @@ export function makeQuoteVideoClip(data: { Type?: string; Content?: unknown[]; e
   }).filter(entry => entry !== null);
   if (lines.length !== selected.length) return null;
   lines.sort((a, b) => a.line.start - b.line.start);
-  const start = lines[0].line.start;
+  const backing = new Map<unknown, QuoteVideoTiming>();
+  for (const vocal of subtitleBackingLines({ ...data, Content: lines.map(({ line }) => line.source) })) {
+    const range = backing.get(vocal.parent);
+    backing.set(vocal.parent, {
+      start: Math.min(vocal.start, range?.start ?? vocal.start),
+      end: Math.max(vocal.end, range?.end ?? vocal.end),
+    });
+  }
+  const vocalStart = lines.map(({ line }) => Math.min(line.start, backing.get(line.source)?.start ?? line.start));
+  const start = Math.min(...vocalStart);
   let end = start;
   let previousPosition: number | undefined;
   const rows: unknown[] = [];
-  for (const { position, line } of lines) {
-    const gap = line.start - end;
+  for (const [index, { position, line }] of lines.entries()) {
+    const gap = vocalStart[index] - end;
     if (previousPosition !== undefined && gap > 0 && (position !== previousPosition + 1 || gap >= interludeMinMs)) {
-      rows.push({ Type: "Interlude", Text: "• • •", StartTime: end / 1000, EndTime: line.start / 1000 });
+      rows.push({ Type: "Interlude", Text: "• • •", StartTime: end / 1000, EndTime: vocalStart[index] / 1000 });
     }
     rows.push(line.source);
-    end = Math.max(end, line.end);
+    end = Math.max(end, line.end, backing.get(line.source)?.end ?? line.end);
     previousPosition = position;
   }
   return end > start && end - start <= MAX_QUOTE_VIDEO_DURATION_MS ? {

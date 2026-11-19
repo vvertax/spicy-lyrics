@@ -1,6 +1,7 @@
-/* Original settings presentation from Spikerko/spicy-lyrics. Scoped to the original design option. */
+/* Original settings presentation from Spikerko/spicy-lyrics. vvertax You shares the settings layout. */
 /* ── Settings Panel — reads chrome tokens from the modal scope ────── */
-:root:where([data-sl-design="original"]) sl-generic-modal.SpicyLyricsModal .sl-modal-overlay {
+:root:where([data-sl-design="original"]) sl-generic-modal.SpicyLyricsModal .sl-modal-overlay,
+:root:where([data-sl-design="vvertax-you"]) sl-generic-modal.SpicyLyricsModal .sl-modal-overlay:where(:has(.sl-sp-panel--settings)) {
   /* Search field. Shared with the Lyrics Manager's search bar, so anything
      specific to the settings sidebar lives under .sl-sp-sidebar below. */
   .sl-sp-search-wrap {
@@ -1307,7 +1308,7 @@
 }
 
 /* Adapt the shared fork rows to upstream's card layout without changing their behavior. */
-:root:where([data-sl-design="original"]) sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings {
+:root:where([data-sl-design="original"], [data-sl-design="vvertax-you"]) sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings {
   background:transparent; color:var(--color-text-primary); font-family:inherit;
   --ry-text:var(--color-text-primary); --ry-muted:var(--color-text-secondary);
   --ry-accent:var(--accent); --ry-line:var(--hairline); --ry-line-strong:var(--hairline-strong);
@@ -1325,6 +1326,7 @@
 :root:where([data-sl-design="original"]) sl-generic-modal.SpicyLyricsModal .sl-modal.slmodal-settingsPanel::before {
   background-image:none;
 }
-:root:where([data-sl-design="original"]) sl-generic-modal.SpicyLyricsModal .sl-modal.slmodal-settingsPanel > div {
+:root:where([data-sl-design="original"]) sl-generic-modal.SpicyLyricsModal .sl-modal.slmodal-settingsPanel > div,
+:root:where([data-sl-design="vvertax-you"]) sl-generic-modal.SpicyLyricsModal .sl-modal.slmodal-settingsPanel:where(:has(.sl-sp-panel--settings)) > div {
   background:transparent; font-family:inherit;
 }

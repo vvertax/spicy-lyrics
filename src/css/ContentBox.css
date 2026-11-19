@@ -1288,10 +1288,8 @@
   margin: 0 1.5cqw;
 }
 
-/* ── Skin A — glass capsule (experiment "newProgressBarStyling") ────────────
-   Same language as the volume capsule: frosted track, white fill that IS the
-   progress, no handle dot. */
-#SpicyLyricsPage.Exp_NewProgressBar .Timeline .SliderBar {
+/* Glass timeline capsule: the fill shows progress, without a handle dot. */
+#SpicyLyricsPage.SpicyRenderer .Timeline .SliderBar {
   height: 2.2cqh;
   overflow: hidden;
   background: var(--material-regular-bg);
@@ -1307,11 +1305,11 @@
 
 /* iOS-style thickening while engaged — the vertical twin of the volume capsule's
    width growth. .Timeline centers its children, so the bar grows symmetrically. */
-#SpicyLyricsPage.Exp_NewProgressBar .Timeline .SliderBar:is(:hover, .Dragging) {
+#SpicyLyricsPage.SpicyRenderer .Timeline .SliderBar:is(:hover, .Dragging) {
   height: 3cqh;
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .Timeline .SliderBar::before {
+#SpicyLyricsPage.SpicyRenderer .Timeline .SliderBar::before {
   content: "";
   position: absolute;
   inset: 0 auto 0 0;
@@ -1323,54 +1321,22 @@
 
 /* Mid-drag the fill must track the pointer 1:1 — the eased glide is for playback
    ticks and seeks only. */
-#SpicyLyricsPage.Exp_NewProgressBar .Timeline .SliderBar.Dragging::before {
+#SpicyLyricsPage.SpicyRenderer .Timeline .SliderBar.Dragging::before {
   transition: none;
 }
 
-/* The handle stays in the markup for the legacy skin; the fill replaces it here. */
-#SpicyLyricsPage.Exp_NewProgressBar .Timeline .SliderBar .Handle {
+#SpicyLyricsPage.SpicyRenderer .Timeline .SliderBar .Handle {
   display: none;
 }
 
 /* The hoisted timeline's cq units resolve against the much taller NowBar container
    rather than the square MediaBox, hence the smaller numbers for the same look. */
-#SpicyLyricsPage.Exp_NewProgressBar .Header > .Timeline .SliderBar {
+#SpicyLyricsPage.SpicyRenderer .Header > .Timeline .SliderBar {
   height: 1.7cqh;
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .Header > .Timeline .SliderBar:is(:hover, .Dragging) {
+#SpicyLyricsPage.SpicyRenderer .Header > .Timeline .SliderBar:is(:hover, .Dragging) {
   height: 2.3cqh;
-}
-
-/* ── Skin B — legacy accent gradient + handle dot ──────────────────────────── */
-#SpicyLyricsPage:not(.Exp_NewProgressBar) .Timeline .SliderBar {
-  --TraveledColor: var(--accent);
-  --RemainingColor: var(--color-text-quaternary);
-  background: linear-gradient(
-    90deg,
-    var(--TraveledColor) 0,
-    var(--TraveledColor) calc(100% * var(--SliderProgress)),
-    var(--RemainingColor) calc(100% * var(--SliderProgress)),
-    var(--RemainingColor)
-  );
-  container-type: size;
-  height: 1.3cqh;
-}
-
-#SpicyLyricsPage:not(.Exp_NewProgressBar) .Header > .Timeline .SliderBar {
-  height: 1cqh;
-}
-
-#SpicyLyricsPage:not(.Exp_NewProgressBar) .Timeline .SliderBar .Handle {
-  aspect-ratio: 1;
-  background: #fff;
-  border-radius: 100cqw;
-  display: block;
-  height: 185cqh;
-  left: calc(100cqw * var(--SliderProgress));
-  position: absolute;
-  top: 54cqh;
-  transform: translate(-50%, -50%);
 }
 
 #SpicyLyricsPage .Timeline .Time {
@@ -1511,9 +1477,8 @@
   cursor: pointer;
 }
 
-/* ── Skin A — glass capsule (experiment "newProgressBarStyling") ────────────
-   The white fill IS the slider: no track line, no handle. */
-#SpicyLyricsPage.Fullscreen.ShowVolumeSlider.Exp_NewProgressBar
+/* Glass volume capsule: the fill shows the level, without a handle dot. */
+#SpicyLyricsPage.Fullscreen.ShowVolumeSlider.SpicyRenderer
   .ContentBox
   .NowBar
   .CenteredView
@@ -1532,10 +1497,8 @@
   transition: width 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* iOS-style thickening while engaged. Width-anchored right, so it grows inward.
-   Skin A only — a handle dot alongside a growing track reads as two competing
-   affordances. */
-#SpicyLyricsPage.Fullscreen.ShowVolumeSlider.Exp_NewProgressBar
+/* iOS-style thickening while engaged. Width-anchored right, so it grows inward. */
+#SpicyLyricsPage.Fullscreen.ShowVolumeSlider.SpicyRenderer
   .ContentBox
   .NowBar
   .CenteredView
@@ -1548,7 +1511,7 @@
 
 /* The fill clips itself rather than the capsule clipping it, so the scrub preview
    can sit outside the capsule. */
-#SpicyLyricsPage.Exp_NewProgressBar .VolumeControl .VolumeFill {
+#SpicyLyricsPage.SpicyRenderer .VolumeControl .VolumeFill {
   position: absolute;
   inset: 0;
   background: #fff;
@@ -1560,81 +1523,11 @@
 
 /* Mid-drag the fill must track the pointer 1:1 — the eased glide is only for
    wheel steps, mute snaps and external volume changes. */
-#SpicyLyricsPage.Exp_NewProgressBar .VolumeControl.Dragging .VolumeFill {
+#SpicyLyricsPage.SpicyRenderer .VolumeControl.Dragging .VolumeFill {
   transition: none;
 }
 
-/* Skin B draws the level as a background gradient instead. */
-#SpicyLyricsPage:not(.Exp_NewProgressBar) .VolumeControl .VolumeFill {
-  display: none;
-}
-
-/* ── Skin B — legacy accent gradient + handle dot ──────────────────────────
-   The vertical twin of the old horizontal bar: a hard-stop gradient painted on
-   the track itself, so both ends stay perfectly rounded at any level and no fill
-   element is involved. Placement and height match Skin A exactly; only the track's
-   thickness differs, because a flat line and a frosted capsule want different
-   weights to read correctly.
-
-   .Fullscreen.ShowVolumeSlider are carried here only to out-specify the shared
-   geometry rule above, which would otherwise win --CapsuleWidth. */
-#SpicyLyricsPage.Fullscreen.ShowVolumeSlider:not(.Exp_NewProgressBar)
-  .ContentBox
-  .NowBar
-  .CenteredView
-  .Header
-  .MediaBox
-  .MediaContent
-  .VolumeControl {
-  /* The old bar was a 1.3cq-thick line, not a capsule — the glass skin's 4cqw is
-     thickness the frosted material needs to read as a material, and it looks
-     bloated with a flat fill. The handle scales off this, so it shrinks to match. */
-  --CapsuleWidth: 1.3cqw;
-  --TraveledColor: var(--accent);
-  --RemainingColor: var(--color-text-quaternary);
-  background: linear-gradient(
-    0deg,
-    var(--TraveledColor) 0,
-    var(--TraveledColor) calc(100% * var(--VolumeLevel)),
-    var(--RemainingColor) calc(100% * var(--VolumeLevel)),
-    var(--RemainingColor)
-  );
-}
-
-/* A 1.3cqw line is a hard thing to grab. Widen the hit area without touching the
-   paint — the pointer target is what the user aims at, not what they see. */
-#SpicyLyricsPage:not(.Exp_NewProgressBar) .VolumeControl::after {
-  content: "";
-  position: absolute;
-  inset: 0 -2.5cqw;
-}
-
-/* Sized off the capsule width exactly as the old handle was sized off the bar's
-   thickness (1.85×), so it overhangs the track the same way — the capsule stays
-   `overflow: visible` in this skin to let it. Rides the top edge of the traveled
-   segment via transform rather than `bottom`, which keeps it off the layout path
-   and lets it glide with the same curve Skin A's fill uses. */
-#SpicyLyricsPage:not(.Exp_NewProgressBar) .VolumeControl .Handle {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: calc(var(--CapsuleWidth) * 1.85);
-  aspect-ratio: 1;
-  background: #fff;
-  border-radius: 50%;
-  transform: translate(-50%, 50%)
-    translateY(calc(-1 * var(--CapsuleHeight) * var(--VolumeLevel)));
-  transition: transform 0.18s cubic-bezier(0.23, 1, 0.32, 1);
-  pointer-events: none;
-}
-
-/* Mid-drag the handle must track the pointer 1:1, same as Skin A's fill. */
-#SpicyLyricsPage:not(.Exp_NewProgressBar) .VolumeControl.Dragging .Handle {
-  transition: none;
-}
-
-/* Skin A replaces the handle with the fill. */
-#SpicyLyricsPage.Exp_NewProgressBar .VolumeControl .Handle {
+#SpicyLyricsPage.SpicyRenderer .VolumeControl .Handle {
   display: none;
 }
 
@@ -1651,30 +1544,16 @@
   transition: fill 0.15s ease;
 }
 
-/* Skin A: inside the capsule, at its foot — the glass track is thick enough to
-   hold the glyph, and the fill sliding up behind it is the point. */
-#SpicyLyricsPage.Exp_NewProgressBar .VolumeControl .VolumeIcon {
+/* Place the volume glyph inside the foot of the capsule. */
+#SpicyLyricsPage.SpicyRenderer .VolumeControl .VolumeIcon {
   bottom: 0;
   left: 0;
   width: 100%;
   height: 6cqh;
 }
 
-/* Skin B: below the track. The legacy bar is a thin line with a handle riding it —
-   there is no room inside, and the white handle passing behind a white glyph would
-   swallow it. This is where the old horizontal band put the icon, rotated. */
-#SpicyLyricsPage:not(.Exp_NewProgressBar) .VolumeControl .VolumeIcon {
-  top: calc(100% + 2cqh);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 6cqw;
-  height: 5cqh;
-}
-
-/* The white fill has risen past the glyph, so flip it to ink. Skin A only —
-   Skin B's traveled segment is the accent colour, which the white glyph reads
-   against fine and dark ink would not. */
-#SpicyLyricsPage.Exp_NewProgressBar .VolumeControl.IconOnFill .VolumeIcon {
+/* The white fill has risen past the glyph, so flip it to ink. */
+#SpicyLyricsPage.SpicyRenderer .VolumeControl.IconOnFill .VolumeIcon {
   fill: rgba(0, 0, 0, 0.68);
 }
 
@@ -1738,7 +1617,7 @@
 }
 
 .spicy-pip-wrapper
-  #SpicyLyricsPage.Fullscreen.ShowVolumeSlider.Exp_NewProgressBar
+  #SpicyLyricsPage.Fullscreen.ShowVolumeSlider.SpicyRenderer
   .ContentBox
   .NowBar
   .CenteredView
@@ -1746,7 +1625,7 @@
   .MediaBox
   .MediaContent
   .VolumeControl,
-#SpicyLyricsPage.Fullscreen.ShowVolumeSlider.Exp_NewProgressBar:is(.CompactMode, .ForcedCompactMode)
+#SpicyLyricsPage.Fullscreen.ShowVolumeSlider.SpicyRenderer:is(.CompactMode, .ForcedCompactMode)
   .ContentBox
   .NowBar
   .CenteredView
@@ -1758,27 +1637,7 @@
 }
 
 .spicy-pip-wrapper
-  #SpicyLyricsPage.Fullscreen.ShowVolumeSlider:not(.Exp_NewProgressBar)
-  .ContentBox
-  .NowBar
-  .CenteredView
-  .Header
-  .MediaBox
-  .MediaContent
-  .VolumeControl,
-#SpicyLyricsPage.Fullscreen.ShowVolumeSlider:not(.Exp_NewProgressBar):is(.CompactMode, .ForcedCompactMode)
-  .ContentBox
-  .NowBar
-  .CenteredView
-  .Header
-  .MediaBox
-  .MediaContent
-  .VolumeControl {
-  --CapsuleWidth: 2.2cqw;
-}
-
-.spicy-pip-wrapper
-  #SpicyLyricsPage.Fullscreen.ShowVolumeSlider.Exp_NewProgressBar
+  #SpicyLyricsPage.Fullscreen.ShowVolumeSlider.SpicyRenderer
   .ContentBox
   .NowBar
   .CenteredView
@@ -1786,7 +1645,7 @@
   .MediaBox
   .MediaContent
   .VolumeControl:is(:hover, .Dragging),
-#SpicyLyricsPage.Fullscreen.ShowVolumeSlider.Exp_NewProgressBar:is(.CompactMode, .ForcedCompactMode)
+#SpicyLyricsPage.Fullscreen.ShowVolumeSlider.SpicyRenderer:is(.CompactMode, .ForcedCompactMode)
   .ContentBox
   .NowBar
   .CenteredView
@@ -3248,7 +3107,7 @@
 
 /* Fork volume placement keeps its established height. The experiment changes
    material only: glass track and solid fill replace the legacy handle. */
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider .SliderBar {
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider .SliderBar {
   overflow: hidden;
   background: var(--material-regular-bg);
   -webkit-backdrop-filter: var(--material-regular-blur);
@@ -3260,71 +3119,71 @@
   transition: width 180ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider .SliderBar::before {
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider .SliderBar::before {
   background: #fff;
   transition: width 180ms cubic-bezier(0.23, 1, 0.32, 1), height 180ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider .SliderBar.Dragging::before {
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider .SliderBar.Dragging::before {
   transition: none;
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider .Handle {
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider .Handle {
   display: none;
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider:not(.Below) {
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider:not(.Below) {
   width: max(29px, 4.8cqw);
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider:not(.Below) .SliderBar {
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider:not(.Below) .SliderBar {
   width: 100%;
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider.Below .SliderBar {
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider.Below .SliderBar {
   height: max(29px, 4.8cqw);
   transition-property: height;
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider.Below .SliderBar:is(:hover, .Dragging) {
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider.Below .SliderBar:is(:hover, .Dragging) {
   height: max(34px, 6.48cqw);
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider:not(.Below) .SliderBar:is(:hover, .Dragging) {
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider:not(.Below) .SliderBar:is(:hover, .Dragging) {
   width: max(34px, 6.48cqw);
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider .VolumeIcon {
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider .VolumeIcon {
   position: absolute;
   z-index: 1;
   color: #fff;
   mix-blend-mode: difference;
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider .VolumeIcon svg {
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider .VolumeIcon svg {
   width: auto;
   height: min(22px, 3cqh);
   fill: currentColor;
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider .SliderBar #SpicyLyrics_VolumeWaveLow,
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider .SliderBar #SpicyLyrics_VolumeWaveHigh,
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider .SliderBar #SpicyLyrics_VolumeMute {
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider .SliderBar #SpicyLyrics_VolumeWaveLow,
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider .SliderBar #SpicyLyrics_VolumeWaveHigh,
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider .SliderBar #SpicyLyrics_VolumeMute {
   transition: opacity 180ms ease;
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider .SliderBar #SpicyLyrics_VolumeMute,
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider .SliderBar.Low #SpicyLyrics_VolumeWaveHigh,
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider .SliderBar.Muted #SpicyLyrics_VolumeWaveLow,
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider .SliderBar.Muted #SpicyLyrics_VolumeWaveHigh {
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider .SliderBar #SpicyLyrics_VolumeMute,
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider .SliderBar.Low #SpicyLyrics_VolumeWaveHigh,
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider .SliderBar.Muted #SpicyLyrics_VolumeWaveLow,
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider .SliderBar.Muted #SpicyLyrics_VolumeWaveHigh {
   opacity: 0;
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider .SliderBar.Muted #SpicyLyrics_VolumeMute {
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider .SliderBar.Muted #SpicyLyrics_VolumeMute {
   opacity: 1;
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider:not(.Below) .VolumeIcon {
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider:not(.Below) .VolumeIcon {
   left: 0;
   bottom: 0;
   width: 100%;
@@ -3334,7 +3193,7 @@
   justify-content: center;
 }
 
-#SpicyLyricsPage.Exp_NewProgressBar .FullscreenVolumeSlider.Below .VolumeIcon {
+#SpicyLyricsPage.SpicyRenderer .FullscreenVolumeSlider.Below .VolumeIcon {
   left: 0;
   top: 0;
   width: 32px;

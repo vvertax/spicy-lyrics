@@ -263,13 +263,8 @@
   margin: 0;
 }
 
-.spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock.Exp_NewProgressBar .ContentBox .NowBar .MediaContent .Timeline .SliderBar:is(:hover, .Dragging) {
+.spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock.SpicyRenderer .ContentBox .NowBar .MediaContent .Timeline .SliderBar:is(:hover, .Dragging) {
   height: calc(var(--PD_BarH) * 1.8);
-}
-
-/* The legacy skin is a line with a handle, not a capsule. */
-.spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock:not(.Exp_NewProgressBar) .ContentBox .NowBar .MediaContent .Timeline .SliderBar {
-  height: calc(var(--PD_BarH) * 0.65);
 }
 
 .spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock .ContentBox .NowBar .MediaContent .Timeline .Time {
@@ -490,19 +485,8 @@
   transition: height 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 
-.spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock.Fullscreen.ShowVolumeSlider.Exp_NewProgressBar .ContentBox .NowBar .CenteredView .Header .MediaBox .MediaContent .VolumeControl:is(:hover, .Dragging) {
+.spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock.Fullscreen.ShowVolumeSlider.SpicyRenderer .ContentBox .NowBar .CenteredView .Header .MediaBox .MediaContent .VolumeControl:is(:hover, .Dragging) {
   --CapsuleWidth: calc(var(--PD_VolumeH) * 1.5);
-}
-
-.spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock.Fullscreen.ShowVolumeSlider:not(.Exp_NewProgressBar) .ContentBox .NowBar .CenteredView .Header .MediaBox .MediaContent .VolumeControl {
-  --CapsuleWidth: calc(var(--PD_VolumeH) * 0.5);
-  background: linear-gradient(
-    90deg,
-    var(--TraveledColor) 0,
-    var(--TraveledColor) calc(100% * var(--VolumeLevel)),
-    var(--RemainingColor) calc(100% * var(--VolumeLevel)),
-    var(--RemainingColor)
-  );
 }
 
 .spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock .NowBar .VolumeControl .VolumeFill {
@@ -523,14 +507,7 @@
   inset: -8px 0;
 }
 
-.spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock:not(.Exp_NewProgressBar) .NowBar .VolumeControl .Handle {
-  left: 0;
-  top: 50%;
-  bottom: auto;
-  transform: translate(-50%, -50%) translateX(calc(var(--CapsuleHeight) * var(--VolumeLevel)));
-}
-
-/* The glyph sits before the capsule, so the thin track doesn't have to hold it in either skin. */
+/* The glyph sits before the capsule. */
 .spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock .NowBar .VolumeControl .VolumeIcon {
   top: 50%;
   bottom: auto;
@@ -614,11 +591,6 @@
     width: auto;
   }
 
-  /* --CapsuleHeight is a fixed length, which a stretched capsule no longer has. */
-  .spicy-pip-wrapper #SpicyLyricsPage.Exp_PopupDock:not(.Exp_NewProgressBar) .NowBar .VolumeControl .Handle {
-    left: calc(100% * var(--VolumeLevel));
-    transform: translate(-50%, -50%);
-  }
 }
 
 @media (max-width: 280px) {

@@ -6,41 +6,7 @@ async function load(entry) {
   const { outputFiles } = await build({ entryPoints: [entry], bundle: true, write: false, format: "esm", platform: "node" });
   return import(`data:text/javascript;base64,${Buffer.from(outputFiles[0].text).toString("base64")}`);
 }
-const { checkTime, checkTimingLines } = await load("src/components/Utils/TTMLCheck.ts");
 const { subtitleLines, subtitleAt, subtitleBackingLines, subtitleBackingAt } = await load("src/components/Utils/SubtitleModel.ts");
-
-test("TTML inspection understands clock, frame, tick and offset timings without normalizing reversed ranges", () => {
-  assert.equal(checkTime("01:02:03.500"), 3723.5);
-  assert.equal(checkTime("02:03.5"), 123.5);
-  assert.equal(checkTime("00:00:01:15", 30), 1.5);
-  assert.equal(checkTime("500ms"), .5);
-  assert.equal(checkTime("90f", 30), 3);
-  assert.equal(checkTime("90t", 30, 10), 9);
-  assert.equal(checkTime("2m"), 120);
-  assert.equal(checkTime("-1s"), -1);
-  assert.equal(checkTime(null), undefined);
-  assert.equal(checkTime("00:02:61"), undefined);
-  assert.equal(checkTime("invalid"), undefined);
-});
-
-test("TTML checks flag malformed lines but accept normal duet overlaps and extended background vocals", () => {
-  const valid = [
-    { text: "Voice A", start: 0, end: 5, spans: [{ start: 0, end: 5 }, { start: 4, end: 7, background: true }] },
-    { text: "Voice B", start: 2, end: 6, spans: [{ start: 2, end: 6 }] },
-  ];
-  assert.deepEqual(checkTimingLines(valid), []);
-  const report = checkTimingLines([
-    ...valid,
-    { text: "", start: 8, end: 7, spans: [] },
-    { text: "Outside", start: 8, end: 10, spans: [{ start: 7, end: 11 }] },
-    { text: "Invalid", start: -1, end: 0, spans: [{ invalid: true }] },
-    { text: "Zero", start: 40, end: 40, spans: [] },
-    { text: "No timing", spans: [] },
-  ]);
-  for (const code of ["Empty lyric line", "End precedes start", "Word outside line timing", "Negative timing", "Unrecognized timing", "Zero duration", "Untimed lyric line", "Long instrumental gap"])
-    assert.ok(report.some(issue => issue.code === code), code);
-  assert.equal(report.find(issue => issue.code === "Long instrumental gap").severity, "info");
-});
 
 test("subtitle model preserves syllable word boundaries, handles overlaps, gaps and backward seeks", () => {
   const rows = subtitleLines({ Type: "Syllable", Content: [

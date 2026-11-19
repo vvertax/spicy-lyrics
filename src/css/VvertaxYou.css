@@ -202,7 +202,7 @@
     :is(button,input,[tabindex]):focus-visible { outline:2px solid var(--you-primary); }
   }
 
-  :is(sl-generic-modal.SpicyLyricsModal, .vv-quote-dialog, .vv-review-dialog, .vv-author-profile, .vv-ttml-check,
+  :is(sl-generic-modal.SpicyLyricsModal, .vv-quote-dialog, .vv-review-dialog, .vv-author-profile,
       .vv-line-menu, #SpicyLyricsPage > .sl-fork-menu) {
     color-scheme: var(--you-scheme);
     accent-color: var(--you-primary);
@@ -260,23 +260,30 @@
     backdrop-filter: none;
   }
 
-  sl-generic-modal.SpicyLyricsModal.Exp_NewSettingsDesign .sl-modal.slmodal-settingsPanel::after,
-  sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings .sl-sp-pane::before {
+  sl-generic-modal.SpicyLyricsModal.Exp_NewSettingsDesign .sl-modal.slmodal-settingsPanel::after {
     background: none;
   }
 
   sl-generic-modal.SpicyLyricsModal .sl-sp-panel--settings {
     background: var(--you-surface);
     color: var(--you-text);
-    scrollbar-color: var(--you-outline) transparent;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
 
+    :is(.sl-sp-sidebar, .sl-sp-settings-scroll) { scrollbar-color: var(--you-outline) transparent; }
     .sl-sp-sidebar { background: var(--you-container); }
-    .sl-sp-card {
-      background: color-mix(in srgb, var(--you-container) 65%, transparent);
-      border-color: var(--you-divider);
+    .sl-sp-pane { position: relative; isolation: isolate; overflow: hidden; }
+    .sl-sp-tab { color: var(--you-muted); }
+    .sl-sp-tab--action { border-radius: 999px; }
+    .sl-sp-tabs .sl-sp-tab {
+      border-radius: 8px;
+      box-shadow: none;
+      background: transparent;
+
+      &:hover { background: var(--you-container-high); color: var(--you-text); }
+      &[data-active] { background: var(--you-tonal); color: var(--you-on-tonal); }
     }
-    .sl-sp-tab { border-radius: 999px; color: var(--you-muted); }
-    .sl-sp-tab[data-active] { background: var(--you-tonal); color: var(--you-on-tonal); box-shadow: none; }
+    .sl-sp-tab:focus-visible { outline: 2px solid var(--you-primary); outline-offset: -2px; }
     .sl-sp-tab .sl-sp-tab-icon { background: none; color: inherit; box-shadow: none; }
     .sl-sp-brand-line { color: var(--you-primary); }
     .sl-sp-pane-logo {
@@ -337,7 +344,7 @@
     }
   }
 
-  :is(.vv-quote-dialog, .vv-review-dialog, .vv-author-profile, .vv-ttml-check, .vv-line-menu, .sl-sp-filter-menu) {
+  :is(.vv-quote-dialog, .vv-review-dialog, .vv-author-profile, .vv-line-menu, .sl-sp-filter-menu) {
     background: var(--you-container);
     color: var(--you-text);
     border-color: var(--you-divider);
@@ -376,6 +383,52 @@
     }
     :is(button:not(.vv-review-line, .vv-review-note-delete):hover:enabled,
         .vv-review-note-delete:hover:enabled) { background: var(--you-state); }
+  }
+
+  .vv-review-dialog.vv-author-dialog {
+    overflow: hidden auto;
+    border-color: var(--you-divider);
+    border-radius: 28px;
+    background: var(--you-container);
+    color: var(--you-text);
+    color-scheme: var(--you-scheme);
+    font-family: system-ui, sans-serif;
+
+    :is(.vv-author-emblem, .vv-author-search-watermark) { color: var(--you-primary); }
+    header h2 { font-weight: 600; }
+    header > button {
+      border: 0;
+      background: var(--you-tonal);
+      color: var(--you-on-tonal);
+    }
+    header > button:hover { background: var(--you-container-high); }
+    form input {
+      border-color: var(--you-outline);
+      background: var(--you-container-high);
+      color: var(--you-text);
+    }
+    form input::placeholder { color: var(--you-muted); }
+    form input:focus { border-color: transparent; }
+    :is(form button, .vv-author-card .vv-author-open) {
+      background: var(--you-primary);
+      color: var(--you-on-primary);
+    }
+    :is(form button, .vv-author-card .vv-author-open):hover {
+      background: color-mix(in oklab, var(--you-primary), var(--you-on-primary) 12%);
+    }
+    :is(p[role="status"], .vv-author-identity span, .vv-author-card p) { color: var(--you-muted); }
+    .vv-author-retirement, .vv-author-avatar {
+      background: var(--you-tonal);
+      color: var(--you-on-tonal);
+    }
+    .vv-author-card { background: var(--you-container-high); border-color: var(--you-divider); }
+    .vv-author-results:not(:empty) { margin-top: 12px; }
+
+    @media (max-width: 520px) {
+      form { flex-direction: column; align-items: stretch; }
+      form input { flex: none; }
+      form button { align-self: flex-start; }
+    }
   }
 
   #SpicyLyricsPage > .sl-fork-menu {
@@ -471,13 +524,13 @@
     .vv-quote-option input[type="checkbox"]:checked::before { background: var(--you-on-primary); }
   }
 
-  :is(sl-generic-modal.SpicyLyricsModal, .vv-quote-dialog, .vv-review-dialog, .vv-author-profile, .vv-ttml-check,
+  :is(sl-generic-modal.SpicyLyricsModal, .vv-quote-dialog, .vv-review-dialog, .vv-author-profile,
       .vv-line-menu, #SpicyLyricsPage > .sl-fork-menu, .sl-sp-filter-menu)
-      :is(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+      :is(button, a, input, select, textarea, summary, [tabindex]):where(:not(.sl-sp-search)):focus-visible {
     outline: 2px solid var(--you-primary);
     outline-offset: 2px;
   }
-  sl-generic-modal.SpicyLyricsModal .sl-sp-settings-group > summary:focus-visible { outline-offset: -3px; }
+  sl-generic-modal.SpicyLyricsModal :is(.sl-sp-settings-group, .vv-quick-settings) > summary:focus-visible { outline-offset: -3px; }
 }
 
 /* Legacy glass styles use important paint rules, including in Cinema View. */

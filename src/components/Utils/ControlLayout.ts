@@ -5,7 +5,7 @@ export const QUICK_CONTROLS = [
   ["load-ttml", "Load TTML File"], ["LyricsManager", "Lyrics Manager"],
   ["CacheAction", "Clear Cached Lyrics"], ["karaoke", "Karaoke"], ["recording", "Recording Mode"],
   ["subtitles", "Subtitles"], ["quote", "Create Quote Card"], ["authors", "Find Author Works"],
-  ["review", "Review Lyrics"], ["check-ttml", "Check TTML"], ["compare", "Compare TTML A/B"],
+  ["review", "Review Lyrics"], ["compare", "Compare TTML A/B"],
   ["SettingsToggle", "Settings"], ["Close", "Close Page"],
 ] as const;
 export function controlId(id: string, label: string): string {

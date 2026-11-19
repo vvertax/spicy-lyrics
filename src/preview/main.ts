@@ -14,7 +14,6 @@ import * as stores from '../utils/stores.ts';
 import {openSettingsPanel}from '../utils/settings.ts';
 import {quoteCard}from '../components/Utils/CreativeTools.ts';
 import {reviewLyrics,compareTTML}from '../components/Utils/ReviewTools.ts';
-import {openTTMLCheck}from '../components/Utils/TTMLCheckPanel.ts';
 import {initSubtitleBar}from '../components/Utils/SubtitleBar.ts';
 import {localizeDocument}from '../utils/i18n/runtime.ts';
 import LoadFonts from '../components/Styling/Fonts.ts';
@@ -57,13 +56,12 @@ async function feature(name:string){for(const dialog of document.querySelectorAl
    await quoteCard(document);
  }
  if(name==='review')reviewLyrics(document);
- if(name==='check'){openTTMLCheck(document);const input=document.querySelector<HTMLInputElement>('.vv-ttml-check input[type=file]');if(input){const transfer=new DataTransfer();transfer.items.add(new File([compareA.replace('</div>','<p begin="30s" end="29s">Timing example</p></div>')],'demo-check.ttml',{type:'application/xml'}));input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));}}
  if(name==='compare'){compareTTML(document);const inputs=document.querySelectorAll<HTMLInputElement>('.vv-page-comparison input[type=file]');for(const [i,input]of [...inputs].entries()){const transfer=new DataTransfer();transfer.items.add(new File([i?compareB:compareA],`demo-${i?'B':'A'}.ttml`,{type:'application/xml'}));input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));}}
  if(name==='subtitles'){stores.$subtitlesEnabled.set(true);await PageView.Destroy();const hint=document.createElement('div');hint.className='preview-library';hint.textContent=t('Лирика остаётся рядом, пока вы выбираете музыку.','Lyrics stay with you while you browse music.');stage.replaceChildren(hint);}
  if(name==='author'){rememberAuthor({id:'11111',username:'demo',displayName:'Spicy Lyrics Demo',avatar:new URL(track().cover,location.href).href});showIframeProfileModal('11111',document,{signal:new AbortController().signal,onState:()=>{}});}
  if(name==='preload'){state.announcePrefetch=true;stores.$prefetchNextLyrics.set(true);window.dispatchEvent(new Event('online'));window.dispatchEvent(new CustomEvent('preview:notice',{detail:t('Готовим текст следующего демо-трека. Нажмите «Следующая» после уведомления.','Preparing next demo lyrics. Press Next after the notification.')}));}
 }
-function toolbar(){const host=document.getElementById('preview-tools')!;host.replaceChildren();for(const [id,ru,en]of [['lyrics','Лирика','Lyrics'],['cinema','Кинорежим','Cinema view'],['romanization','Романизация','Romanization'],['recording','Режим записи','Recording mode'],['settings','Настройки','Settings'],['subtitles','Субтитры','Subtitles'],['cards','Карточки','Cards'],['compare','TTML A/B','TTML A/B'],['review','Замечания','Review'],['check','Проверка TTML','Check TTML'],['history','История','History'],['experiments','Эксперименты','Experiments'],['author','Автор','Author'],['preload','Предзагрузка','Preload']])host.append(button(t(ru,en),()=>void feature(id)));host.append(button(t('Сбросить демо','Reset demo'),()=>window.dispatchEvent(new Event('preview:reset'))));}
+function toolbar(){const host=document.getElementById('preview-tools')!;host.replaceChildren();for(const [id,ru,en]of [['lyrics','Лирика','Lyrics'],['cinema','Кинорежим','Cinema view'],['romanization','Романизация','Romanization'],['recording','Режим записи','Recording mode'],['settings','Настройки','Settings'],['subtitles','Субтитры','Subtitles'],['cards','Карточки','Cards'],['compare','TTML A/B','TTML A/B'],['review','Замечания','Review'],['history','История','History'],['experiments','Эксперименты','Experiments'],['author','Автор','Author'],['preload','Предзагрузка','Preload']])host.append(button(t(ru,en),()=>void feature(id)));host.append(button(t('Сбросить демо','Reset demo'),()=>window.dispatchEvent(new Event('preview:reset'))));}
 toolbar();stores.$uiLanguage.listen(toolbar);
 const player=document.getElementById('preview-player')!,title=document.createElement('span');title.className='preview-track-title';
 const play=button(t('Воспроизвести','Play'),toggle),previous=button('‹',()=>next(-1)),skip=button('›',()=>next());previous.setAttribute('aria-label','Previous demo track');skip.setAttribute('aria-label','Next demo track');

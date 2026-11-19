@@ -63,7 +63,8 @@ test('line-synced comparison uses the same line animation',()=>{
 
 test('joined-syllable motion is identical in normal lyrics and both comparison sessions',()=>{
  const make=()=>{
-  const value=lines(),parent={classList:{contains:name=>name==='word-group'}};
+  const value=lines(),parent=element();
+  parent.classList.add('word-group');
   value[0].Syllables.Lead=[0,1].map(i=>({HTMLElement:element(),StartTime:i*1000,EndTime:(i+1)*1000,TotalTime:1000}));
   value[0].Syllables.Lead.forEach((word,i)=>{
    const el=word.HTMLElement;el.parentElement=parent;el.offsetTop=0;el.offsetLeft=i*100;el.offsetWidth=100;
@@ -83,8 +84,9 @@ test('joined-syllable motion is identical in normal lyrics and both comparison s
  now+=16;Animate(400);sessionA.animate(400);sessionB.animate(400);
  for(const rows of [main,a,b]){
   const [first,second]=rows[0].Syllables.Lead;
-  assert.match(first.HTMLElement.style.translate,/^-0\.\d+em/);
-  assert.match(second.HTMLElement.style.translate,/^0\.\d+em/);
+  assert.equal(first.HTMLElement.style.translate,'');
+  assert.equal(second.HTMLElement.style.translate,'');
+  assert.equal(first.HTMLElement.parentElement.classList.contains('SplitWordSpread'),false);
  }
  globalThis.__comparisonAnimatorTest.motionStore.set(true);
  sessionA.destroy();sessionB.destroy();

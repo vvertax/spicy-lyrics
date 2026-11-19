@@ -23,7 +23,6 @@ export const SETTING_CATALOG = [
   ["appearance-background-type", "Background Type", "Choose the dynamic, legacy, static image, or color background.", "Background"],
   ["appearance-background-blur", "Background Blur", "Soften the static background image.", "Background"],
   ["appearance-npv-background", "Display Dynamic Background in Now Playing View", "Show the animated background in the Now Playing panel.", "Background"],
-  ["appearance-sliderbar-styling", "New SliderBar Styling", "New glass-like style for the SliderBar. Disable to revert back to the original one.", "Appearance"],
   ["appearance-fps-limit", "Limit Animation Frame Rate", "Limit how often lyrics, animated backgrounds, and smooth scrolling redraw. Turn off to redraw on every display refresh.", "Appearance"],
   ["appearance-fps-cap", "Animation Frame Rate", "Frames per second while the cap is on.", "Appearance"],
   ["appearance-cover-art-animation", "Cover Art Animation", "Animate cover art changes in the NowBar.", "Background"],

@@ -39,6 +39,19 @@ test("video clip preserves timing and enforces the duration limit across gaps", 
   assert.equal(makeQuoteVideoClip({ ...data, Type: "Static" }, [1]), null);
 });
 
+test("video clip keeps a duet and includes the backing vocals before and after its lead", () => {
+  const duet = {
+    OppositeAligned: true,
+    Lead: { StartTime: 4, EndTime: 6, Syllables: [{ Text: "Duet", StartTime: 4, EndTime: 6 }] },
+    Background: [{ StartTime: 3, EndTime: 9, Syllables: [{ Text: "Harmony", StartTime: 3, EndTime: 9 }] }],
+  };
+  const lyrics = { Type: "Syllable", Content: [duet, { Text: "Next", StartTime: 11, EndTime: 13 }] };
+  const single = makeQuoteVideoClip(lyrics, [0]);
+  assert.deepEqual([single.start, single.end], [3000, 9000]);
+  assert.deepEqual(single.lyrics.Content, [duet]);
+  assert.equal(makeQuoteVideoClip(lyrics, [0, 1]).lyrics.Content.length, 2);
+});
+
 test("video quotes replace skipped lines with a timed interlude and add dots to long vocal pauses", () => {
   const lyrics = { Type: "Line", Content: [
     { Text: "First", StartTime: 2, EndTime: 4 },

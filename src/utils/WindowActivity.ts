@@ -10,7 +10,7 @@ export function registerActivityWindow(win: Window): void {
   const local = new Set<Listener>();
   const paused = new Set<Animation>(), videos = new Set<HTMLVideoElement>();
   const sync = () => {
-    const roots = win.document.querySelectorAll('#SpicyLyricsPage, #sl-subtitle-bar, sl-generic-modal.SpicyLyricsModal, .vv-ttml-check');
+    const roots = win.document.querySelectorAll('#SpicyLyricsPage, #sl-subtitle-bar, sl-generic-modal.SpicyLyricsModal');
     if (!isWindowVisible(win)) {
       roots.forEach(root => {
         root.getAnimations({ subtree: true }).forEach(animation => { if (animation.playState === 'running') { animation.pause(); paused.add(animation); } });

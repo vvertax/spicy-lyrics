@@ -1,5 +1,5 @@
 export const ProjectName = "spicy-lyrics";
-export const ProjectVersion = "1.12.0";
+export const ProjectVersion = "1.12.1";
 declare const __SL_BUILD_HOTFIX__: number;
 export const ProjectHotfix = typeof __SL_BUILD_HOTFIX__ === "number" ? __SL_BUILD_HOTFIX__ : 0;
 

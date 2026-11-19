@@ -1,4 +1,3 @@
-import { openTTMLCheck } from "../../../Utils/TTMLCheckPanel.ts";
 import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 import { SpotifyPlayer } from "../../../../components/Global/SpotifyPlayer";
@@ -138,7 +137,6 @@ export default function UploadTTMLModal({ onOpenDB, onDone }: UploadTTMLModalPro
       <div className="sl-ldb-upload-header">
         <p className="sl-ldb-upload-subtitle">For: {songName}</p>
         <div className="sl-ldb-upload-actions">
-          <button type="button" className="sl-ldb-database-link" onClick={event => openTTMLCheck(event.currentTarget.ownerDocument)}>Check TTML</button>
           <button
             type="button"
             className="sl-ldb-database-link"
